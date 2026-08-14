@@ -991,8 +991,8 @@ export default function Header() {
           hidden
           h-[46px]
           w-full
-          bg-white/[0.52]
-          backdrop-blur-[7px]
+          bg-white/[0.72]
+          backdrop-blur-[10px]
 
           lg:block
         "
@@ -1107,10 +1107,10 @@ export default function Header() {
                           w-max
                           min-w-[150px]
                           translate-y-[3px]
-                          bg-white/[0.72]
+                          bg-white
                           opacity-0
                           shadow-[0_8px_24px_rgba(0,0,0,0.10)]
-                          backdrop-blur-[9px]
+                          backdrop-blur-[10px]
                           transition-all
                           duration-150
 

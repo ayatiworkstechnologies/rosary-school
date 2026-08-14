@@ -20,21 +20,39 @@ import {
 const slides = [
   {
     id: 1,
-    title: "Quarterly Examination\nTimetable",
-    image: "/images/rosary-01.png",
-    alt: "Rosary School campus",
+    title: "Centum Achievers in\nAccountancy & Commerce",
+    image: "/images/rosary1.png",
+    alt: "Rosary School centum achievers in Accountancy and Commerce",
   },
   {
     id: 2,
-    title: "Parent–Teacher\nMeeting",
-    image: "/images/rosary-01.png",
-    alt: "Rosary School parent teacher meeting",
+    title: "Class XII Board Exam\nTop Achievers 2025–26",
+    image: "/images/rosary2.png",
+    alt: "Rosary School Class XII board exam top achievers 2025-26",
   },
   {
     id: 3,
-    title: "Holiday\nAnnouncement",
-    image: "/images/rosary-01.png",
-    alt: "Rosary School holiday announcement",
+    title: "Centum Achievers in\nMaths & Science",
+    image: "/images/rosary3.png",
+    alt: "Rosary School centum achievers in Mathematics and Science",
+  },
+  {
+    id: 4,
+    title: "Centum Achievers in\nComputer Science",
+    image: "/images/rosary4.png",
+    alt: "Rosary School centum achievers in Computer Science",
+  },
+  {
+    id: 5,
+    title: "Class X Board Exam\nTop Achievers 2025–26",
+    image: "/images/rosary5.png",
+    alt: "Rosary School Class X board exam top achievers 2025-26",
+  },
+  {
+    id: 6,
+    title: "Centum Achievers in\nFrench",
+    image: "/images/rosary6.png",
+    alt: "Rosary School centum achievers in French",
   },
 ];
 
@@ -759,10 +777,10 @@ export default function RosaryShowcase() {
 
                     z-20
 
-                    sm:bottom-6
+                    sm:bottom-4
                     sm:left-7
 
-                    lg:bottom-8
+                    lg:bottom-3
                     lg:left-8
                   "
                 >

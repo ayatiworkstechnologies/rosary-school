@@ -30,7 +30,7 @@ const newsItems = [
     title: "Rosary School Welcomes New Principal and Student Leaders",
 
     description:
-      "Rosary School begins the 2026–27 academic year with new leadership, welcoming Principal Sr. Jasintha Quadras and celebrating the newly elected School Pupil Leaders through a transparent student election process.",
+      "Rosary School begins the 2026–27 academic year with new leadership, welcoming the Principal and newly elected Student Council members.",
 
     image: "/images/news-01.png",
 
@@ -45,12 +45,12 @@ const newsItems = [
     category: "Announcement",
     outlineText: "Announcement",
 
-    title: "Rosary School Welcomes New Principal and Student Leaders",
+    title: "Parent–Teacher Meeting for Academic Progress Review",
 
     description:
-      "Rosary School begins the 2026–27 academic year with new leadership, welcoming our Principal and celebrating the newly elected School Pupil Leaders.",
+      "Parents are invited to meet the teachers and discuss their child’s academic performance, classroom participation, and overall development.",
 
-    image: "/images/news-02.png",
+    image: "/images/news-2.png",
 
     imageAlt: "Rosary School Announcement",
 
@@ -63,12 +63,12 @@ const newsItems = [
     category: "Announcement",
     outlineText: "Announcement",
 
-    title: "Rosary School Welcomes New Principal and Student Leaders",
+    title: "Annual Sports Meet 2026",
 
     description:
-      "Celebrating a new chapter at Rosary with leadership, learning and opportunities that encourage every student to grow with confidence and purpose.",
+      "Students are invited to participate in the Annual Sports Meet featuring athletics, team games, and exciting competitions that celebrate talent and sportsmanship.",
 
-    image: "/images/news-02.png",
+    image: "/images/news-3.png",
 
     imageAlt: "Rosary School latest announcement",
 
@@ -361,47 +361,101 @@ export default function NewsAnnouncement() {
       /* =====================================================
          MOBILE + TABLET
 
-         Simple one-time reveal.
-         No sticky stacking.
+         IMPORTANT:
+         Every part reveals only when THAT element reaches
+         the viewport. This prevents the image/description
+         from animating before the user reaches them.
+
+         Desktop animation above is untouched.
       ====================================================== */
 
       mm.add(
         "(max-width: 1023px) and (prefers-reduced-motion: no-preference)",
         () => {
           cards.forEach((card) => {
-            const elements = card.querySelectorAll(
-              "[data-mobile-reveal]"
+            const elements = Array.from(
+              card.querySelectorAll<HTMLElement>(
+                "[data-mobile-reveal]"
+              )
             );
 
-            gsap.fromTo(
-              elements,
-              {
-                autoAlpha: 0,
-                y: 24,
-              },
-              {
-                autoAlpha: 1,
+            elements.forEach((element) => {
+              const isImageWrapper =
+                element.hasAttribute("data-image-wrapper");
 
-                y: 0,
+              const image = isImageWrapper
+                ? element.querySelector<HTMLElement>(
+                    "[data-image]"
+                  )
+                : null;
 
-                duration: 0.65,
-
-                stagger: 0.08,
-
-                ease: "power3.out",
-
+              const timeline = gsap.timeline({
                 scrollTrigger: {
-                  trigger: card,
+                  /*
+                    Trigger each section individually.
+                    Animation begins only as the actual
+                    element enters the viewport.
+                  */
+                  trigger: element,
+                  start: "top 92%",
+                  once: true,
+                  toggleActions:
+                    "play none none none",
+                },
+              });
 
-                  start: "top 88%",
+              timeline.fromTo(
+                element,
+                {
+                  autoAlpha: 0,
+                  y: isImageWrapper ? 34 : 28,
+                  scale: isImageWrapper
+                    ? 0.985
+                    : 1,
+                },
+                {
+                  autoAlpha: 1,
+                  y: 0,
+                  scale: 1,
 
                   /*
-                    ONE TIME ONLY
+                    Deliberately slower than the
+                    previous 0.65 second animation.
                   */
-                  once: true,
-                },
+                  duration: isImageWrapper
+                    ? 1.25
+                    : 1.05,
+
+                  ease: "power3.out",
+                  clearProps:
+                    "transform,opacity,visibility",
+                }
+              );
+
+              /*
+                Soft image zoom.
+                Runs only when the image wrapper itself
+                enters the viewport.
+              */
+              if (image) {
+                timeline.fromTo(
+                  image,
+                  {
+                    scale: 1.055,
+                  },
+                  {
+                    scale: 1,
+
+                    duration: 1.5,
+
+                    ease: "power2.out",
+
+                    clearProps: "transform",
+                  },
+                  0
+                );
               }
-            );
+            });
           });
         }
       );
@@ -447,7 +501,7 @@ export default function NewsAnnouncement() {
         relative
         isolate
         overflow-visible
-        bg-[#fff]
+        bg-[#fff] 
       "
     >
       {newsItems.map((item, index) => {
@@ -471,7 +525,6 @@ export default function NewsAnnouncement() {
             */
 
             style={{
-              top: `${STICKY_TOP}px`,
               zIndex: 20 + index,
             }}
 
@@ -483,6 +536,7 @@ export default function NewsAnnouncement() {
               bg-white
 
               lg:sticky
+              lg:top-[76px]
               lg:min-h-[640px]
 
               xl:min-h-[680px]
@@ -501,14 +555,16 @@ export default function NewsAnnouncement() {
                 w-full
                 max-w-[1400px]
                 grid-cols-1
-                gap-8
-                px-5
-                py-12
+                gap-6
+                px-4
+                py-8
 
+                sm:gap-7
                 sm:px-7
-                sm:py-14
+                sm:py-10
 
                 md:px-10
+                md:py-12
 
                 lg:min-h-[640px]
                 lg:grid-cols-[250px_minmax(0,680px)_70px]
@@ -545,13 +601,13 @@ export default function NewsAnnouncement() {
                     className="
                       block
                       font-primary
-                      text-[54px]
+                      text-[50px]
                       font-semibold
                       leading-[0.9]
                       tracking-[-0.06em]
                       text-[#111111]
 
-                      sm:text-[64px]
+                      sm:text-[58px]
 
                       lg:text-[78px]
 
@@ -564,10 +620,12 @@ export default function NewsAnnouncement() {
                   <div
                     data-category
                     className="
-                      mt-5
+                      mt-4
                       flex
                       items-center
                       gap-[10px]
+
+                      sm:mt-5
 
                       lg:mt-6
                     "
@@ -724,13 +782,14 @@ export default function NewsAnnouncement() {
                   data-mobile-reveal
                   className="
                     relative
-                    mt-5
-                    aspect-[2/1]
+                    mt-4
+                    aspect-[16/10]
                     w-full
                     overflow-hidden
                     bg-[#fff]
 
                     sm:mt-6
+                    sm:aspect-[2/1]
                   "
                 >
                   <div
@@ -766,8 +825,10 @@ export default function NewsAnnouncement() {
                   data-description
                   data-mobile-reveal
                   className="
-                    mt-5
+                    mt-4
                     max-w-[670px]
+
+                    sm:mt-5
                     font-secondary
                     text-[13px]
                     font-normal
@@ -788,7 +849,7 @@ export default function NewsAnnouncement() {
                   data-explore
                   data-mobile-reveal
                   className="
-                    mt-7
+                    mt-6
 
                     sm:mt-8
                   "

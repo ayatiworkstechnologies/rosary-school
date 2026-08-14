@@ -145,18 +145,18 @@ export default function Footer() {
 
         <div className="absolute inset-0">
           <Image
-            src="/images/footer-bg.png"
+            src="/images/notice-bg.png"
             alt=""
             fill
             sizes="100vw"
             className="
               object-cover
               object-center
-              opacity-[0.55]
+              opacity-[0.80]
             "
           />
 
-          <div className="absolute inset-0 bg-white/35" />
+          {/* <div className="absolute inset-0 bg-white/35" /> */}
         </div>
 
         {/* =================================================

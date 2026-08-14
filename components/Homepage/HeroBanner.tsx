@@ -37,12 +37,11 @@ const banners: Banner[] = [
   {
     id: 1,
     indicator: "OUR PURPOSE",
-
     title:
       "EDUCATING FOR KNOWLEDGE, TRUTH\n& HUMAN DEVELOPMENT",
 
-    desktopImage: "/images/banner-01.png",
-    mobileImage: "/images/banner-mobile-01.png",
+    desktopImage: "/images/banner1.png",
+    mobileImage: "/images/banner-mobile-1.png",
 
     imageAlt: "Rosary School students",
 
@@ -63,12 +62,11 @@ const banners: Banner[] = [
   {
     id: 2,
     indicator: "ACADEMIC EXCELLENCE",
-
     title:
       "CELEBRATING OUR\nACHIEVERS",
 
-    desktopImage: "/images/banner-01.png",
-    mobileImage: "/images/banner-mobile-01.png",
+    desktopImage: "/images/banner-2.png",
+    mobileImage: "/images/banner-mobile-2.png",
 
     imageAlt: "Rosary School academic excellence",
 
@@ -89,12 +87,11 @@ const banners: Banner[] = [
   {
     id: 3,
     indicator: "STUDENT LIFE",
-
     title:
       "LEARN. DISCOVER.\nLEAD.",
 
-    desktopImage: "/images/banner-01.png",
-    mobileImage: "/images/banner-mobile-01.png",
+    desktopImage: "/images/banner-3.png",
+    mobileImage: "/images/banner-mobile-3.png",
 
     imageAlt: "Student life at Rosary School",
 
@@ -115,12 +112,11 @@ const banners: Banner[] = [
   {
     id: 4,
     indicator: "OUR HERITAGE",
-
     title:
       "A LEGACY OF EDUCATION\nSINCE 1950",
 
-    desktopImage: "/images/banner-01.png",
-    mobileImage: "/images/banner-mobile-01.png",
+    desktopImage: "/images/banner-4.png",
+    mobileImage: "/images/banner-mobile-4.png",
 
     imageAlt: "Rosary School heritage",
 
@@ -136,12 +132,11 @@ const banners: Banner[] = [
   {
     id: 5,
     indicator: "ADMISSIONS",
-
     title:
       "BEGIN YOUR JOURNEY\nWITH ROSARY",
 
-    desktopImage: "/images/banner-01.png",
-    mobileImage: "/images/banner-mobile-01.png",
+    desktopImage: "/images/banner-5.png",
+    mobileImage: "/images/banner-mobile-5.png",
 
     imageAlt: "Rosary School admissions",
 
@@ -161,17 +156,15 @@ const banners: Banner[] = [
 ];
 
 /* =========================================================
-   SMOOTH ANIMATION
+   ANIMATION
 ========================================================= */
 
-const smoothEase: [number, number, number, number] = [
+const smoothEase = [
   0.22,
   1,
   0.36,
   1,
-];
-
-/* Whole content stagger */
+] as const;
 
 const contentContainer: Variants = {
   hidden: {
@@ -183,7 +176,7 @@ const contentContainer: Variants = {
 
     transition: {
       delayChildren: 0.12,
-      staggerChildren: 0.15,
+      staggerChildren: 0.14,
     },
   },
 
@@ -191,19 +184,17 @@ const contentContainer: Variants = {
     opacity: 0,
 
     transition: {
-      duration: 0.35,
+      duration: 0.3,
       ease: smoothEase,
     },
   },
 };
 
-/* Every text element */
-
 const textReveal: Variants = {
   hidden: {
     opacity: 0,
-    y: 24,
-    filter: "blur(5px)",
+    y: 22,
+    filter: "blur(4px)",
   },
 
   visible: {
@@ -212,18 +203,16 @@ const textReveal: Variants = {
     filter: "blur(0px)",
 
     transition: {
-      duration: 0.9,
+      duration: 0.85,
       ease: smoothEase,
     },
   },
 };
 
-/* Smaller label animation */
-
 const labelReveal: Variants = {
   hidden: {
     opacity: 0,
-    x: -18,
+    x: -16,
   },
 
   visible: {
@@ -231,19 +220,17 @@ const labelReveal: Variants = {
     x: 0,
 
     transition: {
-      duration: 0.8,
+      duration: 0.75,
       ease: smoothEase,
     },
   },
 };
 
-/* Button animation */
-
 const buttonReveal: Variants = {
   hidden: {
     opacity: 0,
-    y: 20,
-    scale: 0.96,
+    y: 16,
+    scale: 0.97,
   },
 
   visible: {
@@ -252,33 +239,16 @@ const buttonReveal: Variants = {
     scale: 1,
 
     transition: {
-      duration: 0.75,
+      duration: 0.7,
       ease: smoothEase,
     },
   },
 };
 
-/* Right indicator list */
-
 const indicatorContainer: Variants = {
   hidden: {
     opacity: 0,
-  },
-
-  visible: {
-    opacity: 1,
-
-    transition: {
-      delayChildren: 0.4,
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const indicatorItem: Variants = {
-  hidden: {
-    opacity: 0,
-    x: 20,
+    x: 18,
   },
 
   visible: {
@@ -286,7 +256,26 @@ const indicatorItem: Variants = {
     x: 0,
 
     transition: {
-      duration: 0.75,
+      duration: 0.8,
+      delayChildren: 0.25,
+      staggerChildren: 0.08,
+      ease: smoothEase,
+    },
+  },
+};
+
+const indicatorItem: Variants = {
+  hidden: {
+    opacity: 0,
+    x: 15,
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+
+    transition: {
+      duration: 0.65,
       ease: smoothEase,
     },
   },
@@ -297,22 +286,26 @@ const indicatorItem: Variants = {
 ========================================================= */
 
 export default function HeroBanner() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] =
+    useState(0);
 
-  const activeBanner = banners[activeIndex];
+  const activeBanner =
+    banners[activeIndex];
 
   /* =======================================================
      AUTO SLIDER
   ======================================================= */
 
   useEffect(() => {
-    const interval = window.setInterval(() => {
-      setActiveIndex((current) =>
-        current === banners.length - 1
-          ? 0
-          : current + 1
-      );
-    }, 6000);
+    const interval =
+      window.setInterval(() => {
+        setActiveIndex(
+          (current) =>
+            current === banners.length - 1
+              ? 0
+              : current + 1
+        );
+      }, 6000);
 
     return () => {
       window.clearInterval(interval);
@@ -324,22 +317,19 @@ export default function HeroBanner() {
       aria-label="Rosary School Highlights"
       className="
         relative
-        h-[680px]
+        h-[600px]
         w-full
         overflow-hidden
         bg-black
-
-        md:h-[650px]
-        lg:h-[680px]
-        xl:h-[720px]
       "
     >
       {/* =====================================================
-          BACKGROUND IMAGES
+          BANNER IMAGES
       ====================================================== */}
 
       {banners.map((banner, index) => {
-        const active = activeIndex === index;
+        const active =
+          activeIndex === index;
 
         return (
           <div
@@ -359,9 +349,21 @@ export default function HeroBanner() {
               }
             `}
           >
-            {/* DESKTOP IMAGE */}
+            {/* =================================================
+                DESKTOP / LAPTOP
 
-            <div className="absolute inset-0 hidden md:block">
+                SOURCE IMAGE:
+                1440 × 600
+            ================================================= */}
+
+            <div
+              className="
+                absolute
+                inset-0
+                hidden
+                md:block
+              "
+            >
               <Image
                 src={banner.desktopImage}
                 alt={banner.imageAlt}
@@ -375,9 +377,20 @@ export default function HeroBanner() {
               />
             </div>
 
-            {/* MOBILE IMAGE */}
+            {/* =================================================
+                MOBILE
 
-            <div className="absolute inset-0 md:hidden">
+                SOURCE IMAGE:
+                420 × 600
+            ================================================= */}
+
+            <div
+              className="
+                absolute
+                inset-0
+                md:hidden
+              "
+            >
               <Image
                 src={banner.mobileImage}
                 alt={banner.imageAlt}
@@ -395,16 +408,70 @@ export default function HeroBanner() {
       })}
 
       {/* =====================================================
-          CONTENT
+          VERY LIGHT BOTTOM GRADIENT
+
+          Only for text readability.
+          Image remains bright.
+      ====================================================== */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          inset-x-0
+          bottom-0
+          z-[2]
+
+          h-[45%]
+
+          bg-gradient-to-t
+          from-black/45
+          via-black/10
+          to-transparent
+
+          md:h-[46%]
+        "
+      />
+
+      {/* =====================================================
+          SUBTLE LEFT GRADIENT
+
+          NOT full black overlay.
+      ====================================================== */}
+
+      <div
+        className="
+          pointer-events-none
+          absolute
+          inset-y-0
+          left-0
+          z-[2]
+
+          w-[68%]
+
+          bg-gradient-to-r
+          from-black/15
+          via-black/[0.04]
+          to-transparent
+
+          lg:w-[52%]
+        "
+      />
+
+      {/* =====================================================
+          CONTENT WRAPPER
       ====================================================== */}
 
       <div
         className="
           relative
           z-10
+
           mx-auto
+
           h-full
           w-full
+
           max-w-[1440px]
         "
       >
@@ -415,48 +482,48 @@ export default function HeroBanner() {
         <AnimatePresence mode="wait">
           <motion.div
             key={activeBanner.id}
-
             variants={contentContainer}
-
             initial="hidden"
             animate="visible"
             exit="exit"
-
             className="
               absolute
-              bottom-[75px]
-              left-[24px]
-              right-[24px]
 
-              sm:left-[34px]
+              bottom-[68px]
+
+              left-[20px]
+              right-[20px]
+
+              z-20
+
+              sm:left-[30px]
               sm:right-auto
 
-              md:bottom-[75px]
-              md:max-w-[520px]
+              md:bottom-[70px]
+              md:max-w-[570px]
 
-              lg:bottom-[82px]
-              lg:left-[42px]
+              lg:left-[45px]
 
-              xl:left-[45px]
+              xl:left-[55px]
             "
           >
             {/* ===============================================
-                MOBILE LABEL
+                MOBILE / TABLET LABEL
             ================================================ */}
 
             <motion.div
               variants={labelReveal}
               className="
                 mb-[12px]
+
                 flex
                 items-center
+
                 gap-[9px]
 
                 lg:hidden
               "
             >
-              {/* BLUE SMALL LINE */}
-
               <motion.span
                 initial={{
                   scaleX: 0,
@@ -470,25 +537,31 @@ export default function HeroBanner() {
                   ease: smoothEase,
                 }}
                 style={{
-                  transformOrigin: "left center",
+                  transformOrigin:
+                    "left center",
                 }}
                 className="
                   h-[2px]
                   w-[30px]
+
                   bg-[#0075FF]
                 "
               />
 
-              {/* LABEL */}
-
               <span
                 className="
                   font-secondary
+
                   text-[11px]
                   font-semibold
+
                   uppercase
+
                   tracking-[1.2px]
+
                   !text-white
+
+                  drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]
                 "
               >
                 {activeBanner.indicator}
@@ -503,40 +576,51 @@ export default function HeroBanner() {
               variants={textReveal}
               className="
                 m-0
+
+                max-w-[600px]
+
                 whitespace-pre-line
 
                 font-secondary
-                text-[27px]
+
+                text-[25px]
                 font-semibold
+
                 uppercase
-                leading-[1.08]
+
+                leading-[1.1]
+
                 tracking-[-0.5px]
 
                 !text-white
 
-                sm:text-[30px]
+                drop-shadow-[0_2px_5px_rgba(0,0,0,0.45)]
 
-                md:text-[27px]
+                sm:text-[29px]
 
-                lg:text-[25px]
+                md:text-[30px]
 
-                xl:text-[28px]
+                lg:text-[30px]
+
+                xl:text-[32px]
               "
             >
               {activeBanner.title}
             </motion.h1>
 
             {/* ===============================================
-                BLUE + WHITE LINE
+                BLUE / WHITE LINE
             ================================================ */}
 
             <motion.div
               variants={textReveal}
               className="
-                mt-[10px]
+                mt-[12px]
+
                 flex
+
                 h-[2px]
-                w-[125px]
+                w-[140px]
               "
             >
               <motion.div
@@ -548,11 +632,12 @@ export default function HeroBanner() {
                 }}
                 transition={{
                   duration: 1,
-                  delay: 0.5,
+                  delay: 0.45,
                   ease: smoothEase,
                 }}
                 style={{
-                  transformOrigin: "left center",
+                  transformOrigin:
+                    "left center",
                 }}
                 className="
                   flex
@@ -563,7 +648,8 @@ export default function HeroBanner() {
                 <span
                   className="
                     h-full
-                    w-[55px]
+                    w-[60px]
+
                     bg-[#0075FF]
                   "
                 />
@@ -572,15 +658,12 @@ export default function HeroBanner() {
                   className="
                     h-full
                     flex-1
-                    bg-white/60
+
+                    bg-white/80
                   "
                 />
               </motion.div>
             </motion.div>
-
-            {/* =================================================
-                NO PARAGRAPH
-            ================================================= */}
 
             {/* ===============================================
                 BUTTONS
@@ -589,98 +672,108 @@ export default function HeroBanner() {
             <motion.div
               variants={contentContainer}
               className="
-                mt-[22px]
+                mt-[24px]
+
                 flex
                 flex-wrap
+
                 items-center
-                gap-[12px]
+
+                gap-[10px]
+
+                sm:gap-[12px]
               "
             >
-              {activeBanner.buttons.map((button) => (
-                <motion.div
-                  key={button.label}
-                  variants={buttonReveal}
-
-                  whileHover={{
-                    y: -3,
-                    scale: 1.02,
-                  }}
-
-                  whileTap={{
-                    scale: 0.97,
-                  }}
-
-                  transition={{
-                    duration: 0.3,
-                    ease: smoothEase,
-                  }}
-                >
-                  <Link
-                    href={button.href}
-                    className={
-                      button.variant === "primary"
-                        ? `
-                          flex
-                          h-[40px]
-                          min-w-[145px]
-                          items-center
-                          justify-center
-
-                          bg-[#0075FF]
-                          rounded-md
-
-                          px-[20px]
-
-                          font-secondary
-                          text-[12px]
-                          font-semibold
-
-                          !text-white
-
-                          transition-all
-                          duration-300
-
-                          hover:bg-[#0067E5]
-                          hover:!text-white
-
-                          sm:h-[42px]
-                        `
-                        : `
-                          flex
-                          h-[40px]
-                          min-w-[125px]
-                          items-center
-                          justify-center
-
-                          border
-                          border-white
-
-                          bg-transparent
-
-                          px-[20px]
-
-                          font-secondary
-                          rounded-md
-                          text-[12px]
-                          font-semibold
-
-                          !text-white
-
-                          transition-all
-                          duration-300
-
-                          hover:border-[#0075FF]
-                          hover:bg-[#0075FF]
-                          hover:!text-white
-
-                          sm:h-[42px]
-                        `
-                    }
+              {activeBanner.buttons.map(
+                (button) => (
+                  <motion.div
+                    key={button.label}
+                    variants={buttonReveal}
+                    whileHover={{
+                      y: -3,
+                    }}
+                    whileTap={{
+                      scale: 0.97,
+                    }}
                   >
-                    {button.label}
-                  </Link>
-                </motion.div>
-              ))}
+                    <Link
+                      href={button.href}
+                      className={
+                        button.variant ===
+                        "primary"
+                          ? `
+                            flex
+
+                            h-[42px]
+                            min-w-[145px]
+
+                            items-center
+                            justify-center
+
+                            rounded-[8px]
+
+                            bg-[#0075FF]
+
+                            px-[20px]
+
+                            font-secondary
+
+                            text-[11px]
+                            font-semibold
+
+                            !text-white
+
+                            shadow-[0_8px_22px_rgba(0,117,255,0.24)]
+
+                            transition-all
+                            duration-300
+
+                            hover:bg-[#0067E5]
+
+                            sm:text-[12px]
+                          `
+                          : `
+                            flex
+
+                            h-[42px]
+                            min-w-[130px]
+
+                            items-center
+                            justify-center
+
+                            rounded-[8px]
+
+                            border
+                            border-white/90
+
+                            bg-black/5
+
+                            px-[20px]
+
+                            font-secondary
+
+                            text-[11px]
+                            font-semibold
+
+                            !text-white
+
+                            backdrop-blur-[2px]
+
+                            transition-all
+                            duration-300
+
+                            hover:border-[#0075FF]
+                            hover:bg-[#0075FF]
+
+                            sm:text-[12px]
+                          `
+                      }
+                    >
+                      {button.label}
+                    </Link>
+                  </motion.div>
+                )
+              )}
             </motion.div>
           </motion.div>
         </AnimatePresence>
@@ -693,182 +786,225 @@ export default function HeroBanner() {
           variants={indicatorContainer}
           initial="hidden"
           whileInView="visible"
-
           viewport={{
             once: true,
             amount: 0.3,
           }}
-
           className="
             absolute
+
             right-[28px]
             top-1/2
 
+            z-20
+
             hidden
-            w-[230px]
-            -translate-y-[10%]
+
+            w-[245px]
+
+            -translate-y-1/2
+
+            rounded-[12px]
+
+            border
+            border-white/15
+
+            bg-black/[0.10]
+
+            px-[16px]
+            py-[18px]
+
+            backdrop-blur-[3px]
 
             lg:block
 
-            xl:right-[36px]
+            xl:right-[42px]
           "
         >
           <div
             className="
               flex
               flex-col
-              gap-[22px]
+
+              gap-[20px]
             "
           >
-            {banners.map((banner, index) => {
-              const active =
-                activeIndex === index;
+            {banners.map(
+              (
+                banner,
+                index
+              ) => {
+                const active =
+                  activeIndex ===
+                  index;
 
-              return (
-                <motion.div
-                  key={banner.id}
-                  variants={indicatorItem}
-                >
-                  <motion.button
-                    type="button"
-                    aria-label={`Show ${banner.indicator}`}
-
-                    onClick={() =>
-                      setActiveIndex(index)
+                return (
+                  <motion.div
+                    key={banner.id}
+                    variants={
+                      indicatorItem
                     }
-
-                    whileHover={{
-                      x: -3,
-                    }}
-
-                    transition={{
-                      duration: 0.3,
-                      ease: smoothEase,
-                    }}
-
-                    className="
-                      group
-                      flex
-                      w-full
-                      items-center
-                      justify-between
-                      gap-[15px]
-
-                      border-0
-                      bg-transparent
-                      p-0
-
-                      text-left
-                    "
                   >
-                    {/* INDICATOR LABEL */}
-
-                    <span
-                      className={`
-                        relative
-                        whitespace-nowrap
-
-                        font-secondary
-                        text-[12px]
-                        font-medium
-                        uppercase
-
-                        transition-colors
-                        duration-300
-
-                        ${
-                          active
-                            ? "!text-white"
-                            : "!text-white/60 group-hover:!text-white"
-                        }
-                      `}
-                    >
-                      {banner.indicator}
-
-                      {/* BLUE UNDERLINE */}
-
-                      <span
-                        className={`
-                          absolute
-                          -bottom-[5px]
-                          left-0
-
-                          h-[1.5px]
-                          bg-[#0075FF]
-
-                          transition-all
-                          duration-500
-
-                          ${
-                            active
-                              ? "w-full"
-                              : "w-0"
-                          }
-                        `}
-                      />
-                    </span>
-
-                    {/* DOT */}
-
-                    <span
+                    <motion.button
+                      type="button"
+                      aria-label={`Show ${banner.indicator}`}
+                      onClick={() =>
+                        setActiveIndex(index)
+                      }
+                      whileHover={{
+                        x: -3,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: smoothEase,
+                      }}
                       className="
-                        relative
+                        group
 
                         flex
-                        h-[10px]
-                        w-[32px]
+                        w-full
 
                         items-center
-                        justify-end
+                        justify-between
+
+                        gap-[14px]
+
+                        border-0
+
+                        bg-transparent
+
+                        p-0
+
+                        text-left
                       "
                     >
-                      {/* ACTIVE LINE */}
-
-                      <span
-                        className={`
-                          absolute
-                          right-[4px]
-
-                          h-[1.5px]
-                          bg-[#0075FF]
-
-                          transition-all
-                          duration-500
-
-                          ${
-                            active
-                              ? "w-[23px] opacity-100"
-                              : "w-0 opacity-0"
-                          }
-                        `}
-                      />
-
-                      {/* DOT */}
+                      {/* LABEL */}
 
                       <span
                         className={`
                           relative
-                          z-10
 
-                          h-[5px]
-                          w-[5px]
-                          rounded-full
+                          whitespace-nowrap
+
+                          font-secondary
+
+                          text-[11px]
+                          font-medium
+
+                          uppercase
+
+                          tracking-[0.02em]
+
+                          drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]
 
                           transition-all
                           duration-500
 
                           ${
                             active
-                              ? "bg-[#0075FF]"
-                              : "bg-white/45"
+                              ? "!text-white"
+                              : "!text-white/70 group-hover:!text-white"
                           }
                         `}
-                      />
-                    </span>
-                  </motion.button>
-                </motion.div>
-              );
-            })}
+                      >
+                        {banner.indicator}
+
+                        <span
+                          className={`
+                            absolute
+
+                            -bottom-[6px]
+                            left-0
+
+                            h-[1.5px]
+
+                            bg-[#0075FF]
+
+                            transition-all
+                            duration-500
+
+                            ${
+                              active
+                                ? "w-full"
+                                : "w-0"
+                            }
+                          `}
+                        />
+                      </span>
+
+                      {/* RIGHT INDICATOR */}
+
+                      <span
+                        className="
+                          relative
+
+                          flex
+
+                          h-[12px]
+                          w-[38px]
+
+                          shrink-0
+
+                          items-center
+                          justify-end
+                        "
+                      >
+                        <span
+                          className={`
+                            absolute
+
+                            right-[5px]
+
+                            h-[1.5px]
+
+                            bg-[#0075FF]
+
+                            transition-all
+                            duration-500
+
+                            ${
+                              active
+                                ? "w-[27px] opacity-100"
+                                : "w-0 opacity-0"
+                            }
+                          `}
+                        />
+
+                        <span
+                          className={`
+                            relative
+                            z-10
+
+                            rounded-full
+
+                            transition-all
+                            duration-500
+
+                            ${
+                              active
+                                ? `
+                                  h-[7px]
+                                  w-[7px]
+
+                                  bg-[#0075FF]
+
+                                  shadow-[0_0_8px_rgba(0,117,255,0.7)]
+                                `
+                                : `
+                                  h-[5px]
+                                  w-[5px]
+
+                                  bg-white/75
+                                `
+                            }
+                          `}
+                        />
+                      </span>
+                    </motion.button>
+                  </motion.div>
+                );
+              }
+            )}
           </div>
         </motion.div>
 
@@ -879,132 +1015,149 @@ export default function HeroBanner() {
         <motion.div
           initial={{
             opacity: 0,
-            y: 15,
+            y: 14,
           }}
-
           whileInView={{
             opacity: 1,
             y: 0,
           }}
-
           viewport={{
             once: true,
           }}
-
           transition={{
-            duration: 0.9,
-            delay: 0.5,
+            duration: 0.85,
+            delay: 0.45,
             ease: smoothEase,
           }}
-
           className="
             absolute
-            bottom-[25px]
-            left-[24px]
-            right-[24px]
+
+            bottom-[20px]
+
+            left-[20px]
+            right-[20px]
+
+            z-20
 
             flex
+
             items-center
+
             gap-[8px]
 
             lg:hidden
+
+            sm:left-[30px]
+            sm:right-[30px]
           "
         >
-          {banners.map((banner, index) => {
-            const active =
-              activeIndex === index;
+          {banners.map(
+            (
+              banner,
+              index
+            ) => {
+              const active =
+                activeIndex ===
+                index;
 
-            return (
-              <motion.button
-                key={banner.id}
-                type="button"
-                aria-label={`Show banner ${index + 1}`}
+              return (
+                <motion.button
+                  key={banner.id}
+                  type="button"
+                  aria-label={`Show banner ${
+                    index + 1
+                  }`}
+                  onClick={() =>
+                    setActiveIndex(index)
+                  }
+                  whileTap={{
+                    scale: 0.9,
+                  }}
+                  className="
+                    flex
 
-                onClick={() =>
-                  setActiveIndex(index)
-                }
+                    h-[14px]
 
-                whileTap={{
-                  scale: 0.9,
-                }}
+                    items-center
+                  "
+                >
+                  <span
+                    className={`
+                      block
 
-                className="
-                  flex
-                  h-[12px]
-                  items-center
-                "
-              >
-                <span
-                  className={`
-                    block
-                    h-[2px]
+                      h-[2px]
 
-                    transition-all
-                    duration-500
+                      rounded-full
 
-                    ${
-                      active
-                        ? "w-[36px] bg-[#0075FF]"
-                        : "w-[13px] bg-white/50"
-                    }
-                  `}
-                />
-              </motion.button>
-            );
-          })}
+                      transition-all
+                      duration-500
 
-          {/* MOBILE COUNTER */}
+                      ${
+                        active
+                          ? `
+                            w-[36px]
+                            bg-[#0075FF]
+                          `
+                          : `
+                            w-[14px]
+                            bg-white/80
+                          `
+                      }
+                    `}
+                  />
+                </motion.button>
+              );
+            }
+          )}
+
+          {/* COUNTER */}
 
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIndex}
-
               initial={{
                 opacity: 0,
-                y: 7,
+                y: 6,
               }}
-
               animate={{
                 opacity: 1,
                 y: 0,
               }}
-
               exit={{
                 opacity: 0,
-                y: -7,
+                y: -6,
               }}
-
               transition={{
-                duration: 0.5,
+                duration: 0.4,
                 ease: smoothEase,
               }}
-
               className="
                 ml-auto
 
                 font-secondary
+
                 text-[11px]
                 font-semibold
 
-                !text-white/60
+                drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]
+
+                !text-white/65
               "
             >
               <span className="!text-white">
-                {String(activeIndex + 1).padStart(
-                  2,
-                  "0"
-                )}
+                {String(
+                  activeIndex + 1
+                ).padStart(2, "0")}
               </span>
 
-              <span className="mx-[5px] !text-white/40">
+              <span className="mx-[5px] !text-white/45">
                 /
               </span>
 
               <span>
-                {String(banners.length).padStart(
-                  2,
-                  "0"
-                )}
+                {String(
+                  banners.length
+                ).padStart(2, "0")}
               </span>
             </motion.div>
           </AnimatePresence>

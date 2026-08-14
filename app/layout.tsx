@@ -3,6 +3,7 @@ import { Archivo, Urbanist } from "next/font/google";
 import "./globals.css";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import ScrollToTop from "../components/layout/ScrollToTop";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body>
         <Header />
         {children}
+        <ScrollToTop />
         <Footer />
         </body>
     </html>

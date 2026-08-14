@@ -488,7 +488,7 @@ export default function PrincipalMessage() {
               "
             >
               <Image
-                src="/images/principal.png"
+                src="/images/principal-1.png"
                 alt="Principal of Rosary Matriculation Higher Secondary School"
                 fill
                 sizes="

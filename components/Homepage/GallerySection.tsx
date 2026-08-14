@@ -23,32 +23,32 @@ import {
 const galleryImages = [
   {
     id: 1,
-    image: "/images/gallery-01.png",
+    image: "/images/gallery-1.png",
     alt: "Rosary School campus",
   },
   {
     id: 2,
-    image: "/images/gallery-01.png",
+    image: "/images/gallery-2.png",
     alt: "Rosary School student activity",
   },
   {
     id: 3,
-    image: "/images/gallery-01.png",
+    image: "/images/gallery-3.png",
     alt: "Students at Rosary School",
   },
   {
     id: 4,
-    image: "/images/gallery-01.png",
+    image: "/images/gallery-4.png",
     alt: "Rosary School classroom activity",
   },
   {
     id: 5,
-    image: "/images/gallery-01.png",
+    image: "/images/gallery-5.png",
     alt: "Students learning at Rosary School",
   },
   {
     id: 6,
-    image: "/images/gallery-01.png",
+    image: "/images/gallery-6.png",
     alt: "Rosary School building",
   },
 ];
@@ -140,12 +140,12 @@ export default function GallerySection() {
           pointer-events-none
           absolute
           inset-0
-          opacity-[0.45]
+          opacity-[0.95]
         "
         style={{
           backgroundImage: `
-            linear-gradient(rgba(17,17,17,0.055) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(17,17,17,0.055) 1px, transparent 1px)
+            linear-gradient(rgba(17,17,17,0.065) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(17,17,17,0.065) 1px, transparent 1px)
           `,
           backgroundSize: "32px 32px",
         }}
@@ -432,7 +432,7 @@ export default function GallerySection() {
               <div
                 className="
                   grid
-                  grid-cols-2
+                  grid-cols-2 
 
                   gap-[20px]
                 "
@@ -443,7 +443,7 @@ export default function GallerySection() {
                   direction="bottom"
                   className="
                     aspect-[1.48/1]
-                    w-full
+                    w-full  
                   "
                 />
 
@@ -644,6 +644,7 @@ export default function GallerySection() {
                 w-full
 
                 overflow-hidden
+                rounded-md
 
                 bg-[#eeeeee]
 
@@ -939,6 +940,7 @@ function GalleryImage({
         relative
 
         overflow-hidden
+        rounded-md
 
         bg-[#eeeeee]
 
@@ -1009,6 +1011,7 @@ function TabletGalleryImage({
         w-full
 
         overflow-hidden
+        rounded-md
 
         bg-[#eeeeee]
 
