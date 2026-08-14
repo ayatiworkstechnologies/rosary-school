@@ -400,7 +400,7 @@ export default function GallerySection() {
               grid
               grid-cols-2
 
-              gap-[26px]
+              gap-[20px]
             "
           >
             {/* =================================================
@@ -412,7 +412,7 @@ export default function GallerySection() {
                 flex
                 flex-col
 
-                gap-[24px]
+                gap-[20px]
               "
             >
               {/* LARGE */}
@@ -434,7 +434,7 @@ export default function GallerySection() {
                   grid
                   grid-cols-2
 
-                  gap-[22px]
+                  gap-[20px]
                 "
               >
                 <GalleryImage
@@ -468,7 +468,7 @@ export default function GallerySection() {
                 flex
                 flex-col
 
-                gap-[24px]
+                gap-[20px]
               "
             >
               {/* TWO SMALL */}
@@ -478,7 +478,7 @@ export default function GallerySection() {
                   grid
                   grid-cols-2
 
-                  gap-[22px]
+                  gap-[20px]
                 "
               >
                 <GalleryImage
@@ -774,7 +774,7 @@ export default function GallerySection() {
             flex
             justify-center
 
-            lg:mt-11
+            lg:mt-11 
           "
         >
           <Link
@@ -793,7 +793,7 @@ export default function GallerySection() {
               items-center
               justify-center
 
-              bg-[#0075FF]
+              bg-[#0075FF] rounded-md
 
               px-8
 

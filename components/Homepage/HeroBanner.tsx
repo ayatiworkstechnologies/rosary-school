@@ -3,6 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  AnimatePresence,
+  motion,
+  Variants,
+} from "framer-motion";
 
 /* =========================================================
    TYPES
@@ -156,6 +161,138 @@ const banners: Banner[] = [
 ];
 
 /* =========================================================
+   SMOOTH ANIMATION
+========================================================= */
+
+const smoothEase: [number, number, number, number] = [
+  0.22,
+  1,
+  0.36,
+  1,
+];
+
+/* Whole content stagger */
+
+const contentContainer: Variants = {
+  hidden: {
+    opacity: 0,
+  },
+
+  visible: {
+    opacity: 1,
+
+    transition: {
+      delayChildren: 0.12,
+      staggerChildren: 0.15,
+    },
+  },
+
+  exit: {
+    opacity: 0,
+
+    transition: {
+      duration: 0.35,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* Every text element */
+
+const textReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    filter: "blur(5px)",
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+
+    transition: {
+      duration: 0.9,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* Smaller label animation */
+
+const labelReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    x: -18,
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+
+    transition: {
+      duration: 0.8,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* Button animation */
+
+const buttonReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+    scale: 0.96,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+
+    transition: {
+      duration: 0.75,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* Right indicator list */
+
+const indicatorContainer: Variants = {
+  hidden: {
+    opacity: 0,
+  },
+
+  visible: {
+    opacity: 1,
+
+    transition: {
+      delayChildren: 0.4,
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const indicatorItem: Variants = {
+  hidden: {
+    opacity: 0,
+    x: 20,
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+
+    transition: {
+      duration: 0.75,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
    COMPONENT
 ========================================================= */
 
@@ -275,211 +412,293 @@ export default function HeroBanner() {
             LEFT CONTENT
         ================================================= */}
 
-        <div
-          key={activeBanner.id}
-          className="
-            absolute
-            bottom-[75px]
-            left-[24px]
-            right-[24px]
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeBanner.id}
 
-            sm:left-[34px]
-            sm:right-auto
+            variants={contentContainer}
 
-            md:bottom-[75px]
-            md:max-w-[520px]
+            initial="hidden"
+            animate="visible"
+            exit="exit"
 
-            lg:bottom-[82px]
-            lg:left-[42px]
-
-            xl:left-[45px]
-          "
-        >
-          {/* ===============================================
-              MOBILE LABEL
-          ================================================ */}
-
-          <div
             className="
-              mb-[12px]
-              flex
-              items-center
-              gap-[9px]
+              absolute
+              bottom-[75px]
+              left-[24px]
+              right-[24px]
 
-              lg:hidden
+              sm:left-[34px]
+              sm:right-auto
+
+              md:bottom-[75px]
+              md:max-w-[520px]
+
+              lg:bottom-[82px]
+              lg:left-[42px]
+
+              xl:left-[45px]
             "
           >
-            <span
-              className="
-                h-[2px]
-                w-[30px]
-                bg-[#0075FF]
-              "
-            />
+            {/* ===============================================
+                MOBILE LABEL
+            ================================================ */}
 
-            <span
+            <motion.div
+              variants={labelReveal}
               className="
-                font-secondary
-                text-[11px]
-                font-semibold
-                uppercase
-                tracking-[1.2px]
-                !text-white
+                mb-[12px]
+                flex
+                items-center
+                gap-[9px]
+
+                lg:hidden
               "
             >
-              {activeBanner.indicator}
-            </span>
-          </div>
+              {/* BLUE SMALL LINE */}
 
-          {/* ===============================================
-              TITLE
-          ================================================ */}
+              <motion.span
+                initial={{
+                  scaleX: 0,
+                }}
+                animate={{
+                  scaleX: 1,
+                }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.15,
+                  ease: smoothEase,
+                }}
+                style={{
+                  transformOrigin: "left center",
+                }}
+                className="
+                  h-[2px]
+                  w-[30px]
+                  bg-[#0075FF]
+                "
+              />
 
-          <h1
-            className="
-              m-0
-              whitespace-pre-line
+              {/* LABEL */}
 
-              font-secondary
-              text-[27px]
-              font-semibold
-              uppercase
-              leading-[1.08]
-              tracking-[-0.5px]
-
-              !text-white
-
-              sm:text-[30px]
-
-              md:text-[27px]
-
-              lg:text-[25px]
-
-              xl:text-[28px]
-            "
-          >
-            {activeBanner.title}
-          </h1>
-
-          {/* ===============================================
-              BLUE + WHITE LINE
-          ================================================ */}
-
-          <div
-            className="
-              mt-[10px]
-              flex
-              h-[2px]
-              w-[125px]
-            "
-          >
-            <span
-              className="
-                h-full
-                w-[55px]
-                bg-[#0075FF]
-              "
-            />
-
-            <span
-              className="
-                h-full
-                flex-1
-                bg-white/60
-              "
-            />
-          </div>
-
-          {/* =================================================
-              NO PARAGRAPH
-          ================================================= */}
-
-          {/* ===============================================
-              BUTTONS
-          ================================================ */}
-
-          <div
-            className="
-              mt-[22px]
-              flex
-              flex-wrap
-              items-center
-              gap-[12px]
-            "
-          >
-            {activeBanner.buttons.map((button) => (
-              <Link
-                key={button.label}
-                href={button.href}
-                className={
-                  button.variant === "primary"
-                    ? `
-                      flex
-                      h-[40px]
-                      min-w-[145px]
-                      items-center
-                      justify-center
-
-                      bg-[#0075FF]
-
-                      px-[20px]
-
-                      font-secondary
-                      text-[12px]
-                      font-semibold
-
-                      !text-white
-
-                      transition-all
-                      duration-300
-
-                      hover:bg-[#0067E5]
-                      hover:!text-white
-
-                      sm:h-[42px]
-                    `
-                    : `
-                      flex
-                      h-[40px]
-                      min-w-[125px]
-                      items-center
-                      justify-center
-
-                      border
-                      border-white
-
-                      bg-transparent
-
-                      px-[20px]
-
-                      font-secondary
-                      text-[12px]
-                      font-semibold
-
-                      !text-white
-
-                      transition-all
-                      duration-300
-
-                      hover:border-[#0075FF]
-                      hover:bg-[#0075FF]
-                      hover:!text-white
-
-                      sm:h-[42px]
-                    `
-                }
+              <span
+                className="
+                  font-secondary
+                  text-[11px]
+                  font-semibold
+                  uppercase
+                  tracking-[1.2px]
+                  !text-white
+                "
               >
-                {button.label}
-              </Link>
-            ))}
-          </div>
-        </div>
+                {activeBanner.indicator}
+              </span>
+            </motion.div>
+
+            {/* ===============================================
+                TITLE
+            ================================================ */}
+
+            <motion.h1
+              variants={textReveal}
+              className="
+                m-0
+                whitespace-pre-line
+
+                font-secondary
+                text-[27px]
+                font-semibold
+                uppercase
+                leading-[1.08]
+                tracking-[-0.5px]
+
+                !text-white
+
+                sm:text-[30px]
+
+                md:text-[27px]
+
+                lg:text-[25px]
+
+                xl:text-[28px]
+              "
+            >
+              {activeBanner.title}
+            </motion.h1>
+
+            {/* ===============================================
+                BLUE + WHITE LINE
+            ================================================ */}
+
+            <motion.div
+              variants={textReveal}
+              className="
+                mt-[10px]
+                flex
+                h-[2px]
+                w-[125px]
+              "
+            >
+              <motion.div
+                initial={{
+                  scaleX: 0,
+                }}
+                animate={{
+                  scaleX: 1,
+                }}
+                transition={{
+                  duration: 1,
+                  delay: 0.5,
+                  ease: smoothEase,
+                }}
+                style={{
+                  transformOrigin: "left center",
+                }}
+                className="
+                  flex
+                  h-full
+                  w-full
+                "
+              >
+                <span
+                  className="
+                    h-full
+                    w-[55px]
+                    bg-[#0075FF]
+                  "
+                />
+
+                <span
+                  className="
+                    h-full
+                    flex-1
+                    bg-white/60
+                  "
+                />
+              </motion.div>
+            </motion.div>
+
+            {/* =================================================
+                NO PARAGRAPH
+            ================================================= */}
+
+            {/* ===============================================
+                BUTTONS
+            ================================================ */}
+
+            <motion.div
+              variants={contentContainer}
+              className="
+                mt-[22px]
+                flex
+                flex-wrap
+                items-center
+                gap-[12px]
+              "
+            >
+              {activeBanner.buttons.map((button) => (
+                <motion.div
+                  key={button.label}
+                  variants={buttonReveal}
+
+                  whileHover={{
+                    y: -3,
+                    scale: 1.02,
+                  }}
+
+                  whileTap={{
+                    scale: 0.97,
+                  }}
+
+                  transition={{
+                    duration: 0.3,
+                    ease: smoothEase,
+                  }}
+                >
+                  <Link
+                    href={button.href}
+                    className={
+                      button.variant === "primary"
+                        ? `
+                          flex
+                          h-[40px]
+                          min-w-[145px]
+                          items-center
+                          justify-center
+
+                          bg-[#0075FF]
+                          rounded-md
+
+                          px-[20px]
+
+                          font-secondary
+                          text-[12px]
+                          font-semibold
+
+                          !text-white
+
+                          transition-all
+                          duration-300
+
+                          hover:bg-[#0067E5]
+                          hover:!text-white
+
+                          sm:h-[42px]
+                        `
+                        : `
+                          flex
+                          h-[40px]
+                          min-w-[125px]
+                          items-center
+                          justify-center
+
+                          border
+                          border-white
+
+                          bg-transparent
+
+                          px-[20px]
+
+                          font-secondary
+                          rounded-md
+                          text-[12px]
+                          font-semibold
+
+                          !text-white
+
+                          transition-all
+                          duration-300
+
+                          hover:border-[#0075FF]
+                          hover:bg-[#0075FF]
+                          hover:!text-white
+
+                          sm:h-[42px]
+                        `
+                    }
+                  >
+                    {button.label}
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
 
         {/* =================================================
             RIGHT DESKTOP INDICATORS
         ================================================= */}
 
-        <div
+        <motion.div
+          variants={indicatorContainer}
+          initial="hidden"
+          whileInView="visible"
+
+          viewport={{
+            once: true,
+            amount: 0.3,
+          }}
+
           className="
             absolute
             right-[28px]
@@ -506,140 +725,178 @@ export default function HeroBanner() {
                 activeIndex === index;
 
               return (
-                <button
+                <motion.div
                   key={banner.id}
-                  type="button"
-                  aria-label={`Show ${banner.indicator}`}
-                  onClick={() =>
-                    setActiveIndex(index)
-                  }
-                  className="
-                    group
-                    flex
-                    w-full
-                    items-center
-                    justify-between
-                    gap-[15px]
-
-                    border-0
-                    bg-transparent
-                    p-0
-
-                    text-left
-                  "
+                  variants={indicatorItem}
                 >
-                  {/* INDICATOR LABEL */}
+                  <motion.button
+                    type="button"
+                    aria-label={`Show ${banner.indicator}`}
 
-                  <span
-                    className={`
-                      relative
-                      whitespace-nowrap
+                    onClick={() =>
+                      setActiveIndex(index)
+                    }
 
-                      font-secondary
-                      text-[12px]
-                      font-medium
-                      uppercase
+                    whileHover={{
+                      x: -3,
+                    }}
 
-                      transition-colors
-                      duration-300
+                    transition={{
+                      duration: 0.3,
+                      ease: smoothEase,
+                    }}
 
-                      ${
-                        active
-                          ? "!text-white"
-                          : "!text-white/60 group-hover:!text-white"
-                      }
-                    `}
-                  >
-                    {banner.indicator}
-
-                    {/* BLUE UNDERLINE */}
-
-                    <span
-                      className={`
-                        absolute
-                        -bottom-[5px]
-                        left-0
-
-                        h-[1.5px]
-                        bg-[#0075FF]
-
-                        transition-all
-                        duration-500
-
-                        ${
-                          active
-                            ? "w-full"
-                            : "w-0"
-                        }
-                      `}
-                    />
-                  </span>
-
-                  {/* DOT */}
-
-                  <span
                     className="
-                      relative
-
+                      group
                       flex
-                      h-[10px]
-                      w-[32px]
-
+                      w-full
                       items-center
-                      justify-end
+                      justify-between
+                      gap-[15px]
+
+                      border-0
+                      bg-transparent
+                      p-0
+
+                      text-left
                     "
                   >
-                    {/* ACTIVE LINE */}
-
-                    <span
-                      className={`
-                        absolute
-                        right-[4px]
-
-                        h-[1.5px]
-                        bg-[#0075FF]
-
-                        transition-all
-                        duration-500
-
-                        ${
-                          active
-                            ? "w-[23px] opacity-100"
-                            : "w-0 opacity-0"
-                        }
-                      `}
-                    />
-
-                    {/* DOT */}
+                    {/* INDICATOR LABEL */}
 
                     <span
                       className={`
                         relative
-                        z-10
+                        whitespace-nowrap
 
-                        h-[5px]
-                        w-[5px]
-                        rounded-full
+                        font-secondary
+                        text-[12px]
+                        font-medium
+                        uppercase
+
+                        transition-colors
+                        duration-300
 
                         ${
                           active
-                            ? "bg-[#0075FF]"
-                            : "bg-white/45"
+                            ? "!text-white"
+                            : "!text-white/60 group-hover:!text-white"
                         }
                       `}
-                    />
-                  </span>
-                </button>
+                    >
+                      {banner.indicator}
+
+                      {/* BLUE UNDERLINE */}
+
+                      <span
+                        className={`
+                          absolute
+                          -bottom-[5px]
+                          left-0
+
+                          h-[1.5px]
+                          bg-[#0075FF]
+
+                          transition-all
+                          duration-500
+
+                          ${
+                            active
+                              ? "w-full"
+                              : "w-0"
+                          }
+                        `}
+                      />
+                    </span>
+
+                    {/* DOT */}
+
+                    <span
+                      className="
+                        relative
+
+                        flex
+                        h-[10px]
+                        w-[32px]
+
+                        items-center
+                        justify-end
+                      "
+                    >
+                      {/* ACTIVE LINE */}
+
+                      <span
+                        className={`
+                          absolute
+                          right-[4px]
+
+                          h-[1.5px]
+                          bg-[#0075FF]
+
+                          transition-all
+                          duration-500
+
+                          ${
+                            active
+                              ? "w-[23px] opacity-100"
+                              : "w-0 opacity-0"
+                          }
+                        `}
+                      />
+
+                      {/* DOT */}
+
+                      <span
+                        className={`
+                          relative
+                          z-10
+
+                          h-[5px]
+                          w-[5px]
+                          rounded-full
+
+                          transition-all
+                          duration-500
+
+                          ${
+                            active
+                              ? "bg-[#0075FF]"
+                              : "bg-white/45"
+                          }
+                        `}
+                      />
+                    </span>
+                  </motion.button>
+                </motion.div>
               );
             })}
           </div>
-        </div>
+        </motion.div>
 
         {/* =================================================
             MOBILE INDICATORS
         ================================================= */}
 
-        <div
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 15,
+          }}
+
+          whileInView={{
+            opacity: 1,
+            y: 0,
+          }}
+
+          viewport={{
+            once: true,
+          }}
+
+          transition={{
+            duration: 0.9,
+            delay: 0.5,
+            ease: smoothEase,
+          }}
+
           className="
             absolute
             bottom-[25px]
@@ -658,13 +915,19 @@ export default function HeroBanner() {
               activeIndex === index;
 
             return (
-              <button
+              <motion.button
                 key={banner.id}
                 type="button"
                 aria-label={`Show banner ${index + 1}`}
+
                 onClick={() =>
                   setActiveIndex(index)
                 }
+
+                whileTap={{
+                  scale: 0.9,
+                }}
+
                 className="
                   flex
                   h-[12px]
@@ -686,36 +949,66 @@ export default function HeroBanner() {
                     }
                   `}
                 />
-              </button>
+              </motion.button>
             );
           })}
 
           {/* MOBILE COUNTER */}
 
-          <div
-            className="
-              ml-auto
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeIndex}
 
-              font-secondary
-              text-[11px]
-              font-semibold
+              initial={{
+                opacity: 0,
+                y: 7,
+              }}
 
-              !text-white/60
-            "
-          >
-            <span className="!text-white">
-              {String(activeIndex + 1).padStart(2, "0")}
-            </span>
+              animate={{
+                opacity: 1,
+                y: 0,
+              }}
 
-            <span className="mx-[5px] !text-white/40">
-              /
-            </span>
+              exit={{
+                opacity: 0,
+                y: -7,
+              }}
 
-            <span>
-              {String(banners.length).padStart(2, "0")}
-            </span>
-          </div>
-        </div>
+              transition={{
+                duration: 0.5,
+                ease: smoothEase,
+              }}
+
+              className="
+                ml-auto
+
+                font-secondary
+                text-[11px]
+                font-semibold
+
+                !text-white/60
+              "
+            >
+              <span className="!text-white">
+                {String(activeIndex + 1).padStart(
+                  2,
+                  "0"
+                )}
+              </span>
+
+              <span className="mx-[5px] !text-white/40">
+                /
+              </span>
+
+              <span>
+                {String(banners.length).padStart(
+                  2,
+                  "0"
+                )}
+              </span>
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
       </div>
     </section>
   );

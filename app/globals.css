@@ -132,6 +132,7 @@ input,
 textarea,
 select {
   font: inherit;
+  border-radius: 10px ;
 }
 
 
@@ -199,3 +200,4 @@ video {
     transform: translateY(0);
   }
 }
+

@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   AnimatePresence,
   motion,
+  Variants,
 } from "framer-motion";
 import {
   useEffect,
@@ -13,7 +14,6 @@ import {
 
 /* =========================================================
    NOTICE DATA
-   All content is now in ONE ARRAY
 ========================================================= */
 
 const notices = [
@@ -72,6 +72,244 @@ const notices = [
     href: "#",
   },
 ];
+
+/* =========================================================
+   SMOOTH ANIMATION SYSTEM
+========================================================= */
+
+const smoothEase = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
+
+/* =========================================================
+   WHOLE SECTION
+========================================================= */
+
+const sectionVariants: Variants = {
+  hidden: {
+    opacity: 0,
+  },
+
+  visible: {
+    opacity: 1,
+
+    transition: {
+      delayChildren: 0.12,
+      staggerChildren: 0.2,
+    },
+  },
+};
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+const headerVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 28,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+
+    transition: {
+      duration: 1,
+      ease: smoothEase,
+
+      delayChildren: 0.1,
+      staggerChildren: 0.16,
+    },
+  },
+};
+
+/* =========================================================
+   GENERIC TEXT REVEAL
+========================================================= */
+
+const textReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 20,
+    filter: "blur(4px)",
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+
+    transition: {
+      duration: 0.9,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   SMALL BADGE
+========================================================= */
+
+const badgeReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 10,
+    scale: 0.93,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+
+    transition: {
+      duration: 0.7,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   CONTENT GRID
+========================================================= */
+
+const gridVariants: Variants = {
+  hidden: {},
+
+  visible: {
+    transition: {
+      delayChildren: 0.12,
+      staggerChildren: 0.22,
+    },
+  },
+};
+
+/* =========================================================
+   FEATURED CARD
+========================================================= */
+
+const featuredCardVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: -38,
+    y: 18,
+    scale: 0.985,
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    scale: 1,
+
+    transition: {
+      duration: 1,
+      ease: smoothEase,
+
+      delayChildren: 0.15,
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+/* =========================================================
+   FEATURED CONTENT
+========================================================= */
+
+const featuredContentVariants: Variants = {
+  hidden: {},
+
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+/* =========================================================
+   DOWNLOAD LINK
+========================================================= */
+
+const downloadReveal: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 16,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+
+    transition: {
+      duration: 0.8,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   RIGHT CAROUSEL PANEL
+========================================================= */
+
+const rightPanelVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: 38,
+    y: 16,
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+
+    transition: {
+      duration: 1,
+      ease: smoothEase,
+      delay: 0.12,
+    },
+  },
+};
+
+/* =========================================================
+   INDICATORS
+========================================================= */
+
+const indicatorsVariants: Variants = {
+  hidden: {
+    opacity: 0,
+  },
+
+  visible: {
+    opacity: 1,
+
+    transition: {
+      delayChildren: 0.45,
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const indicatorVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.5,
+  },
+
+  visible: {
+    opacity: 1,
+    scale: 1,
+
+    transition: {
+      duration: 0.6,
+      ease: smoothEase,
+    },
+  },
+};
 
 /* =========================================================
    COMPONENT
@@ -145,7 +383,10 @@ export default function NoticeBoard() {
             announcements.length
         ];
 
-      return [first, second];
+      return [
+        first,
+        second,
+      ];
     }, [
       activeIndex,
       announcements,
@@ -187,7 +428,6 @@ export default function NoticeBoard() {
     >
       {/* =====================================================
           BACKGROUND IMAGE
-
       ====================================================== */}
 
       <div
@@ -199,7 +439,7 @@ export default function NoticeBoard() {
           bg-cover
           bg-center
           bg-no-repeat
-          opacity-[0.55]
+          opacity-[0.95]
         "
         style={{
           backgroundImage:
@@ -207,7 +447,9 @@ export default function NoticeBoard() {
         }}
       />
 
-      {/* White overlay */}
+      {/* =====================================================
+          WHITE OVERLAY
+      ====================================================== */}
 
       <div
         className="
@@ -215,11 +457,13 @@ export default function NoticeBoard() {
           absolute
           inset-0
           z-0
-          bg-white/35
+          bg-white/85
         "
       />
 
-      {/* Blue soft blur */}
+      {/* =====================================================
+          BLUE SOFT BLUR
+      ====================================================== */}
 
       <div
         className="
@@ -240,7 +484,14 @@ export default function NoticeBoard() {
           MAIN CONTAINER
       ====================================================== */}
 
-      <div
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{
+          once: true,
+          amount: 0.12,
+        }}
         className="
           relative
           z-10
@@ -254,30 +505,13 @@ export default function NoticeBoard() {
         ==================================================== */}
 
         <motion.div
-          initial={{
-            opacity: 0,
-            y: 22,
-          }}
-          whileInView={{
-            opacity: 1,
-            y: 0,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.4,
-          }}
-          transition={{
-            duration: 0.65,
-            ease: [
-              0.22,
-              1,
-              0.36,
-              1,
-            ],
-          }}
+          variants={headerVariants}
           className="text-center"
         >
-          <span
+          {/* Small heading */}
+
+          <motion.span
+            variants={textReveal}
             className="
               font-primary
               text-[11px]
@@ -288,11 +522,15 @@ export default function NoticeBoard() {
             "
           >
             Notice Board
-          </span>
+          </motion.span>
 
-          <h2
+          {/* Main heading */}
+
+          <motion.h2
+            variants={textReveal}
             className="
               mt-3
+
               font-primary
               text-[28px]
               font-semibold
@@ -306,14 +544,15 @@ export default function NoticeBoard() {
             "
           >
             Important School Updates
-          </h2>
+          </motion.h2>
         </motion.div>
 
         {/* ===================================================
             CONTENT GRID
         ==================================================== */}
 
-        <div
+        <motion.div
+          variants={gridVariants}
           className="
             mt-10
             grid
@@ -334,41 +573,30 @@ export default function NoticeBoard() {
           ================================================== */}
 
           <motion.article
-            initial={{
-              opacity: 0,
-              x: -35,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.25,
-            }}
-            transition={{
-              duration: 0.7,
-              ease: [
-                0.22,
-                1,
-                0.36,
-                1,
-              ],
-            }}
+            variants={featuredCardVariants}
             whileHover={{
               y: -4,
+              transition: {
+                duration: 0.35,
+                ease: smoothEase,
+              },
             }}
             className="
               group
               relative
+
               flex
               min-h-[330px]
               flex-col
               justify-between
+
               overflow-hidden
+
               border
               border-primary
+
               bg-white
+
               px-7
               py-7
 
@@ -387,16 +615,36 @@ export default function NoticeBoard() {
           >
             {/* Glow */}
 
-            <div
+            <motion.div
+              initial={{
+                opacity: 0,
+                scale: 0.7,
+              }}
+              whileInView={{
+                opacity: 1,
+                scale: 1,
+              }}
+              viewport={{
+                once: true,
+              }}
+              transition={{
+                duration: 1.2,
+                delay: 0.3,
+                ease: smoothEase,
+              }}
               className="
                 pointer-events-none
                 absolute
                 left-[-60px]
                 top-[-60px]
+
                 h-[150px]
                 w-[150px]
+
                 rounded-full
+
                 bg-primary/[0.05]
+
                 blur-[55px]
 
                 transition-all
@@ -406,15 +654,31 @@ export default function NoticeBoard() {
               "
             />
 
-            <div className="relative z-10">
+            {/* =================================================
+                FEATURED CONTENT
+            ================================================= */}
+
+            <motion.div
+              variants={
+                featuredContentVariants
+              }
+              className="
+                relative
+                z-10
+              "
+            >
               {/* Badge */}
 
-              <span
+              <motion.span
+                variants={badgeReveal}
                 className="
                   inline-flex
+
                   bg-[#F3F8FF]
+
                   px-2
                   py-[4px]
+
                   font-secondary
                   text-[10px]
                   font-medium
@@ -422,53 +686,65 @@ export default function NoticeBoard() {
                 "
               >
                 {featuredNotice.badge}
-              </span>
+              </motion.span>
 
               {/* Date */}
 
-              <p
+              <motion.p
+                variants={textReveal}
                 className="
                   mt-6
+
                   font-primary
                   text-[20px]
                   font-semibold
+
                   tracking-[-0.02em]
+
                   text-[#111111]
 
                   sm:text-[22px]
                 "
               >
                 {featuredNotice.date}
-              </p>
+              </motion.p>
 
               {/* Title */}
 
-              <h3
+              <motion.h3
+                variants={textReveal}
                 className="
                   mt-5
                   max-w-[270px]
+
                   font-primary
                   text-[21px]
                   font-semibold
+
                   leading-[1.08]
                   tracking-[-0.025em]
+
                   text-[#111111]
 
                   sm:text-[22px]
                 "
               >
                 {featuredNotice.title}
-              </h3>
+              </motion.h3>
 
               {/* Description */}
 
-              <p
+              <motion.p
+                variants={textReveal}
                 className="
                   mt-5
                   max-w-[280px]
+
                   font-secondary
                   text-[13px]
+
                   leading-[1.45]
+
                   text-[#929292]
 
                   sm:text-[14px]
@@ -477,12 +753,15 @@ export default function NoticeBoard() {
                 {
                   featuredNotice.description
                 }
-              </p>
-            </div>
+              </motion.p>
+            </motion.div>
 
-            {/* Download */}
+            {/* =================================================
+                DOWNLOAD
+            ================================================= */}
 
-            <div
+            <motion.div
+              variants={downloadReveal}
               className="
                 relative
                 z-10
@@ -492,7 +771,7 @@ export default function NoticeBoard() {
               <DownloadLink
                 href="#"
               />
-            </div>
+            </motion.div>
           </motion.article>
 
           {/* =================================================
@@ -500,28 +779,7 @@ export default function NoticeBoard() {
           ================================================== */}
 
           <motion.div
-            initial={{
-              opacity: 0,
-              x: 35,
-            }}
-            whileInView={{
-              opacity: 1,
-              x: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.25,
-            }}
-            transition={{
-              duration: 0.7,
-              delay: 0.12,
-              ease: [
-                0.22,
-                1,
-                0.36,
-                1,
-              ],
-            }}
+            variants={rightPanelVariants}
             className="
               relative
               min-w-0
@@ -529,12 +787,16 @@ export default function NoticeBoard() {
               lg:pr-10
             "
           >
-            {/* Carousel window */}
+            {/* =================================================
+                CAROUSEL WINDOW
+            ================================================= */}
 
             <div
               className="
                 relative
+
                 min-h-[330px]
+
                 overflow-hidden
 
                 lg:min-h-[340px]
@@ -554,14 +816,26 @@ export default function NoticeBoard() {
                     ) => ({
                       y:
                         direction > 0
-                          ? 90
-                          : -90,
+                          ? 55
+                          : -55,
+
                       opacity: 0,
+
+                      scale: 0.985,
+
+                      filter:
+                        "blur(3px)",
                     }),
 
                     center: {
                       y: 0,
+
                       opacity: 1,
+
+                      scale: 1,
+
+                      filter:
+                        "blur(0px)",
                     },
 
                     exit: (
@@ -569,28 +843,31 @@ export default function NoticeBoard() {
                     ) => ({
                       y:
                         direction > 0
-                          ? -90
-                          : 90,
+                          ? -55
+                          : 55,
+
                       opacity: 0,
+
+                      scale: 0.985,
+
+                      filter:
+                        "blur(3px)",
                     }),
                   }}
                   initial="enter"
                   animate="center"
                   exit="exit"
                   transition={{
-                    duration: 0.62,
-                    ease: [
-                      0.22,
-                      1,
-                      0.36,
-                      1,
-                    ],
+                    duration: 0.8,
+                    ease: smoothEase,
                   }}
                   className="
                     absolute
                     inset-0
+
                     flex
                     flex-col
+
                     gap-4
                   "
                 >
@@ -604,7 +881,9 @@ export default function NoticeBoard() {
                         notice={
                           notice
                         }
-                        index={index}
+                        index={
+                          index
+                        }
                       />
                     )
                   )}
@@ -616,14 +895,22 @@ export default function NoticeBoard() {
                 DESKTOP INDICATOR DOTS
             ================================================== */}
 
-            <div
+            <motion.div
+              variants={
+                indicatorsVariants
+              }
               className="
                 absolute
+
                 right-0
                 top-1/2
+
                 hidden
+
                 -translate-y-1/2
+
                 flex-col
+
                 gap-[10px]
 
                 lg:flex
@@ -639,8 +926,13 @@ export default function NoticeBoard() {
                     activeIndex;
 
                   return (
-                    <button
-                      key={notice.id}
+                    <motion.button
+                      variants={
+                        indicatorVariants
+                      }
+                      key={
+                        notice.id
+                      }
                       type="button"
                       onClick={() =>
                         goToSlide(
@@ -650,11 +942,22 @@ export default function NoticeBoard() {
                       aria-label={`Show notice ${
                         index + 1
                       }`}
+                      whileHover={{
+                        scale: 1.15,
+                      }}
+                      whileTap={{
+                        scale: 0.9,
+                      }}
+                      transition={{
+                        duration: 0.25,
+                      }}
                       className="
                         group
+
                         flex
                         h-[14px]
                         w-[14px]
+
                         items-center
                         justify-center
                       "
@@ -663,8 +966,9 @@ export default function NoticeBoard() {
                         className={`
                           block
                           rounded-full
+
                           transition-all
-                          duration-300
+                          duration-500
 
                           ${
                             active
@@ -683,22 +987,27 @@ export default function NoticeBoard() {
                           }
                         `}
                       />
-                    </button>
+                    </motion.button>
                   );
                 }
               )}
-            </div>
+            </motion.div>
 
             {/* =================================================
                 MOBILE INDICATORS
             ================================================== */}
 
-            <div
+            <motion.div
+              variants={
+                indicatorsVariants
+              }
               className="
                 mt-5
+
                 flex
                 items-center
                 justify-center
+
                 gap-2
 
                 lg:hidden
@@ -709,8 +1018,13 @@ export default function NoticeBoard() {
                   notice,
                   index
                 ) => (
-                  <button
-                    key={notice.id}
+                  <motion.button
+                    variants={
+                      indicatorVariants
+                    }
+                    key={
+                      notice.id
+                    }
                     type="button"
                     onClick={() =>
                       goToSlide(
@@ -720,10 +1034,14 @@ export default function NoticeBoard() {
                     aria-label={`Show notice ${
                       index + 1
                     }`}
+                    whileTap={{
+                      scale: 0.9,
+                    }}
                     className={`
                       rounded-full
+
                       transition-all
-                      duration-300
+                      duration-500
 
                       ${
                         activeIndex ===
@@ -743,10 +1061,10 @@ export default function NoticeBoard() {
                   />
                 )
               )}
-            </div>
+            </motion.div>
           </motion.div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }
@@ -773,28 +1091,45 @@ function AnnouncementCard({
     <motion.article
       initial={{
         opacity: 0,
-        y: 18,
+        y: 26,
+        scale: 0.985,
+        filter:
+          "blur(3px)",
       }}
       animate={{
         opacity: 1,
         y: 0,
+        scale: 1,
+        filter:
+          "blur(0px)",
       }}
       transition={{
-        duration: 0.5,
+        duration: 0.78,
         delay:
-          index * 0.07,
+          index * 0.13,
+        ease: smoothEase,
       }}
       whileHover={{
         x: 4,
+
+        transition: {
+          duration: 0.35,
+          ease: smoothEase,
+        },
       }}
       className="
         group
         relative
+
         flex
+
         min-h-[157px]
         flex-1
+
         overflow-hidden
+
         bg-white/80
+
         px-5
         py-5
 
@@ -806,6 +1141,7 @@ function AnnouncementCard({
         duration-300
 
         hover:bg-white
+
         hover:shadow-[0_12px_35px_rgba(0,0,0,0.06)]
 
         sm:px-6
@@ -818,47 +1154,130 @@ function AnnouncementCard({
         lg:min-h-[160px]
       "
     >
-      {/* LEFT */}
+      {/* =====================================================
+          LEFT
+      ====================================================== */}
 
-      <div>
-        <span
+      <motion.div
+        initial={{
+          opacity: 0,
+          x: -16,
+        }}
+        animate={{
+          opacity: 1,
+          x: 0,
+        }}
+        transition={{
+          duration: 0.72,
+          delay:
+            0.1 +
+            index * 0.12,
+          ease: smoothEase,
+        }}
+      >
+        {/* Badge */}
+
+        <motion.span
+          initial={{
+            opacity: 0,
+            y: 8,
+            scale: 0.94,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+            scale: 1,
+          }}
+          transition={{
+            duration: 0.62,
+            delay:
+              0.18 +
+              index * 0.12,
+            ease: smoothEase,
+          }}
           className="
             inline-flex
+
             bg-[#F3F8FF]
+
             px-2
             py-[3px]
+
             font-secondary
             text-[10px]
             font-medium
+
             text-primary
           "
         >
           {notice.badge}
-        </span>
+        </motion.span>
 
-        <p
+        {/* Date */}
+
+        <motion.p
+          initial={{
+            opacity: 0,
+            y: 12,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.7,
+            delay:
+              0.25 +
+              index * 0.12,
+            ease: smoothEase,
+          }}
           className="
             mt-5
+
             font-primary
+
             text-[18px]
             font-semibold
+
             tracking-[-0.02em]
+
             text-[#111111]
 
             sm:text-[20px]
           "
         >
           {notice.date}
-        </p>
+        </motion.p>
 
-        <h3
+        {/* Title */}
+
+        <motion.h3
+          initial={{
+            opacity: 0,
+            y: 12,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.72,
+            delay:
+              0.33 +
+              index * 0.12,
+            ease: smoothEase,
+          }}
           className="
             mt-4
+
             font-primary
+
             text-[17px]
             font-semibold
+
             leading-[1.2]
             tracking-[-0.02em]
+
             text-[#111111]
 
             transition-colors
@@ -870,48 +1289,111 @@ function AnnouncementCard({
           "
         >
           {notice.title}
-        </h3>
-      </div>
+        </motion.h3>
+      </motion.div>
 
-      {/* RIGHT */}
+      {/* =====================================================
+          RIGHT
+      ====================================================== */}
 
-      <div
+      <motion.div
+        initial={{
+          opacity: 0,
+          x: 16,
+        }}
+        animate={{
+          opacity: 1,
+          x: 0,
+        }}
+        transition={{
+          duration: 0.75,
+          delay:
+            0.28 +
+            index * 0.13,
+          ease: smoothEase,
+        }}
         className="
           mt-5
 
           md:mt-0
         "
       >
-        <p
+        {/* Description */}
+
+        <motion.p
+          initial={{
+            opacity: 0,
+            y: 10,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.72,
+            delay:
+              0.36 +
+              index * 0.13,
+            ease: smoothEase,
+          }}
           className="
             max-w-[330px]
+
             font-secondary
+
             text-[13px]
+
             leading-[1.45]
+
             text-[#8F8F8F]
 
             sm:text-[14px]
           "
         >
           {notice.description}
-        </p>
+        </motion.p>
 
-        <div className="mt-5">
+        {/* Download */}
+
+        <motion.div
+          initial={{
+            opacity: 0,
+            y: 10,
+          }}
+          animate={{
+            opacity: 1,
+            y: 0,
+          }}
+          transition={{
+            duration: 0.7,
+            delay:
+              0.44 +
+              index * 0.13,
+            ease: smoothEase,
+          }}
+          className="
+            mt-5
+          "
+        >
           <DownloadLink
             href="#"
           />
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
-      {/* Hover line */}
+      {/* =====================================================
+          HOVER LINE
+      ====================================================== */}
 
       <span
         className="
           absolute
           bottom-0
           left-0
+
           h-[1px]
           w-0
+
           bg-primary
 
           transition-all
@@ -926,7 +1408,6 @@ function AnnouncementCard({
 
 /* =========================================================
    DOWNLOAD LINK
-   Navigation kept as # for frontend design stage
 ========================================================= */
 
 function DownloadLink({
@@ -935,49 +1416,82 @@ function DownloadLink({
   href?: string;
 }) {
   return (
-    <Link
-      href={href}
-      onClick={(event) => {
-        /*
-          Remove this preventDefault()
-          later when real PDF/API links are added.
-        */
-        if (href === "#") {
-          event.preventDefault();
-        }
-      }}
+    <motion.div
+      initial="rest"
+      whileHover="hover"
       className="
-        group/link
-        inline-flex
-        min-w-[140px]
-        items-center
-        justify-between
-        gap-6
-        border-b
-        border-primary
-        pb-[9px]
-
-        font-primary
-        text-[13px]
-        font-medium
-        text-primary
+        w-fit
       "
     >
-      <span>
-        Download Pdf
-      </span>
+      <Link
+        href={href}
+        onClick={(
+          event
+        ) => {
+          /*
+            Remove this preventDefault()
+            later when real PDF/API links are added.
+          */
 
-      <span
+          if (
+            href === "#"
+          ) {
+            event.preventDefault();
+          }
+        }}
         className="
-          transition-transform
-          duration-300
+          group/link
 
-          group-hover/link:translate-x-2
+          inline-flex
+
+          min-w-[140px]
+
+          items-center
+          justify-between
+
+          gap-6
+
+          border-b
+          border-primary
+
+          pb-[9px]
+
+          font-primary
+
+          text-[13px]
+          font-medium
+
+          text-primary
         "
       >
-        <ArrowIcon />
-      </span>
-    </Link>
+        <span>
+          Download Pdf
+        </span>
+
+        <motion.span
+          variants={{
+            rest: {
+              x: 0,
+            },
+
+            hover: {
+              x: 6,
+            },
+          }}
+          transition={{
+            duration: 0.35,
+            ease: smoothEase,
+          }}
+          className="
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <ArrowIcon />
+        </motion.span>
+      </Link>
+    </motion.div>
   );
 }
 

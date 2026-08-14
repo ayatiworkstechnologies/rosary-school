@@ -1,10 +1,13 @@
 "use client";
 
 import Image from "next/image";
+
 import {
   AnimatePresence,
   motion,
+  Variants,
 } from "framer-motion";
+
 import {
   useEffect,
   useState,
@@ -34,6 +37,190 @@ const slides = [
     alt: "Rosary School holiday announcement",
   },
 ];
+
+/* =========================================================
+   SMOOTH ANIMATION
+========================================================= */
+
+const smoothEase = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
+
+/* =========================================================
+   WHOLE SECTION
+
+   Controls the order in which the different parts
+   appear when this section comes into the viewport.
+========================================================= */
+
+const sectionVariants: Variants = {
+  hidden: {
+    opacity: 1,
+  },
+
+  visible: {
+    opacity: 1,
+
+    transition: {
+      delayChildren: 0.1,
+      staggerChildren: 0.18,
+    },
+  },
+};
+
+/* =========================================================
+   LARGE ROSARY TEXT
+========================================================= */
+
+const rosaryVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: -45,
+    y: 8,
+    filter: "blur(5px)",
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    filter: "blur(0px)",
+
+    transition: {
+      duration: 1.15,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   SCHOOL VERTICAL TEXT
+========================================================= */
+
+const schoolVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: 38,
+    y: 12,
+    filter: "blur(5px)",
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    filter: "blur(0px)",
+
+    transition: {
+      duration: 1.15,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   SLIDER WRAPPER
+========================================================= */
+
+const sliderVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 38,
+    scale: 0.985,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+
+    transition: {
+      duration: 1.05,
+      ease: smoothEase,
+
+      delayChildren: 0.18,
+      staggerChildren: 0.15,
+    },
+  },
+};
+
+/* =========================================================
+   INDICATORS
+========================================================= */
+
+const indicatorContainerVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 12,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+
+    transition: {
+      duration: 0.8,
+      ease: smoothEase,
+
+      delayChildren: 0.08,
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const indicatorVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.5,
+  },
+
+  visible: {
+    opacity: 1,
+    scale: 1,
+
+    transition: {
+      duration: 0.55,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   MOBILE TEXT
+========================================================= */
+
+const mobileTextContainer: Variants = {
+  hidden: {},
+
+  visible: {
+    transition: {
+      delayChildren: 0.15,
+      staggerChildren: 0.16,
+    },
+  },
+};
+
+const mobileTextVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 12,
+    letterSpacing: "0.24em",
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    letterSpacing: "0.18em",
+
+    transition: {
+      duration: 0.8,
+      ease: smoothEase,
+    },
+  },
+};
 
 /* =========================================================
    COMPONENT
@@ -121,7 +308,23 @@ export default function RosaryShowcase() {
           BLUE BLUR
       ====================================================== */}
 
-      <div
+      <motion.div
+        initial={{
+          opacity: 0,
+          scale: 0.8,
+        }}
+        whileInView={{
+          opacity: 1,
+          scale: 1,
+        }}
+        viewport={{
+          once: true,
+          amount: 0.1,
+        }}
+        transition={{
+          duration: 1.4,
+          ease: smoothEase,
+        }}
         className="
           pointer-events-none
           absolute
@@ -147,7 +350,14 @@ export default function RosaryShowcase() {
           MAIN WRAPPER
       ====================================================== */}
 
-      <div
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{
+          once: true,
+          amount: 0.14,
+        }}
         className="
           relative
           z-10
@@ -159,38 +369,16 @@ export default function RosaryShowcase() {
 
           lg:pt-[125px]
           xl:pt-[145px]
-      "
+        "
       >
         {/* ===================================================
             LARGE ROSARY TEXT
 
             DESKTOP / TABLET ONLY
-
-            Extra vertical room above slider prevents
-            the word from colliding with the image.
         ==================================================== */}
 
         <motion.div
-          initial={{
-            opacity: 0,
-            x: -30,
-          }}
-          whileInView={{
-            opacity: 1,
-            x: 0,
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.8,
-            ease: [
-              0.22,
-              1,
-              0.36,
-              1,
-            ],
-          }}
+          variants={rosaryVariants}
           aria-hidden="true"
           className="
             pointer-events-none
@@ -207,7 +395,25 @@ export default function RosaryShowcase() {
             lg:block
           "
         >
-          <span
+          <motion.span
+            initial={{
+              opacity: 0,
+              clipPath:
+                "inset(0 100% 0 0)",
+            }}
+            whileInView={{
+              opacity: 1,
+              clipPath:
+                "inset(0 0% 0 0)",
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              duration: 1.3,
+              delay: 0.15,
+              ease: smoothEase,
+            }}
             className="
               block
 
@@ -234,7 +440,7 @@ export default function RosaryShowcase() {
             }}
           >
             Rosary
-          </span>
+          </motion.span>
         </motion.div>
 
         {/* ===================================================
@@ -242,28 +448,7 @@ export default function RosaryShowcase() {
         ==================================================== */}
 
         <motion.div
-          initial={{
-            opacity: 0,
-            x: 25,
-          }}
-          whileInView={{
-            opacity: 1,
-            x: 0,
-          }}
-          viewport={{
-            once: true,
-          }}
-          transition={{
-            duration: 0.8,
-            delay: 0.12,
-
-            ease: [
-              0.22,
-              1,
-              0.36,
-              1,
-            ],
-          }}
+          variants={schoolVariants}
           aria-hidden="true"
           className="
             pointer-events-none
@@ -281,7 +466,25 @@ export default function RosaryShowcase() {
             lg:block
           "
         >
-          <span
+          <motion.span
+            initial={{
+              opacity: 0,
+              clipPath:
+                "inset(0 0 100% 0)",
+            }}
+            whileInView={{
+              opacity: 1,
+              clipPath:
+                "inset(0 0 0% 0)",
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              duration: 1.25,
+              delay: 0.3,
+              ease: smoothEase,
+            }}
             className="
               block
 
@@ -316,14 +519,15 @@ export default function RosaryShowcase() {
             }}
           >
             School
-          </span>
+          </motion.span>
         </motion.div>
 
         {/* ===================================================
             SLIDER
         ==================================================== */}
 
-        <div
+        <motion.div
+          variants={sliderVariants}
           className="
             relative
             z-10
@@ -339,27 +543,23 @@ export default function RosaryShowcase() {
           ================================================== */}
 
           <motion.div
-            initial={{
-              opacity: 0,
-              y: 30,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
-            viewport={{
-              once: true,
-              amount: 0.2,
-            }}
-            transition={{
-              duration: 0.8,
+            variants={{
+              hidden: {
+                opacity: 0,
+                y: 32,
+                scale: 0.98,
+              },
 
-              ease: [
-                0.22,
-                1,
-                0.36,
-                1,
-              ],
+              visible: {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+
+                transition: {
+                  duration: 1,
+                  ease: smoothEase,
+                },
+              },
             }}
             className="
               relative
@@ -381,9 +581,7 @@ export default function RosaryShowcase() {
               custom={direction}
             >
               <motion.div
-                key={
-                  currentSlide.id
-                }
+                key={currentSlide.id}
                 custom={direction}
                 variants={{
                   enter: (
@@ -393,17 +591,25 @@ export default function RosaryShowcase() {
 
                     x:
                       direction > 0
-                        ? 55
-                        : -55,
+                        ? 42
+                        : -42,
 
                     scale:
                       1.025,
+
+                    filter:
+                      "blur(2px)",
                   }),
 
                   center: {
                     opacity: 1,
+
                     x: 0,
+
                     scale: 1,
+
+                    filter:
+                      "blur(0px)",
                   },
 
                   exit: (
@@ -413,11 +619,14 @@ export default function RosaryShowcase() {
 
                     x:
                       direction > 0
-                        ? -55
-                        : 55,
+                        ? -42
+                        : 42,
 
                     scale:
                       1.015,
+
+                    filter:
+                      "blur(2px)",
                   }),
                 }}
                 initial="enter"
@@ -425,14 +634,10 @@ export default function RosaryShowcase() {
                 exit="exit"
                 transition={{
                   duration:
-                    0.65,
+                    0.85,
 
-                  ease: [
-                    0.22,
-                    1,
-                    0.36,
-                    1,
-                  ],
+                  ease:
+                    smoothEase,
                 }}
                 className="
                   absolute
@@ -443,34 +648,57 @@ export default function RosaryShowcase() {
                     IMAGE
                 ============================================ */}
 
-                <Image
-                  src={
-                    currentSlide.image
-                  }
-                  alt={
-                    currentSlide.alt
-                  }
-                  fill
-                  priority={
-                    activeIndex === 0
-                  }
-
-                  /* IMPORTANT:
-                     Keep sizes in ONE LINE.
-                  */
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 94vw, 844px"
-
+                <motion.div
+                  initial={{
+                    scale: 1.04,
+                  }}
+                  animate={{
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: 1.2,
+                    ease: smoothEase,
+                  }}
                   className="
-                    object-cover
-                    object-center
+                    absolute
+                    inset-0
                   "
-                />
+                >
+                  <Image
+                    src={
+                      currentSlide.image
+                    }
+                    alt={
+                      currentSlide.alt
+                    }
+                    fill
+                    priority={
+                      activeIndex === 0
+                    }
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 94vw, 844px"
+                    className="
+                      object-cover
+                      object-center
+                    "
+                  />
+                </motion.div>
 
                 {/* ===========================================
                     BOTTOM GRADIENT
                 ============================================ */}
 
-                <div
+                <motion.div
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  transition={{
+                    duration: 0.9,
+                    delay: 0.15,
+                    ease: smoothEase,
+                  }}
                   className="
                     pointer-events-none
 
@@ -497,25 +725,31 @@ export default function RosaryShowcase() {
                   key={`text-${currentSlide.id}`}
                   initial={{
                     opacity: 0,
-                    y: 15,
+                    y: 24,
+                    filter:
+                      "blur(4px)",
                   }}
                   animate={{
                     opacity: 1,
                     y: 0,
+                    filter:
+                      "blur(0px)",
+                  }}
+                  exit={{
+                    opacity: 0,
+                    y: -12,
+                    filter:
+                      "blur(3px)",
                   }}
                   transition={{
                     duration:
-                      0.5,
+                      0.9,
 
                     delay:
-                      0.2,
+                      0.25,
 
-                    ease: [
-                      0.22,
-                      1,
-                      0.36,
-                      1,
-                    ],
+                    ease:
+                      smoothEase,
                   }}
                   className="
                     absolute
@@ -532,7 +766,20 @@ export default function RosaryShowcase() {
                     lg:left-8
                   "
                 >
-                  <h3
+                  <motion.h3
+                    initial={{
+                      opacity: 0,
+                      y: 14,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      delay: 0.35,
+                      ease: smoothEase,
+                    }}
                     className="
                       max-w-[220px]
 
@@ -568,7 +815,7 @@ export default function RosaryShowcase() {
                     {
                       currentSlide.title
                     }
-                  </h3>
+                  </motion.h3>
                 </motion.div>
               </motion.div>
             </AnimatePresence>
@@ -578,7 +825,10 @@ export default function RosaryShowcase() {
               INDICATORS
           ================================================== */}
 
-          <div
+          <motion.div
+            variants={
+              indicatorContainerVariants
+            }
             className="
               mt-5
 
@@ -599,7 +849,10 @@ export default function RosaryShowcase() {
                   activeIndex;
 
                 return (
-                  <button
+                  <motion.button
+                    variants={
+                      indicatorVariants
+                    }
                     key={
                       slide.id
                     }
@@ -615,13 +868,25 @@ export default function RosaryShowcase() {
                       index + 1
                     }`}
 
+                    whileHover={{
+                      scale: 1.12,
+                    }}
+
+                    whileTap={{
+                      scale: 0.9,
+                    }}
+
+                    transition={{
+                      duration: 0.25,
+                    }}
+
                     className={`
                       block
 
                       rounded-full
 
                       transition-all
-                      duration-300
+                      duration-500
 
                       ${
                         active
@@ -643,19 +908,20 @@ export default function RosaryShowcase() {
                 );
               }
             )}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* ===================================================
             MOBILE
 
-            NO DESIGN CHANGE.
-
-            This is exactly the same simple bottom
-            Rosary / School treatment you currently have.
+            Same design.
+            Only smooth text reveal added.
         ==================================================== */}
 
-        <div
+        <motion.div
+          variants={
+            mobileTextContainer
+          }
           aria-hidden="true"
           className="
             mt-5
@@ -669,7 +935,12 @@ export default function RosaryShowcase() {
             lg:hidden
           "
         >
-          <span
+          {/* ROSARY */}
+
+          <motion.span
+            variants={
+              mobileTextVariants
+            }
             className="
               font-primary
 
@@ -685,9 +956,14 @@ export default function RosaryShowcase() {
             "
           >
             Rosary
-          </span>
+          </motion.span>
 
-          <span
+          {/* SCHOOL */}
+
+          <motion.span
+            variants={
+              mobileTextVariants
+            }
             className="
               font-primary
 
@@ -703,9 +979,9 @@ export default function RosaryShowcase() {
             "
           >
             School
-          </span>
-        </div>
-      </div>
+          </motion.span>
+        </motion.div>
+      </motion.div>
     </section>
   );
 }

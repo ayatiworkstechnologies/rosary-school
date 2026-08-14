@@ -3,60 +3,169 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 
 /* =========================================================
-   ANIMATION VARIANTS
+   SMOOTH EASING
 ========================================================= */
 
-const cardVariants = {
+const smoothEase = [0.22, 1, 0.36, 1] as const;
+
+/* =========================================================
+   MAIN CARD ANIMATION
+========================================================= */
+
+const cardVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 35,
+    y: 40,
+    scale: 0.985,
   },
 
   visible: {
     opacity: 1,
     y: 0,
+    scale: 1,
+
+    transition: {
+      duration: 1,
+      ease: smoothEase,
+
+      delayChildren: 0.15,
+      staggerChildren: 0.18,
+    },
+  },
+};
+
+/* =========================================================
+   GRID
+========================================================= */
+
+const gridVariants: Variants = {
+  hidden: {},
+
+  visible: {
+    transition: {
+      delayChildren: 0.12,
+      staggerChildren: 0.22,
+    },
+  },
+};
+
+/* =========================================================
+   LEFT CONTENT CONTAINER
+========================================================= */
+
+const contentVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    x: -28,
+  },
+
+  visible: {
+    opacity: 1,
+    x: 0,
+
+    transition: {
+      duration: 0.95,
+      ease: smoothEase,
+
+      delayChildren: 0.1,
+      staggerChildren: 0.17,
+    },
+  },
+};
+
+/* =========================================================
+   INDIVIDUAL TEXT ANIMATION
+========================================================= */
+
+const textVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 22,
+    filter: "blur(4px)",
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+
+    transition: {
+      duration: 0.9,
+      ease: smoothEase,
+    },
+  },
+};
+
+/* =========================================================
+   SMALL LABEL
+========================================================= */
+
+const labelVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 12,
+    scale: 0.94,
+  },
+
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+
     transition: {
       duration: 0.75,
-      ease: [0.22, 1, 0.36, 1] as const,
-      staggerChildren: 0.12,
-      delayChildren: 0.08,
+      ease: smoothEase,
     },
   },
 };
 
-const contentVariants = {
+/* =========================================================
+   BUTTON ANIMATION
+========================================================= */
+
+const buttonVariants: Variants = {
   hidden: {
     opacity: 0,
-    x: -25,
+    y: 18,
   },
 
   visible: {
     opacity: 1,
-    x: 0,
+    y: 0,
+
     transition: {
-      duration: 0.65,
-      ease: [0.22, 1, 0.36, 1] as const,
+      duration: 0.85,
+      ease: smoothEase,
     },
   },
 };
 
-const imageVariants = {
+/* =========================================================
+   IMAGE ANIMATION
+========================================================= */
+
+const imageVariants: Variants = {
   hidden: {
     opacity: 0,
-    x: 30,
-    scale: 0.97,
+    x: 32,
+    y: 10,
+    scale: 0.96,
+    filter: "blur(4px)",
   },
 
   visible: {
     opacity: 1,
     x: 0,
+    y: 0,
     scale: 1,
+    filter: "blur(0px)",
+
     transition: {
-      duration: 0.72,
-      ease: [0.22, 1, 0.36, 1] as const,
+      duration: 1.1,
+      ease: smoothEase,
     },
   },
 };
@@ -114,7 +223,7 @@ export default function PrincipalMessage() {
         whileInView="visible"
         viewport={{
           once: true,
-          amount: 0.22,
+          amount: 0.2,
         }}
         className="
           relative
@@ -144,7 +253,8 @@ export default function PrincipalMessage() {
             DESKTOP GRID
         ====================================================== */}
 
-        <div
+        <motion.div
+          variants={gridVariants}
           className="
             flex
             flex-col
@@ -174,7 +284,8 @@ export default function PrincipalMessage() {
                 SMALL LABEL
             ================================================ */}
 
-            <span
+            <motion.span
+              variants={labelVariants}
               className="
                 inline-flex
                 items-center
@@ -191,13 +302,14 @@ export default function PrincipalMessage() {
               "
             >
               Message
-            </span>
+            </motion.span>
 
             {/* ===============================================
                 TITLE
             ================================================ */}
 
-            <h2
+            <motion.h2
+              variants={textVariants}
               className="
                 mt-[31px]
                 font-primary
@@ -214,13 +326,14 @@ export default function PrincipalMessage() {
               "
             >
               From The Principal
-            </h2>
+            </motion.h2>
 
             {/* ===============================================
                 TAGLINE
             ================================================ */}
 
-            <p
+            <motion.p
+              variants={textVariants}
               className="
                 mt-[26px]
                 font-primary
@@ -236,13 +349,14 @@ export default function PrincipalMessage() {
               "
             >
               Nurturing Minds. Shaping Character. Inspiring Purpose.
-            </p>
+            </motion.p>
 
             {/* ===============================================
                 DESCRIPTION
             ================================================ */}
 
-            <p
+            <motion.p
+              variants={textVariants}
               className="
                 mt-[25px]
                 max-w-[445px]
@@ -254,7 +368,8 @@ export default function PrincipalMessage() {
                 tracking-[-0.1px]
                 text-[#888888]
 
-                sm:text-[13px] pt-5
+                sm:text-[13px]
+                pt-5
 
                 lg:text-[13px]
                 lg:leading-[1.28]
@@ -266,13 +381,14 @@ export default function PrincipalMessage() {
               individuals. Guided by truth, love and a spirit of service, we
               encourage every student to discover her potential and contribute
               meaningfully to the world around her.
-            </p>
+            </motion.p>
 
             {/* ===============================================
                 EXPLORE MORE
             ================================================ */}
 
             <motion.div
+              variants={buttonVariants}
               initial="rest"
               whileHover="hover"
               className="
@@ -307,13 +423,14 @@ export default function PrincipalMessage() {
                     rest: {
                       x: 0,
                     },
+
                     hover: {
                       x: 6,
                     },
                   }}
                   transition={{
-                    duration: 0.22,
-                    ease: "easeOut",
+                    duration: 0.35,
+                    ease: smoothEase,
                   }}
                   className="
                     flex
@@ -360,8 +477,8 @@ export default function PrincipalMessage() {
                 scale: 1.025,
               }}
               transition={{
-                duration: 0.45,
-                ease: [0.22, 1, 0.36, 1],
+                duration: 0.6,
+                ease: smoothEase,
               }}
               className="
                 relative
@@ -386,7 +503,7 @@ export default function PrincipalMessage() {
               />
             </motion.div>
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
     </section>
   );

@@ -1,3 +1,4 @@
+import ConnectSection from "../components/Homepage/ConnectSection";
 import GallerySection from "../components/Homepage/GallerySection";
 import HeroBanner from "../components/Homepage/HeroBanner";
 import NewsAnnouncement from "../components/Homepage/NewsAnnouncement";
@@ -25,6 +26,8 @@ export default function Home() {
      <RosaryShowcase />
 
      <GallerySection />
+     
+     <ConnectSection />
 
     </main>
   );
