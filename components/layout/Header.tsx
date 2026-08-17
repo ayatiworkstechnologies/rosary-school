@@ -56,6 +56,17 @@ const navigation: NavigationItem[] = [
       "mission",
       "principal",
     ],
+    children: [
+      {
+        label: "History",
+        href: "/about/history",
+        keywords: [
+          "history",
+          "school history",
+          "rosary history",
+        ],
+      },
+    ],
   },
   {
     label: "Academics",
