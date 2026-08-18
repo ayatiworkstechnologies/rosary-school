@@ -21,37 +21,37 @@ const slides = [
   {
     id: 1,
     title: "Centum Achievers in\nAccountancy & Commerce",
-    image: "/images/rosary1.png",
+    image: "/images/rosary-1e.png",
     alt: "Rosary School centum achievers in Accountancy and Commerce",
   },
   {
     id: 2,
     title: "Class XII Board Exam\nTop Achievers 2025–26",
-    image: "/images/rosary2.png",
+    image: "/images/rosary-2e.png",
     alt: "Rosary School Class XII board exam top achievers 2025-26",
   },
   {
     id: 3,
     title: "Centum Achievers in\nMaths & Science",
-    image: "/images/rosary3.png",
+    image: "/images/rosary-3e.png",
     alt: "Rosary School centum achievers in Mathematics and Science",
   },
   {
     id: 4,
     title: "Centum Achievers in\nComputer Science",
-    image: "/images/rosary4.png",
+    image: "/images/rosary-4e.png",
     alt: "Rosary School centum achievers in Computer Science",
   },
   {
     id: 5,
     title: "Class X Board Exam\nTop Achievers 2025–26",
-    image: "/images/rosary5.png",
+    image: "/images/rosary-5e.png",
     alt: "Rosary School Class X board exam top achievers 2025-26",
   },
   {
     id: 6,
     title: "Centum Achievers in\nFrench",
-    image: "/images/rosary6.png",
+    image: "/images/rosary-6e.png",
     alt: "Rosary School centum achievers in French",
   },
 ];

@@ -50,7 +50,7 @@ const newsItems = [
     description:
       "Parents are invited to meet the teachers and discuss their child’s academic performance, classroom participation, and overall development.",
 
-    image: "/images/news-2.png",
+    image: "/images/news2.png",
 
     imageAlt: "Rosary School Announcement",
 
@@ -68,7 +68,7 @@ const newsItems = [
     description:
       "Students are invited to participate in the Annual Sports Meet featuring athletics, team games, and exciting competitions that celebrate talent and sportsmanship.",
 
-    image: "/images/news-3.png",
+    image: "/images/news3.png",
 
     imageAlt: "Rosary School latest announcement",
 

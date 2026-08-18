@@ -17,38 +17,38 @@ import {
    Replace image paths with your images.
 
    Recommended maximum source size:
-   483px × 373px
+   483x × 373px
 ========================================================= */
 
 const galleryImages = [
   {
     id: 1,
-    image: "/images/gallery-1.png",
+    image: "/images/g-1.png",
     alt: "Rosary School campus",
   },
   {
     id: 2,
-    image: "/images/gallery-2.png",
+    image: "/images/g-2.png",
     alt: "Rosary School student activity",
   },
   {
     id: 3,
-    image: "/images/gallery-3.png",
+    image: "/images/g-3.png",
     alt: "Students at Rosary School",
   },
   {
     id: 4,
-    image: "/images/gallery-4.png",
+    image: "/images/g-4.png",
     alt: "Rosary School classroom activity",
   },
   {
     id: 5,
-    image: "/images/gallery-5.png",
+    image: "/images/g-5.png",
     alt: "Students learning at Rosary School",
   },
   {
     id: 6,
-    image: "/images/gallery-6.png",
+    image: "/images/g-6.png",
     alt: "Rosary School building",
   },
 ];
