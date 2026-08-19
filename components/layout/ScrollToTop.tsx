@@ -8,40 +8,182 @@ import {
   useScroll,
   useSpring,
 } from "framer-motion";
-import { useState } from "react";
+
+import { useLayoutEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const smoothEase = [0.22, 1, 0.36, 1] as const;
 
 export default function ScrollToTop() {
   const [visible, setVisible] = useState(false);
 
+  /* =========================================================
+     GET CURRENT ROUTE
+  ========================================================= */
+
+  const pathname = usePathname();
+
   const { scrollY, scrollYProgress } = useScroll();
+
+  /* =========================================================
+     RESET SCROLL WHEN PAGE / ROUTE CHANGES
+
+     FIXES:
+     Home page bottom
+          ↓
+     Click another page
+          ↓
+     New page opens directly from TOP
+
+     No bottom → top visible animation
+  ========================================================= */
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+
+    /*
+     * Stop browser from restoring the previous
+     * page's scroll position.
+     */
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    const html = document.documentElement;
+    const body = document.body;
+
+    /*
+     * Store existing scroll behavior.
+     */
+    const previousHtmlScrollBehavior =
+      html.style.scrollBehavior;
+
+    const previousBodyScrollBehavior =
+      body.style.scrollBehavior;
+
+    /*
+     * IMPORTANT
+     *
+     * Temporarily disable smooth scrolling.
+     * Otherwise:
+     *
+     * bottom
+     *   ↓
+     * slowly scrolls
+     *   ↓
+     * top
+     *
+     * which causes your page animation issue.
+     */
+    html.style.setProperty(
+      "scroll-behavior",
+      "auto",
+      "important"
+    );
+
+    body.style.setProperty(
+      "scroll-behavior",
+      "auto",
+      "important"
+    );
+
+    /*
+     * Reset immediately before browser paint.
+     */
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+
+    /*
+     * Extra protection for:
+     *
+     * Framer Motion
+     * GSAP
+     * dynamic sections
+     * Next.js route transitions
+     */
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+
+      requestAnimationFrame(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: "auto",
+        });
+
+        /*
+         * Restore your original behavior.
+         */
+        if (previousHtmlScrollBehavior) {
+          html.style.scrollBehavior =
+            previousHtmlScrollBehavior;
+        } else {
+          html.style.removeProperty(
+            "scroll-behavior"
+          );
+        }
+
+        if (previousBodyScrollBehavior) {
+          body.style.scrollBehavior =
+            previousBodyScrollBehavior;
+        } else {
+          body.style.removeProperty(
+            "scroll-behavior"
+          );
+        }
+      });
+    });
+
+    /*
+     * Hide Back To Top button
+     * immediately when entering new page.
+     */
+    setVisible(false);
+  }, [pathname]);
 
   /* =========================================================
      SMOOTH SCROLL PROGRESS
   ========================================================= */
 
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 24,
-    mass: 0.25,
-  });
+  const smoothProgress = useSpring(
+    scrollYProgress,
+    {
+      stiffness: 120,
+      damping: 24,
+      mass: 0.25,
+    }
+  );
 
   /* =========================================================
      SHOW BUTTON AFTER SCROLL
   ========================================================= */
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setVisible(latest > 350);
-  });
+  useMotionValueEvent(
+    scrollY,
+    "change",
+    (latest) => {
+      setVisible(latest > 350);
+    }
+  );
 
   /* =========================================================
-     SCROLL TO TOP
+     BACK TO TOP BUTTON
+
+     This one stays smooth because it is
+     manually clicked by the user.
   ========================================================= */
 
   const handleScrollTop = () => {
     window.scrollTo({
       top: 0,
+      left: 0,
       behavior: "smooth",
     });
   };
@@ -146,7 +288,7 @@ export default function ScrollToTop() {
             >
               Back to top
 
-              {/* tooltip triangle */}
+              {/* Tooltip triangle */}
 
               <span
                 className="
@@ -309,7 +451,7 @@ export default function ScrollToTop() {
                 "
                 viewBox="0 0 58 58"
               >
-                {/* background ring */}
+                {/* Background ring */}
 
                 <circle
                   cx="29"
@@ -320,7 +462,7 @@ export default function ScrollToTop() {
                   strokeWidth="1.5"
                 />
 
-                {/* progress */}
+                {/* Progress ring */}
 
                 <motion.circle
                   cx="29"
@@ -331,24 +473,23 @@ export default function ScrollToTop() {
                   strokeWidth="2"
                   strokeLinecap="round"
                   style={{
-                    pathLength: smoothProgress,
+                    pathLength:
+                      smoothProgress,
                   }}
                 />
               </svg>
 
               {/* =================================================
-                  ARROW ANIMATION AREA
+                  ARROW ANIMATION
               ================================================= */}
 
               <motion.div
                 variants={{
                   rest: {},
-
                   hover: {},
                 }}
                 className="
                   relative
-
                   z-10
 
                   flex
@@ -427,7 +568,7 @@ export default function ScrollToTop() {
               </motion.div>
 
               {/* =================================================
-                  SMALL LIGHT REFLECTION
+                  LIGHT REFLECTION
               ================================================= */}
 
               <span
@@ -435,7 +576,6 @@ export default function ScrollToTop() {
                   pointer-events-none
 
                   absolute
-
                   left-[12px]
                   top-[8px]
 

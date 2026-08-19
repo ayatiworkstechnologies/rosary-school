@@ -397,7 +397,7 @@ export default function PrincipalMessage() {
               "
             >
               <Link
-                href="/about/principal-message"
+                href="/about"
                 className="
                   flex
                   w-[178px]
