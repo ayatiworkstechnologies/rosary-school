@@ -1299,7 +1299,7 @@ export default function SubjectsWeOffer() {
 
               font-secondary
 
-              text-[9px]
+              text-[11px]
               font-medium
 
               uppercase
@@ -1319,7 +1319,7 @@ export default function SubjectsWeOffer() {
 
               font-primary
 
-              text-[35px]
+              text-[30px]
               font-semibold
 
               leading-[1.08]
@@ -1328,7 +1328,7 @@ export default function SubjectsWeOffer() {
 
               text-[#111111]
 
-              xl:text-[39px]
+              xl:text-[32px] 
             "
           >
             Subjects We
@@ -1579,7 +1579,7 @@ export default function SubjectsWeOffer() {
 
               font-secondary
 
-              text-[9px]
+              text-[10px] 
               font-medium
 
               uppercase
@@ -1606,7 +1606,7 @@ export default function SubjectsWeOffer() {
 
               text-[#111111]
 
-              sm:text-[33px]
+              sm:text-[33px] pt-2
             "
           >
             Subjects We

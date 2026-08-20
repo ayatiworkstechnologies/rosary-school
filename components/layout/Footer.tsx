@@ -152,11 +152,11 @@ export default function Footer() {
             className="
               object-cover
               object-center
-              opacity-[0.80]
+              opacity-[0.30] lg:opacity-[0.80]
             "
           />
 
-          {/* <div className="absolute inset-0 bg-white/35" /> */}
+          <div className="absolute inset-0 bg-white/20" />
         </div>
 
         {/* =================================================

@@ -1802,7 +1802,7 @@ export default function StudentClubsActivities() {
           <motion.h2
             variants={fadeUp}
             className="
-              mt-[16px]
+              mt-[16px] pb-3
 
               font-primary
 
@@ -1853,7 +1853,7 @@ export default function StudentClubsActivities() {
               md:max-w-[620px]
               md:text-[11.5px]
 
-              lg:text-[12px]
+              lg:text-[13px]
             "
           >
             Discover engaging clubs that

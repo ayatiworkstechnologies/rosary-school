@@ -668,7 +668,7 @@ export default function LearningApproach() {
 
               text-[#0075FF]
 
-              sm:text-[9px]
+              sm:text-[13px]
             "
           >
             Our Approach
@@ -713,7 +713,7 @@ export default function LearningApproach() {
 
               sm:text-[30px]
 
-              lg:text-[34px]
+              lg:text-[34px] pt-3
             "
           >
             Learning That Builds Strong

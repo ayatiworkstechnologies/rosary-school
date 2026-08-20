@@ -1487,7 +1487,7 @@ export default function WhatStudentsLearn() {
 
               text-[#0075FF]
 
-              sm:text-[9px]
+              sm:text-[12px]
             "
           >
             Our Approach
@@ -1510,7 +1510,7 @@ export default function WhatStudentsLearn() {
 
               sm:text-[32px]
 
-              lg:text-[35px]
+              lg:text-[35px] pt-3
             "
           >
             What Students Learn

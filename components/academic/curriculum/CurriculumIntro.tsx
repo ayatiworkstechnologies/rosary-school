@@ -243,7 +243,7 @@ export default function CurriculumIntro() {
 
                   text-[#0075FF]
 
-                  sm:text-[10px] mb-3
+                  sm:text-[13px] mb-3
                 "
               >
                 Curriculum

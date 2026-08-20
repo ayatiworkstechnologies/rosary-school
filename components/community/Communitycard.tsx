@@ -7,55 +7,47 @@ import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 /* =========================================================
-   DATA
+   COMMUNITY DATA
 ========================================================= */
 
-const academics = [
+const community = [
   {
     id: 1,
-    title: "Curriculum",
+    title: "Student Corner",
     description:
-      "A balanced curriculum that builds knowledge, creativity, confidence, and essential skills at every stage of learning.",
-    image: "/images/curriculum.png",
-    href: "/academics/curriculum",
+      "A dedicated space for students to access academic resources, updates, activities, and helpful school information.",
+    image: "/images/student-corner.png",
+    href: "/community/student-corner",
   },
   {
     id: 2,
-    title: "Departments",
+    title: "Parent Corner",
     description:
-      "Explore diverse academic departments that build strong subject knowledge and practical skills.",
-    image: "/images/departments.png",
-    href: "/academics/departments",
+      "Stay connected with important school updates, academic information, resources, and support for your child’s learning journey.",
+    image: "/images/parent-corner.png",
+    href: "/community/parent-corner",
   },
   {
     id: 3,
-    title: "Faculty",
+    title: "Alumni",
     description:
-      "Meet our experienced educators dedicated to guiding, inspiring, and supporting every student.",
-    image: "/images/faculty.png",
-    href: "/academics/faculty",
-  },
-  {
-    id: 4,
-    title: "Clubs",
-    description:
-      "Discover engaging clubs that encourage creativity, teamwork, leadership, and individual talents.",
-    image: "/images/clubs.png",
-    href: "/academics/clubs",
+      "Reconnect with Rosary, celebrate shared memories, build meaningful connections, and stay involved with our growing alumni community.",
+    image: "/images/alumni.png",
+    href: "/community/alumni",
   },
 ];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 /* =========================================================
-   ACADEMIC CARD
+   COMMUNITY CARD
 ========================================================= */
 
-function AcademicCard({
+function CommunityCard({
   item,
   index,
 }: {
-  item: (typeof academics)[number];
+  item: (typeof community)[number];
   index: number;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -95,22 +87,19 @@ function AcademicCard({
         border
         border-[#0075FF]/60
         bg-white
-
         transition-[border-color,box-shadow]
         duration-700
 
         sm:h-[245px]
-
         md:h-[230px]
-
         lg:h-[250px]
-
         xl:h-[260px]
       "
       animate={{
         boxShadow: hovered
           ? "0 24px 55px rgba(0,117,255,0.13)"
           : "0 12px 34px rgba(20,45,75,0.06)",
+
         borderColor: hovered
           ? "rgba(0,117,255,0.95)"
           : "rgba(0,117,255,0.60)",
@@ -124,14 +113,6 @@ function AcademicCard({
 
       {/* =====================================================
           BLUE SHUFFLE
-
-          NORMAL:
-          blue left / white right
-
-          HOVER:
-          white left / blue right
-
-          Card itself DOES NOT MOVE.
       ====================================================== */}
 
       <motion.div
@@ -154,7 +135,9 @@ function AcademicCard({
         "
       />
 
-      {/* very subtle depth */}
+      {/* =====================================================
+          SUBTLE DEPTH
+      ====================================================== */}
 
       <motion.div
         initial={false}
@@ -179,7 +162,7 @@ function AcademicCard({
       />
 
       {/* =====================================================
-          TEXT
+          CONTENT
       ====================================================== */}
 
       <div
@@ -193,9 +176,7 @@ function AcademicCard({
           px-[18px]
 
           sm:px-[22px]
-
           md:px-[20px]
-
           lg:px-[26px]
         "
       >
@@ -204,9 +185,7 @@ function AcademicCard({
             w-[58%]
 
             sm:w-[56%]
-
             md:w-[57%]
-
             lg:w-[55%]
           "
         >
@@ -225,9 +204,7 @@ function AcademicCard({
               duration-700
 
               sm:text-[20px]
-
               lg:text-[23px]
-
               xl:text-[24px]
 
               ${
@@ -255,12 +232,12 @@ function AcademicCard({
               transition-colors
               duration-700
 
-              sm:mt-[11px]
+              sm:mt-[11px] pt-3
               sm:text-[10.5px]
 
               lg:text-[11.5px]
 
-              xl:text-[12px] pt-3
+              xl:text-[12px]
 
               ${
                 hovered
@@ -272,9 +249,7 @@ function AcademicCard({
             {item.description}
           </p>
 
-          {/* =================================================
-              BUTTON
-          ================================================= */}
+          {/* BUTTON */}
 
           <Link
             href={item.href}
@@ -315,7 +290,7 @@ function AcademicCard({
               }
             `}
           >
-            View More
+            Explore
 
             <span
               className={`
@@ -344,9 +319,6 @@ function AcademicCard({
 
       {/* =====================================================
           IMAGE
-
-          NO BORDER ADDED.
-          Your original image border/design remains untouched.
       ====================================================== */}
 
       <motion.div
@@ -395,15 +367,13 @@ function AcademicCard({
             (max-width: 767px) 135px,
             (max-width: 1023px) 125px,
             (max-width: 1279px) 152px,
-            164px
+            175px
           "
           className="
             object-cover
             object-center
           "
         />
-
-        {/* very soft image zoom */}
 
         <motion.div
           initial={false}
@@ -426,10 +396,10 @@ function AcademicCard({
 }
 
 /* =========================================================
-   MAIN SECTION
+   COMMUNITY SECTION
 ========================================================= */
 
-export default function AcademicsOverview() {
+export default function CommunityCards() {
   return (
     <section
       className="
@@ -447,9 +417,7 @@ export default function AcademicsOverview() {
       "
     >
       {/* =====================================================
-          BACKGROUND IMAGE
-
-          public/images/academics-bg.png
+          BACKGROUND
       ====================================================== */}
 
       <div
@@ -460,8 +428,7 @@ export default function AcademicsOverview() {
           -z-20
         "
         style={{
-          backgroundImage:
-            "url('/images/academics-bg.png')",
+          backgroundImage: "url('/images/academics-bg.png')",
           backgroundPosition: "center",
           backgroundSize: "cover",
           backgroundRepeat: "no-repeat",
@@ -540,7 +507,9 @@ export default function AcademicsOverview() {
               opacity: 1,
               scale: 1,
             }}
-            viewport={{ once: true }}
+            viewport={{
+              once: true,
+            }}
             transition={{
               duration: 0.8,
               ease,
@@ -553,16 +522,16 @@ export default function AcademicsOverview() {
               py-[4px]
 
               font-secondary
-              text-[9px]
+              text-[10px]
               font-medium
               leading-none
 
               text-[#0075FF]
 
-              sm:text-[13px]
+              sm:text-[14px]
             "
           >
-            Academics
+            Community
           </motion.span>
 
           {/* TITLE */}
@@ -576,7 +545,9 @@ export default function AcademicsOverview() {
               opacity: 1,
               y: 0,
             }}
-            viewport={{ once: true }}
+            viewport={{
+              once: true,
+            }}
             transition={{
               duration: 1,
               delay: 0.1,
@@ -597,20 +568,58 @@ export default function AcademicsOverview() {
 
               !text-[#111111]
 
-              sm:text-[27px]
+              sm:text-[27px] pt-3
 
               md:text-[29px]
 
-              lg:text-[32px] pt-3
+              lg:text-[32px]
             "
           >
-            Explore our Curriculum, Departments, Faculty, and Clubs, designed
-            to support academic excellence and overall student development.
+            Stay Connected with the Rosary Community
           </motion.h2>
+
+          {/* SUBTITLE */}
+
+          <motion.p
+            initial={{
+              opacity: 0,
+              y: 18,
+            }}
+            whileInView={{
+              opacity: 1,
+              y: 0,
+            }}
+            viewport={{
+              once: true,
+            }}
+            transition={{
+              duration: 1,
+              delay: 0.18,
+              ease,
+            }}
+            className="
+              mx-auto
+              mt-[10px]
+              max-w-[650px]
+
+              font-secondary
+              text-[11px] pt-3
+              font-normal
+              leading-[1.6]
+              text-[#666666]
+
+              sm:text-[12px]
+              md:text-[13px]
+            "
+          >
+            Explore dedicated spaces for students, parents, and alumni to
+            access resources, stay informed, connect, and remain part of
+            our school community.
+          </motion.p>
         </motion.div>
 
         {/* =================================================
-            GRID
+            CARDS GRID
         ================================================= */}
 
         <div
@@ -630,8 +639,8 @@ export default function AcademicsOverview() {
             lg:gap-[25px]
           "
         >
-          {academics.map((item, index) => (
-            <AcademicCard
+          {community.map((item, index) => (
+            <CommunityCard
               key={item.id}
               item={item}
               index={index}

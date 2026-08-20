@@ -729,7 +729,7 @@ export default function CurriculumStages() {
 
               text-[#0075FF]
 
-              sm:text-[10px]
+              sm:text-[13px]
             "
           >
             Curriculum
@@ -755,7 +755,7 @@ export default function CurriculumStages() {
 
               sm:text-[31px]
 
-              lg:text-[35px]
+              lg:text-[35px] pt-2 and pb-2
             "
           >
             Curriculum Across Every Stage

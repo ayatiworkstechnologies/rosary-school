@@ -634,7 +634,7 @@ export default function DepartmentsOverview() {
             "
           >
             <Image
-              src="/images/rosary-1.png"
+              src="/images/departments-overview.png"
               alt="Rosary School academic departments"
               fill
               sizes="(max-width: 639px) 100vw, (max-width: 1023px) 80vw, 520px"
