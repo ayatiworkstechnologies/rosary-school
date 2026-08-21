@@ -68,7 +68,7 @@ const alumniData: Alumni[] = [
     {
         id: 1,
         name: "Chandrika K. Raman Murthy",
-        image: "/images/alumni/chandrika.jpg",
+        image: "/images/al-1.png",
         paragraphs: [
             "Chandrika K. Raman Murthy (Batch 1976), with expertise in communications, began her career at Cycle Corporation of India in 1982 after earning an MA and PG in Corporate Communications.",
             "She held pioneering roles at RPG Cellular and HMV, collaborating with M.S. Subbulakshmi, and served as Head of Communications at Airtel and Protocol Officer to Tamil Nadu’s CM.",
@@ -78,7 +78,7 @@ const alumniData: Alumni[] = [
     {
         id: 2,
         name: "Sumithra Ravichandran",
-        image: "/images/alumni/sumithra.jpg",
+        image: "/images/al-2.png",
         paragraphs: [
             "Sumithra Ravichandran is a Fellow Chartered Accountant and Partner at M/s N.C. Rajagopal & Co., with expertise in taxation and auditing.",
             "She has represented clients before the Income Tax Department and Appellate Tribunal, and signed balance sheets for major banks, including RBI.",
@@ -88,7 +88,7 @@ const alumniData: Alumni[] = [
     {
         id: 3,
         name: "Dr. Shivi S. Sivanantham",
-        image: "/images/alumni/shivi.jpg",
+        image: "/images/al-3.png",
         paragraphs: [
             "Dr. Shivi S. Sivanantham is a gastroenterologist and Assistant Professor specializing in Crohn’s disease, ulcerative colitis, and general gastroenterology.",
             "She trained globally, earned her MD in 1997, and completed an IBD fellowship at the University of Chicago in 2016.",
@@ -98,7 +98,7 @@ const alumniData: Alumni[] = [
     {
         id: 4,
         name: "Pushpa Kandaswamy",
-        image: "/images/alumni/pushpa.jpg",
+        image: "/images/al-4.png",
         paragraphs: [
             "Pushpa Kandaswamy, of the 1976 batch, is a National Award-winning film and TV producer and creative head of Kavithalayaa, with over 50 films and 1000+ hours of TV content.",
             "She secured top academic honors and pioneered film education through industry-academia ties with IIMs and ISB.",
@@ -108,7 +108,7 @@ const alumniData: Alumni[] = [
     {
         id: 5,
         name: "Smt. Revathi Ramachandran",
-        image: "/images/alumni/revathi.jpg",
+        image: "/images/al-5.png",
         paragraphs: [
             "Smt. Revathi Ramachandran (1976 batch) holds master’s degrees in Economics and Fine Arts and is a renowned Bharatanatyam dancer, teacher, and choreographer.",
             "She formerly directed Kalakshetra and now serves as Director of Nada Gurukulam at Sri Sathya Sai University.",
@@ -118,7 +118,7 @@ const alumniData: Alumni[] = [
     {
         id: 6,
         name: "Dr. Maheswari Natarajan",
-        image: "/images/alumni/maheswari.jpg",
+        image: "/images/al-6.png",
         paragraphs: [
             "Dr. Maheswari Natarajan (1976 batch) is an educationist with multiple degrees, including M.A.s in Psychology and Education, and a D.Litt.",
             "She founded a CBSE school, initiated India–Singapore twinning, and trained educators as a Master Trainer for CBSE and UNESCO.",
@@ -128,7 +128,7 @@ const alumniData: Alumni[] = [
     {
         id: 7,
         name: "Dr. Malika Hakim Haque",
-        image: "/images/alumni/malika.jpg",
+        image: "/images/al-7.png",
         paragraphs: [
             "Dr. Malika Hakim Haque, MD, is a pediatrician with more than 50 years of experience. A gold medalist from Madras Medical College and Stella Maris College, she is a Clinical Professor at The Ohio State University.",
             "Founder of Noor Community Free Clinic in Ohio, she holds three patents for antiviral treatments.",
@@ -138,7 +138,7 @@ const alumniData: Alumni[] = [
     {
         id: 8,
         name: "Shyamala Lakshmanan",
-        image: "/images/alumni/shyamala.jpg",
+        image: "/images/al-8.png",
         paragraphs: [
             "Batch Year: 1987. She completed her B.Com and M.Com from Meenakshi College.",
             "She moved to Texas, USA in 1997, worked as a Montessori teacher and tax consultant, and returned to Chennai in 2012 to care for her aging parents.",
@@ -149,7 +149,7 @@ const alumniData: Alumni[] = [
     {
         id: 9,
         name: "Srinidhi Srinath",
-        image: "/images/alumni/srinidhi.jpg",
+        image: "/images/al-9.png",
         paragraphs: [
             "Batch of 2013. She achieved State Rank 4 in Class XII and State Rank 24 in Class X.",
             "She holds an MBA from the Indian Institute of Management (IIM), Lucknow and is a qualified Chartered Accountant (CA) and Company Secretary (CS).",
@@ -160,7 +160,7 @@ const alumniData: Alumni[] = [
     {
         id: 10,
         name: "Justice Prabha Sridevan",
-        image: "/images/alumni/prabha-sridevan.jpg",
+        image: "/images/al-10.png",
         paragraphs: [
             "Justice Prabha Sridevan (Retd.), Batch of 1963, served as Judge of the Madras High Court from 2000 to 2010.",
             "Former Chairperson of the Intellectual Property Appellate Board and contributor to the Think Tank on India’s IPR Policy, she has been recognized among the 50 most influential figures in global intellectual property.",
