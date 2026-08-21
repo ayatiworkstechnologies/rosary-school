@@ -50,7 +50,7 @@ const newsItems = [
     description:
       "Parents are invited to meet the teachers and discuss their child’s academic performance, classroom participation, and overall development.",
 
-    image: "/images/news2.png",
+    image: "/images/newsannouncement2.png",
 
     imageAlt: "Rosary School Announcement",
 
