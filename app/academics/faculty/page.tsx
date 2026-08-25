@@ -9,8 +9,8 @@ export default function FacultyPage() {
     <>
       <InnerBanner
         title="Faculty"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/faculty-banner.png"
+        mobileImage="/images/faculty-banner-mobile.png"
         alt="Rosary School faculty"
       />
       

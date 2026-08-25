@@ -1,20 +1,20 @@
 
+import PreliminaryAdmissionForm from "../../components/admissions/PreliminaryAdmissionForm";
 import InnerBanner from "../../components/common/InnerBanner";
-import SchoolNews from "../../components/news/SchoolNews";
 
-export default function NewsPage() {
+
+export default function AdmissionsPage() {
   return (
     <>
       <InnerBanner
-        title="News"
+        title="Admissions"
         desktopImage="/images/ex-1.png"
         mobileImage="/images/ex-1.png"
         alt="Rosary School students"
       />
 
-      <SchoolNews />
+      <PreliminaryAdmissionForm />
 
-  
 
 
     </>

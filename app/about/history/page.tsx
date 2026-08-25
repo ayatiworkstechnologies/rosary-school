@@ -6,8 +6,8 @@ export default function HistoryPage() {
     <>
       <InnerBanner
       title="History"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/history-banner.png"
+        mobileImage="/images/history-banner-mobile.png"
         alt="Rosary School students"
       
       />

@@ -7,8 +7,8 @@ export default function AcademicsPage() {
     <>
       <InnerBanner
         title="Academics"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/academic-banner.png"
+        mobileImage="/images/academic-banner-mobile.png"
         alt="Rosary School students"
       />
 

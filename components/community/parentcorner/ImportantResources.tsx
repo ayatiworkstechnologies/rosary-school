@@ -1,7 +1,9 @@
 "use client";
 
-import Image from "next/image";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
 import {
   BusFront,
   ChevronLeft,
@@ -9,7 +11,10 @@ import {
   Clock3,
   Shirt,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
 /* =========================================================
    TYPES
@@ -21,7 +26,13 @@ type ResourceItem = {
   category: string;
   shortDescription: string;
   description: string;
+
+  /* TABLET + DESKTOP IMAGE */
   image: string;
+
+  /* MOBILE IMAGE */
+  mobileImage: string;
+
   icon: React.ElementType;
 };
 
@@ -32,7 +43,9 @@ type ResourceItem = {
 const resources: ResourceItem[] = [
   {
     id: 1,
+
     title: "School Timings",
+
     category: "Schedule",
 
     shortDescription:
@@ -41,14 +54,20 @@ const resources: ResourceItem[] = [
     description:
       "Find details about regular school hours, morning assembly, class timings, lunch breaks, dispersal time, examination schedules, and any special changes announced by the school.",
 
-    image: "/images/school-timings-ex.png",
+    image:
+      "/images/school-timings-01.png",
+
+    mobileImage:
+      "/images/school-timings-mobile-01.png",
 
     icon: Clock3,
   },
 
   {
     id: 2,
+
     title: "Transport",
+
     category: "Transport",
 
     shortDescription:
@@ -57,14 +76,20 @@ const resources: ResourceItem[] = [
     description:
       "Our school transport service is planned to provide students with safe and reliable travel. Parents can refer to route details, pickup and drop timings, transport guidelines, and important travel updates.",
 
-    image: "/images/school-timings-ex.png",
+    image:
+      "/images/transport-01.png",
+
+    mobileImage:
+      "/images/transport-mobile-01.png",
 
     icon: BusFront,
   },
 
   {
     id: 3,
+
     title: "School Uniform",
+
     category: "Guidelines",
 
     shortDescription:
@@ -73,7 +98,11 @@ const resources: ResourceItem[] = [
     description:
       "Students are expected to maintain a neat and disciplined appearance. Refer to the approved uniform pattern, designated footwear, accessories, grooming expectations, and special uniform instructions.",
 
-    image: "/images/school-timings-ex.png",
+    image:
+      "/images/school-uniform-01.png",
+
+    mobileImage:
+      "/images/school-uniform-mobile-01.png",
 
     icon: Shirt,
   },
@@ -83,7 +112,12 @@ const resources: ResourceItem[] = [
    MOTION
 ========================================================= */
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const ease = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
 
 const headerContainer = {
   hidden: {},
@@ -118,9 +152,16 @@ const fadeUp = {
 ========================================================= */
 
 const slideVariants = {
-  enter: (direction: number) => ({
+  enter: (
+    direction: number
+  ) => ({
     opacity: 0,
-    x: direction > 0 ? 65 : -65,
+
+    x:
+      direction > 0
+        ? 65
+        : -65,
+
     scale: 0.985,
   }),
 
@@ -130,9 +171,16 @@ const slideVariants = {
     scale: 1,
   },
 
-  exit: (direction: number) => ({
+  exit: (
+    direction: number
+  ) => ({
     opacity: 0,
-    x: direction > 0 ? -65 : 65,
+
+    x:
+      direction > 0
+        ? -65
+        : 65,
+
     scale: 0.985,
   }),
 };
@@ -142,11 +190,20 @@ const slideVariants = {
 ========================================================= */
 
 export default function ImportantResources() {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
 
-  const [direction, setDirection] = useState(1);
+  const [
+    direction,
+    setDirection,
+  ] = useState(1);
 
-  const [paused, setPaused] = useState(false);
+  const [
+    paused,
+    setPaused,
+  ] = useState(false);
 
   /* =========================================================
      NEXT
@@ -156,7 +213,9 @@ export default function ImportantResources() {
     setDirection(1);
 
     setActiveIndex(
-      (current) => (current + 1) % resources.length
+      (current) =>
+        (current + 1) %
+        resources.length
     );
   };
 
@@ -169,7 +228,9 @@ export default function ImportantResources() {
 
     setActiveIndex(
       (current) =>
-        (current - 1 + resources.length) %
+        (current -
+          1 +
+          resources.length) %
         resources.length
     );
   };
@@ -179,36 +240,51 @@ export default function ImportantResources() {
   ========================================================= */
 
   useEffect(() => {
-    if (paused) return;
+    if (paused) {
+      return;
+    }
 
-    const timer = window.setInterval(() => {
-      setDirection(1);
+    const timer =
+      window.setInterval(
+        () => {
+          setDirection(1);
 
-      setActiveIndex(
-        (current) => (current + 1) % resources.length
+          setActiveIndex(
+            (current) =>
+              (current + 1) %
+              resources.length
+          );
+        },
+        4500
       );
-    }, 4500);
 
     return () => {
-      window.clearInterval(timer);
+      window.clearInterval(
+        timer
+      );
     };
   }, [paused]);
 
-  const activeResource = resources[activeIndex];
-
-  const ActiveIcon = activeResource.icon;
-
   /* =========================================================
-     RETURN
+     ACTIVE RESOURCE
   ========================================================= */
+
+  const activeResource =
+    resources[activeIndex];
+
+  const ActiveIcon =
+    activeResource.icon;
 
   return (
     <section
       className="
         relative
         isolate
+
         w-full
+
         overflow-hidden
+
         bg-white
 
         py-[50px]
@@ -225,7 +301,9 @@ export default function ImportantResources() {
       ===================================================== */}
 
       <motion.div
-        variants={headerContainer}
+        variants={
+          headerContainer
+        }
         initial="hidden"
         whileInView="visible"
         viewport={{
@@ -250,8 +328,6 @@ export default function ImportantResources() {
           text-center
         "
       >
-        {/* LABEL */}
-
         <motion.span
           variants={fadeUp}
           className="
@@ -272,6 +348,7 @@ export default function ImportantResources() {
             uppercase
 
             leading-none
+
             tracking-[0.35px]
 
             text-[#0075FF]
@@ -281,8 +358,6 @@ export default function ImportantResources() {
         >
           Guidelines
         </motion.span>
-
-        {/* TITLE */}
 
         <motion.h2
           variants={fadeUp}
@@ -331,8 +406,12 @@ export default function ImportantResources() {
           delay: 0.12,
           ease,
         }}
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
+        onMouseEnter={() =>
+          setPaused(true)
+        }
+        onMouseLeave={() =>
+          setPaused(false)
+        }
         className="
           relative
           z-10
@@ -367,12 +446,14 @@ export default function ImportantResources() {
           "
         >
           {/* =================================================
-              DESKTOP LEFT ARROW
+              DESKTOP PREVIOUS
           ================================================= */}
 
           <motion.button
             type="button"
-            onClick={handlePrevious}
+            onClick={
+              handlePrevious
+            }
             whileHover={{
               x: -3,
               scale: 1.05,
@@ -427,12 +508,14 @@ export default function ImportantResources() {
           </motion.button>
 
           {/* =================================================
-              DESKTOP RIGHT ARROW
+              DESKTOP NEXT
           ================================================= */}
 
           <motion.button
             type="button"
-            onClick={handleNext}
+            onClick={
+              handleNext
+            }
             whileHover={{
               x: 3,
               scale: 1.05,
@@ -501,13 +584,21 @@ export default function ImportantResources() {
           >
             <AnimatePresence
               mode="wait"
-              custom={direction}
+              custom={
+                direction
+              }
               initial={false}
             >
               <motion.article
-                key={activeResource.id}
-                custom={direction}
-                variants={slideVariants}
+                key={
+                  activeResource.id
+                }
+                custom={
+                  direction
+                }
+                variants={
+                  slideVariants
+                }
                 initial="enter"
                 animate="center"
                 exit="exit"
@@ -542,6 +633,10 @@ export default function ImportantResources() {
               >
                 {/* =================================================
                     IMAGE
+
+                    IMPORTANT:
+                    <picture> guarantees the browser chooses
+                    the correct source.
                 ================================================= */}
 
                 <motion.div
@@ -573,35 +668,60 @@ export default function ImportantResources() {
 
                     md:h-[300px]
                     md:w-[220px]
-
-                    lg:h-[300px]
-                    lg:w-[220px]
                   "
                 >
-                  {/* =============================================
-                      IMPORTANT FIX
+                  <picture
+                    className="
+                      absolute
+                      inset-0
 
-                      Keep "sizes" on ONE LINE.
+                      block
 
-                      Don't write it like:
-                      
-                      sizes="
-                        (max-width: 767px) 100vw,
-                        220px
+                      h-full
+                      w-full
+                    "
+                  >
+                    {/* =========================================
+                        MOBILE
+
+                        0 - 767px
+                    ========================================== */}
+
+                    <source
+                      media="(max-width: 767px)"
+                      srcSet={
+                        activeResource.mobileImage
+                      }
+                    />
+
+                    {/* =========================================
+                        TABLET + DESKTOP
+
+                        768px+
+                    ========================================== */}
+
+                    <img
+                      key={`${activeResource.id}-${activeResource.image}`}
+                      src={
+                        activeResource.image
+                      }
+                      alt={
+                        activeResource.title
+                      }
+                      loading={
+                        activeIndex === 0
+                          ? "eager"
+                          : "lazy"
+                      }
+                      className="
+                        h-full
+                        w-full
+
+                        object-cover
+                        object-center
                       "
-
-                      because Turbopack was generating an invalid
-                      imagesizes selector.
-                  ============================================= */}
-
-                  <Image
-                    src={activeResource.image}
-                    alt={activeResource.title}
-                    fill
-                    preload={activeIndex === 0}
-                    sizes="(max-width: 767px) 100vw, 220px"
-                    className="object-cover object-center"
-                  />
+                    />
+                  </picture>
                 </motion.div>
 
                 {/* =================================================
@@ -729,7 +849,9 @@ export default function ImportantResources() {
                       md:top-[18px]
                     "
                   >
-                    {activeResource.category}
+                    {
+                      activeResource.category
+                    }
                   </motion.span>
 
                   {/* TITLE */}
@@ -769,7 +891,9 @@ export default function ImportantResources() {
                       lg:text-[24px]
                     "
                   >
-                    {activeResource.title}
+                    {
+                      activeResource.title
+                    }
                   </motion.h3>
 
                   {/* SHORT DESCRIPTION */}
@@ -808,7 +932,9 @@ export default function ImportantResources() {
                       lg:text-[12.5px]
                     "
                   >
-                    {activeResource.shortDescription}
+                    {
+                      activeResource.shortDescription
+                    }
                   </motion.p>
 
                   {/* SEPARATOR */}
@@ -869,7 +995,9 @@ export default function ImportantResources() {
                       lg:text-[12.5px]
                     "
                   >
-                    {activeResource.description}
+                    {
+                      activeResource.description
+                    }
                   </motion.p>
                 </div>
               </motion.article>
@@ -886,6 +1014,7 @@ export default function ImportantResources() {
             mt-[18px]
 
             flex
+
             items-center
             justify-center
 
@@ -894,11 +1023,11 @@ export default function ImportantResources() {
             lg:hidden
           "
         >
-          {/* PREVIOUS */}
-
           <motion.button
             type="button"
-            onClick={handlePrevious}
+            onClick={
+              handlePrevious
+            }
             whileTap={{
               scale: 0.9,
             }}
@@ -933,7 +1062,7 @@ export default function ImportantResources() {
             />
           </motion.button>
 
-          {/* CURRENT COUNTER */}
+          {/* COUNTER */}
 
           <div
             className="
@@ -952,30 +1081,41 @@ export default function ImportantResources() {
             <span
               className="
                 font-semibold
+
                 text-[#0075FF]
               "
             >
               {String(
                 activeIndex + 1
-              ).padStart(2, "0")}
+              ).padStart(
+                2,
+                "0"
+              )}
             </span>
 
-            <span className="mx-[4px]">
+            <span
+              className="
+                mx-[4px]
+              "
+            >
               /
             </span>
 
             <span>
               {String(
                 resources.length
-              ).padStart(2, "0")}
+              ).padStart(
+                2,
+                "0"
+              )}
             </span>
           </div>
 
-          {/* NEXT */}
-
           <motion.button
             type="button"
-            onClick={handleNext}
+            onClick={
+              handleNext
+            }
             whileTap={{
               scale: 0.9,
             }}
@@ -1027,9 +1167,14 @@ export default function ImportantResources() {
           "
         >
           {resources.map(
-            (_, index) => (
+            (
+              resource,
+              index
+            ) => (
               <motion.button
-                key={index}
+                key={
+                  resource.id
+                }
                 type="button"
                 onClick={() => {
                   if (
@@ -1074,7 +1219,7 @@ export default function ImportantResources() {
 
                   bg-[#0075FF]
                 "
-                aria-label={`View ${resources[index].title}`}
+                aria-label={`View ${resource.title}`}
               />
             )
           )}

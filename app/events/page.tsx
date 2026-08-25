@@ -1,21 +1,18 @@
 
 import InnerBanner from "../../components/common/InnerBanner";
-import SchoolNews from "../../components/news/SchoolNews";
+import SchoolEventsSection from "../../components/events/SchoolEventsSection";
 
-export default function NewsPage() {
+export default function EventsPage() {
   return (
     <>
       <InnerBanner
-        title="News"
+        title="Events"
         desktopImage="/images/ex-1.png"
         mobileImage="/images/ex-1.png"
         alt="Rosary School students"
       />
 
-      <SchoolNews />
-
-  
-
+      <SchoolEventsSection />
 
     </>
   );

@@ -12,8 +12,8 @@ export default function ParentCornerPage() {
     <>
       <InnerBanner
         title="Parent Corner"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/parent-corner-banner.png"
+        mobileImage="/images/parent-corner-banner-mobile.png"
         alt="Rosary School students"
       />
        

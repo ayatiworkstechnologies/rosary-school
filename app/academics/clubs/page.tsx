@@ -9,8 +9,8 @@ export default function ClubsPage() {
     <>
       <InnerBanner
         title="Clubs"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/clubs-banner.png"
+        mobileImage="/images/clubs-banner-mobile.png"
         alt="Rosary School students"
       />
 

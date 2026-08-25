@@ -11,8 +11,8 @@ export default function CurriculumPage() {
     <>
       <InnerBanner
         title="Curriculum"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/curriculam-banner.png"
+        mobileImage="/images/curriculam-banner-mobile.png"
         alt="Rosary School students"
       />
 

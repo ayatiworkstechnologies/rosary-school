@@ -10,8 +10,8 @@ export default function AlumniPage() {
     <>
       <InnerBanner
         title="Alumni"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/alumini-banner.png"
+        mobileImage="/images/alumini-banner-banner.png"
         alt="Rosary School students"
       />
        

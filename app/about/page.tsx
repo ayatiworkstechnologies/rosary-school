@@ -10,8 +10,8 @@ export default function AboutPage() {
     <>
       <InnerBanner
         title="About Us"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/about-banner.png"
+        mobileImage="/images/about-banner-mobile.png"
         alt="Rosary School students"
       />
 

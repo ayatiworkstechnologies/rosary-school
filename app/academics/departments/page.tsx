@@ -9,8 +9,8 @@ export default function DepartmentsPage() {
     <>
       <InnerBanner
         title="Departments"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/departments-banner.png"
+        mobileImage="/images/departments-banner-mobile.png"
         alt="Rosary School students"
       />
 

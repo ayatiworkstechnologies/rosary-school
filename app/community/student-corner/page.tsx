@@ -13,8 +13,8 @@ export default function StudentCornerPage() {
     <>
       <InnerBanner
         title="Student Corner"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/student-corner-banner.png"
+        mobileImage="/images/student-corner-banner-mobile.png"
         alt="Rosary School students"
       />
 
