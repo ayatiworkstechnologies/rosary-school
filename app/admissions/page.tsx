@@ -8,8 +8,8 @@ export default function AdmissionsPage() {
     <>
       <InnerBanner
         title="Admissions"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/admission-banner.png"
+        mobileImage="/images/admission-banner-mobile.png"
         alt="Rosary School students"
       />
 

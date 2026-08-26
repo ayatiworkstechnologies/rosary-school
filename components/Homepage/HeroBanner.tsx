@@ -2,7 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+
+import {
+  useEffect,
+  useState,
+} from "react";
+
 import {
   AnimatePresence,
   motion,
@@ -16,16 +21,21 @@ import {
 type BannerButton = {
   label: string;
   href: string;
-  variant: "primary" | "outline";
+  variant:
+    | "primary"
+    | "outline";
 };
 
 type Banner = {
   id: number;
   indicator: string;
   title: string;
+
   desktopImage: string;
   mobileImage: string;
+
   imageAlt: string;
+
   buttons: BannerButton[];
 };
 
@@ -36,120 +46,203 @@ type Banner = {
 const banners: Banner[] = [
   {
     id: 1,
-    indicator: "OUR PURPOSE",
+
+    indicator:
+      "OUR PURPOSE",
+
     title:
       "EDUCATING FOR KNOWLEDGE, TRUTH\n& HUMAN DEVELOPMENT",
 
-    desktopImage: "/images/banner1.png",
-    mobileImage: "/images/banner-mobile-1.png",
+    desktopImage:
+      "/images/banner1.png",
 
-    imageAlt: "Rosary School students",
+    mobileImage:
+      "/images/banner-mobile-1.png",
+
+    imageAlt:
+      "Rosary School students",
 
     buttons: [
       {
-        label: "EXPLORE ROSARY",
+        label:
+          "EXPLORE ROSARY",
+
         href: "/about",
-        variant: "primary",
+
+        variant:
+          "primary",
       },
+
       {
-        label: "ADMISSION",
-        href: "/admissions",
-        variant: "outline",
+        label:
+          "ADMISSION",
+
+        href:
+          "/admissions",
+
+        variant:
+          "outline",
       },
     ],
   },
 
   {
     id: 2,
-    indicator: "ACADEMIC EXCELLENCE",
+
+    indicator:
+      "ACADEMIC EXCELLENCE",
+
     title:
       "CELEBRATING OUR\nACHIEVERS",
 
-    desktopImage: "/images/banner-2.png",
-    mobileImage: "/images/banner-mobile-2.png",
+    desktopImage:
+      "/images/banner-2.png",
 
-    imageAlt: "Rosary School academic excellence",
+    mobileImage:
+      "/images/banner-mobile-2.png",
+
+    imageAlt:
+      "Rosary School academic excellence",
 
     buttons: [
       {
-        label: "OUR ACHIEVEMENTS",
-        href: "/achievements",
-        variant: "primary",
+        label:
+          "OUR ACHIEVEMENTS",
+
+        href:
+          "/achievements",
+
+        variant:
+          "primary",
       },
+
       {
-        label: "ACADEMICS",
-        href: "/academics",
-        variant: "outline",
+        label:
+          "ACADEMICS",
+
+        href:
+          "/academics",
+
+        variant:
+          "outline",
       },
     ],
   },
 
   {
     id: 3,
-    indicator: "STUDENT LIFE",
+
+    indicator:
+      "STUDENT LIFE",
+
     title:
       "LEARN. DISCOVER.\nLEAD.",
 
-    desktopImage: "/images/banner-3.png",
-    mobileImage: "/images/banner-mobile-3.png",
+    desktopImage:
+      "/images/banner-3.png",
 
-    imageAlt: "Student life at Rosary School",
+    mobileImage:
+      "/images/banner-mobile-3.png",
+
+    imageAlt:
+      "Student life at Rosary School",
 
     buttons: [
       {
-        label: "STUDENT CORNER",
-        href: "/community/student-corner",
-        variant: "primary",
+        label:
+          "STUDENT CORNER",
+
+        href:
+          "/community/student-corner",
+
+        variant:
+          "primary",
       },
+
       {
-        label: "EXPLORE CLUBS",
-        href: "/academics/clubs",
-        variant: "outline",
+        label:
+          "EXPLORE CLUBS",
+
+        href:
+          "/academics/clubs",
+
+        variant:
+          "outline",
       },
     ],
   },
 
   {
     id: 4,
-    indicator: "OUR HERITAGE",
+
+    indicator:
+      "OUR HERITAGE",
+
     title:
       "A LEGACY OF EDUCATION\nSINCE 1950",
 
-    desktopImage: "/images/banner-4.png",
-    mobileImage: "/images/banner-mobile-4.png",
+    desktopImage:
+      "/images/banner-4.png",
 
-    imageAlt: "Rosary School heritage",
+    mobileImage:
+      "/images/banner-mobile-4.png",
+
+    imageAlt:
+      "Rosary School heritage",
 
     buttons: [
       {
-        label: "OUR HISTORY",
-        href: "/about",
-        variant: "primary",
+        label:
+          "OUR HISTORY",
+
+        href:
+          "/about/history",
+
+        variant:
+          "primary",
       },
     ],
   },
 
   {
     id: 5,
-    indicator: "ADMISSIONS",
+
+    indicator:
+      "ADMISSIONS",
+
     title:
       "BEGIN YOUR JOURNEY\nWITH ROSARY",
 
-    desktopImage: "/images/banner-5.png",
-    mobileImage: "/images/banner-mobile-5.png",
+    desktopImage:
+      "/images/banner-5.png",
 
-    imageAlt: "Rosary School admissions",
+    mobileImage:
+      "/images/banner-mobile-5.png",
+
+    imageAlt:
+      "Rosary School admissions",
 
     buttons: [
       {
-        label: "ADMISSION",
-        href: "/admissions",
-        variant: "primary",
+        label:
+          "ADMISSION",
+
+        href:
+          "/admissions",
+
+        variant:
+          "primary",
       },
+
       {
-        label: "CONTACT US",
-        href: "/contact-us",
-        variant: "outline",
+        label:
+          "CONTACT US",
+
+        href:
+          "/contact-us",
+
+        variant:
+          "outline",
       },
     ],
   },
@@ -166,128 +259,171 @@ const smoothEase = [
   1,
 ] as const;
 
-const contentContainer: Variants = {
-  hidden: {
-    opacity: 0,
-  },
-
-  visible: {
-    opacity: 1,
-
-    transition: {
-      delayChildren: 0.12,
-      staggerChildren: 0.14,
+const contentContainer: Variants =
+  {
+    hidden: {
+      opacity: 0,
     },
-  },
 
-  exit: {
-    opacity: 0,
+    visible: {
+      opacity: 1,
 
-    transition: {
-      duration: 0.3,
-      ease: smoothEase,
+      transition: {
+        delayChildren:
+          0.12,
+
+        staggerChildren:
+          0.14,
+      },
     },
-  },
-};
 
-const textReveal: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 22,
-    filter: "blur(4px)",
-  },
+    exit: {
+      opacity: 0,
 
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
+      transition: {
+        duration: 0.3,
 
-    transition: {
-      duration: 0.85,
-      ease: smoothEase,
+        ease:
+          smoothEase,
+      },
     },
-  },
-};
+  };
 
-const labelReveal: Variants = {
-  hidden: {
-    opacity: 0,
-    x: -16,
-  },
+const textReveal: Variants =
+  {
+    hidden: {
+      opacity: 0,
 
-  visible: {
-    opacity: 1,
-    x: 0,
+      y: 22,
 
-    transition: {
-      duration: 0.75,
-      ease: smoothEase,
+      filter:
+        "blur(4px)",
     },
-  },
-};
 
-const buttonReveal: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 16,
-    scale: 0.97,
-  },
+    visible: {
+      opacity: 1,
 
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
+      y: 0,
 
-    transition: {
-      duration: 0.7,
-      ease: smoothEase,
+      filter:
+        "blur(0px)",
+
+      transition: {
+        duration: 0.85,
+
+        ease:
+          smoothEase,
+      },
     },
-  },
-};
+  };
 
-const indicatorContainer: Variants = {
-  hidden: {
-    opacity: 0,
-    x: 18,
-  },
+const labelReveal: Variants =
+  {
+    hidden: {
+      opacity: 0,
 
-  visible: {
-    opacity: 1,
-    x: 0,
-
-    transition: {
-      duration: 0.8,
-      delayChildren: 0.25,
-      staggerChildren: 0.08,
-      ease: smoothEase,
+      x: -16,
     },
-  },
-};
 
-const indicatorItem: Variants = {
-  hidden: {
-    opacity: 0,
-    x: 15,
-  },
+    visible: {
+      opacity: 1,
 
-  visible: {
-    opacity: 1,
-    x: 0,
+      x: 0,
 
-    transition: {
-      duration: 0.65,
-      ease: smoothEase,
+      transition: {
+        duration: 0.75,
+
+        ease:
+          smoothEase,
+      },
     },
-  },
-};
+  };
+
+const buttonReveal: Variants =
+  {
+    hidden: {
+      opacity: 0,
+
+      y: 16,
+
+      scale: 0.97,
+    },
+
+    visible: {
+      opacity: 1,
+
+      y: 0,
+
+      scale: 1,
+
+      transition: {
+        duration: 0.7,
+
+        ease:
+          smoothEase,
+      },
+    },
+  };
+
+const indicatorContainer: Variants =
+  {
+    hidden: {
+      opacity: 0,
+
+      x: 18,
+    },
+
+    visible: {
+      opacity: 1,
+
+      x: 0,
+
+      transition: {
+        duration: 0.8,
+
+        delayChildren:
+          0.25,
+
+        staggerChildren:
+          0.08,
+
+        ease:
+          smoothEase,
+      },
+    },
+  };
+
+const indicatorItem: Variants =
+  {
+    hidden: {
+      opacity: 0,
+
+      x: 15,
+    },
+
+    visible: {
+      opacity: 1,
+
+      x: 0,
+
+      transition: {
+        duration: 0.65,
+
+        ease:
+          smoothEase,
+      },
+    },
+  };
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 export default function HeroBanner() {
-  const [activeIndex, setActiveIndex] =
-    useState(0);
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
 
   const activeBanner =
     banners[activeIndex];
@@ -298,17 +434,25 @@ export default function HeroBanner() {
 
   useEffect(() => {
     const interval =
-      window.setInterval(() => {
-        setActiveIndex(
-          (current) =>
-            current === banners.length - 1
-              ? 0
-              : current + 1
-        );
-      }, 6000);
+      window.setInterval(
+        () => {
+          setActiveIndex(
+            (current) =>
+              current ===
+              banners.length -
+                1
+                ? 0
+                : current +
+                  1
+          );
+        },
+        6000
+      );
 
     return () => {
-      window.clearInterval(interval);
+      window.clearInterval(
+        interval
+      );
     };
   }, []);
 
@@ -317,114 +461,170 @@ export default function HeroBanner() {
       aria-label="Rosary School Highlights"
       className="
         relative
-        h-[600px]
+
         w-full
+
         overflow-hidden
+
         bg-black
+
+        aspect-[7/10]
+
+        md:aspect-[12/5]
       "
     >
       {/* =====================================================
           BANNER IMAGES
       ====================================================== */}
 
-      {banners.map((banner, index) => {
-        const active =
-          activeIndex === index;
+      {banners.map(
+        (
+          banner,
+          index
+        ) => {
+          const active =
+            activeIndex ===
+            index;
 
-        return (
-          <div
-            key={banner.id}
-            className={`
-              absolute
-              inset-0
-
-              transition-opacity
-              duration-[1200ms]
-              ease-in-out
-
-              ${
-                active
-                  ? "opacity-100"
-                  : "pointer-events-none opacity-0"
+          return (
+            <div
+              key={
+                banner.id
               }
-            `}
-          >
-            {/* =================================================
-                DESKTOP / LAPTOP
-
-                SOURCE IMAGE:
-                1440 × 600
-            ================================================= */}
-
-            <div
-              className="
+              className={`
                 absolute
                 inset-0
-                hidden
-                md:block
-              "
+
+                transition-opacity
+                duration-[1200ms]
+                ease-in-out
+
+                ${
+                  active
+                    ? "opacity-100"
+                    : "pointer-events-none opacity-0"
+                }
+              `}
             >
-              <Image
-                src={banner.desktopImage}
-                alt={banner.imageAlt}
-                fill
-                priority={index === 0}
-                sizes="100vw"
+              {/* =============================================
+                  DESKTOP / TABLET
+
+                  IMAGE SIZE:
+                  1440 × 600
+
+                  RATIO:
+                  12 / 5
+
+                  IMPORTANT:
+                  object-contain prevents crop
+              ============================================== */}
+
+              <div
                 className="
-                  object-cover
-                  object-center
+                  absolute
+                  inset-0
+
+                  hidden
+
+                  h-full
+                  w-full
+
+                  bg-black
+
+                  md:block
                 "
-              />
-            </div>
+              >
+                <Image
+                  src={
+                    banner.desktopImage
+                  }
+                  alt={
+                    banner.imageAlt
+                  }
+                  fill
+                  priority={
+                    index ===
+                    0
+                  }
+                  sizes="100vw"
+                  className="
+                    object-contain
+                    object-center
+                  "
+                />
+              </div>
 
-            {/* =================================================
-                MOBILE
+              {/* =============================================
+                  MOBILE
 
-                SOURCE IMAGE:
-                420 × 600
-            ================================================= */}
+                  IMAGE SIZE:
+                  420 × 600
 
-            <div
-              className="
-                absolute
-                inset-0
-                md:hidden
-              "
-            >
-              <Image
-                src={banner.mobileImage}
-                alt={banner.imageAlt}
-                fill
-                priority={index === 0}
-                sizes="100vw"
+                  RATIO:
+                  7 / 10
+
+                  IMPORTANT:
+                  object-contain prevents crop
+              ============================================== */}
+
+              <div
                 className="
-                  object-cover
-                  object-center
+                  absolute
+                  inset-0
+
+                  block
+
+                  h-full
+                  w-full
+
+                  bg-black
+
+                  md:hidden
                 "
-              />
+              >
+                <Image
+                  src={
+                    banner.mobileImage
+                  }
+                  alt={
+                    banner.imageAlt
+                  }
+                  fill
+                  priority={
+                    index ===
+                    0
+                  }
+                  sizes="100vw"
+                  className="
+                    object-contain
+                    object-center
+                  "
+                />
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        }
+      )}
 
       {/* =====================================================
-          VERY LIGHT BOTTOM GRADIENT
-
-          Only for text readability.
-          Image remains bright.
+          BOTTOM GRADIENT
       ====================================================== */}
 
       <div
         className="
           pointer-events-none
+
           absolute
+
           inset-x-0
           bottom-0
+
           z-[2]
 
           h-[45%]
 
           bg-gradient-to-t
+
           from-black/45
           via-black/10
           to-transparent
@@ -434,22 +634,24 @@ export default function HeroBanner() {
       />
 
       {/* =====================================================
-          SUBTLE LEFT GRADIENT
-
-          NOT full black overlay.
+          LEFT GRADIENT
       ====================================================== */}
 
       <div
         className="
           pointer-events-none
+
           absolute
+
           inset-y-0
           left-0
+
           z-[2]
 
           w-[68%]
 
           bg-gradient-to-r
+
           from-black/15
           via-black/[0.04]
           to-transparent
@@ -465,6 +667,7 @@ export default function HeroBanner() {
       <div
         className="
           relative
+
           z-10
 
           mx-auto
@@ -479,10 +682,16 @@ export default function HeroBanner() {
             LEFT CONTENT
         ================================================= */}
 
-        <AnimatePresence mode="wait">
+        <AnimatePresence
+          mode="wait"
+        >
           <motion.div
-            key={activeBanner.id}
-            variants={contentContainer}
+            key={
+              activeBanner.id
+            }
+            variants={
+              contentContainer
+            }
             initial="hidden"
             animate="visible"
             exit="exit"
@@ -499,9 +708,10 @@ export default function HeroBanner() {
               sm:left-[30px]
               sm:right-auto
 
-              md:bottom-[70px]
+              md:bottom-[54px]
               md:max-w-[570px]
 
+              lg:bottom-[60px]
               lg:left-[45px]
 
               xl:left-[55px]
@@ -512,11 +722,14 @@ export default function HeroBanner() {
             ================================================ */}
 
             <motion.div
-              variants={labelReveal}
+              variants={
+                labelReveal
+              }
               className="
                 mb-[12px]
 
                 flex
+
                 items-center
 
                 gap-[9px]
@@ -532,9 +745,14 @@ export default function HeroBanner() {
                   scaleX: 1,
                 }}
                 transition={{
-                  duration: 0.8,
-                  delay: 0.15,
-                  ease: smoothEase,
+                  duration:
+                    0.8,
+
+                  delay:
+                    0.15,
+
+                  ease:
+                    smoothEase,
                 }}
                 style={{
                   transformOrigin:
@@ -564,7 +782,9 @@ export default function HeroBanner() {
                   drop-shadow-[0_1px_3px_rgba(0,0,0,0.45)]
                 "
               >
-                {activeBanner.indicator}
+                {
+                  activeBanner.indicator
+                }
               </span>
             </motion.div>
 
@@ -573,7 +793,9 @@ export default function HeroBanner() {
             ================================================ */}
 
             <motion.h1
-              variants={textReveal}
+              variants={
+                textReveal
+              }
               className="
                 m-0
 
@@ -605,15 +827,19 @@ export default function HeroBanner() {
                 xl:text-[32px]
               "
             >
-              {activeBanner.title}
+              {
+                activeBanner.title
+              }
             </motion.h1>
 
             {/* ===============================================
-                BLUE / WHITE LINE
+                BLUE + WHITE LINE
             ================================================ */}
 
             <motion.div
-              variants={textReveal}
+              variants={
+                textReveal
+              }
               className="
                 mt-[12px]
 
@@ -632,8 +858,12 @@ export default function HeroBanner() {
                 }}
                 transition={{
                   duration: 1,
-                  delay: 0.45,
-                  ease: smoothEase,
+
+                  delay:
+                    0.45,
+
+                  ease:
+                    smoothEase,
                 }}
                 style={{
                   transformOrigin:
@@ -641,6 +871,7 @@ export default function HeroBanner() {
                 }}
                 className="
                   flex
+
                   h-full
                   w-full
                 "
@@ -670,7 +901,9 @@ export default function HeroBanner() {
             ================================================ */}
 
             <motion.div
-              variants={contentContainer}
+              variants={
+                contentContainer
+              }
               className="
                 mt-[24px]
 
@@ -685,19 +918,28 @@ export default function HeroBanner() {
               "
             >
               {activeBanner.buttons.map(
-                (button) => (
+                (
+                  button
+                ) => (
                   <motion.div
-                    key={button.label}
-                    variants={buttonReveal}
+                    key={
+                      button.label
+                    }
+                    variants={
+                      buttonReveal
+                    }
                     whileHover={{
                       y: -3,
                     }}
                     whileTap={{
-                      scale: 0.97,
+                      scale:
+                        0.97,
                     }}
                   >
                     <Link
-                      href={button.href}
+                      href={
+                        button.href
+                      }
                       className={
                         button.variant ===
                         "primary"
@@ -769,7 +1011,9 @@ export default function HeroBanner() {
                           `
                       }
                     >
-                      {button.label}
+                      {
+                        button.label
+                      }
                     </Link>
                   </motion.div>
                 )
@@ -783,7 +1027,9 @@ export default function HeroBanner() {
         ================================================= */}
 
         <motion.div
-          variants={indicatorContainer}
+          variants={
+            indicatorContainer
+          }
           initial="hidden"
           whileInView="visible"
           viewport={{
@@ -840,7 +1086,9 @@ export default function HeroBanner() {
 
                 return (
                   <motion.div
-                    key={banner.id}
+                    key={
+                      banner.id
+                    }
                     variants={
                       indicatorItem
                     }
@@ -849,14 +1097,19 @@ export default function HeroBanner() {
                       type="button"
                       aria-label={`Show ${banner.indicator}`}
                       onClick={() =>
-                        setActiveIndex(index)
+                        setActiveIndex(
+                          index
+                        )
                       }
                       whileHover={{
                         x: -3,
                       }}
                       transition={{
-                        duration: 0.3,
-                        ease: smoothEase,
+                        duration:
+                          0.3,
+
+                        ease:
+                          smoothEase,
                       }}
                       className="
                         group
@@ -907,7 +1160,9 @@ export default function HeroBanner() {
                           }
                         `}
                       >
-                        {banner.indicator}
+                        {
+                          banner.indicator
+                        }
 
                         <span
                           className={`
@@ -932,7 +1187,7 @@ export default function HeroBanner() {
                         />
                       </span>
 
-                      {/* RIGHT INDICATOR */}
+                      {/* INDICATOR */}
 
                       <span
                         className="
@@ -1009,7 +1264,7 @@ export default function HeroBanner() {
         </motion.div>
 
         {/* =================================================
-            MOBILE INDICATORS
+            MOBILE / TABLET INDICATORS
         ================================================= */}
 
         <motion.div
@@ -1026,8 +1281,11 @@ export default function HeroBanner() {
           }}
           transition={{
             duration: 0.85,
+
             delay: 0.45,
-            ease: smoothEase,
+
+            ease:
+              smoothEase,
           }}
           className="
             absolute
@@ -1062,16 +1320,21 @@ export default function HeroBanner() {
 
               return (
                 <motion.button
-                  key={banner.id}
+                  key={
+                    banner.id
+                  }
                   type="button"
                   aria-label={`Show banner ${
                     index + 1
                   }`}
                   onClick={() =>
-                    setActiveIndex(index)
+                    setActiveIndex(
+                      index
+                    )
                   }
                   whileTap={{
-                    scale: 0.9,
+                    scale:
+                      0.9,
                   }}
                   className="
                     flex
@@ -1112,9 +1375,13 @@ export default function HeroBanner() {
 
           {/* COUNTER */}
 
-          <AnimatePresence mode="wait">
+          <AnimatePresence
+            mode="wait"
+          >
             <motion.div
-              key={activeIndex}
+              key={
+                activeIndex
+              }
               initial={{
                 opacity: 0,
                 y: 6,
@@ -1129,7 +1396,9 @@ export default function HeroBanner() {
               }}
               transition={{
                 duration: 0.4,
-                ease: smoothEase,
+
+                ease:
+                  smoothEase,
               }}
               className="
                 ml-auto
@@ -1144,20 +1413,37 @@ export default function HeroBanner() {
                 !text-white/65
               "
             >
-              <span className="!text-white">
+              <span
+                className="
+                  !text-white
+                "
+              >
                 {String(
-                  activeIndex + 1
-                ).padStart(2, "0")}
+                  activeIndex +
+                    1
+                ).padStart(
+                  2,
+                  "0"
+                )}
               </span>
 
-              <span className="mx-[5px] !text-white/45">
+              <span
+                className="
+                  mx-[5px]
+
+                  !text-white/45
+                "
+              >
                 /
               </span>
 
               <span>
                 {String(
                   banners.length
-                ).padStart(2, "0")}
+                ).padStart(
+                  2,
+                  "0"
+                )}
               </span>
             </motion.div>
           </AnimatePresence>

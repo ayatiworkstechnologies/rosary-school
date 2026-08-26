@@ -7,8 +7,8 @@ export default function NewsPage() {
     <>
       <InnerBanner
         title="News"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/news-banner.png"
+        mobileImage="/images/news-banner-mobile.png"
         alt="Rosary School students"
       />
 

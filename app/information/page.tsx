@@ -7,8 +7,8 @@ export default function InformationPage() {
     <>
       <InnerBanner
         title="Information"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/information-banner.png"
+        mobileImage="/images/information-banner-mobile.png"
         alt="Rosary School students"
       />
 

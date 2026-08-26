@@ -8,8 +8,8 @@ export default function ContactUsPage() {
     <>
       <InnerBanner
         title="Contact Us"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/contactus-banner.png"
+        mobileImage="/images/contactus-banner-mobile.png"
         alt="Rosary School students"
       />
 

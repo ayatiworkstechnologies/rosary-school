@@ -7,8 +7,8 @@ export default function EventsPage() {
     <>
       <InnerBanner
         title="Events"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/events-banner.png"
+        mobileImage="/images/events-banner-mobile.png"
         alt="Rosary School students"
       />
 

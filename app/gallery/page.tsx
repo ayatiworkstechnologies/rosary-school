@@ -7,8 +7,8 @@ export default function GalleryPage() {
     <>
       <InnerBanner
         title="Gallery"
-        desktopImage="/images/ex-1.png"
-        mobileImage="/images/ex-1.png"
+        desktopImage="/images/gallery-banner.png"
+        mobileImage="/images/gallery-banner-mobile.png"
         alt="Rosary School students"
       />
 
