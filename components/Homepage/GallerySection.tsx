@@ -779,69 +779,67 @@ export default function GallerySection() {
           "
         >
           <Link
-            href="#"
-            onClick={(event) =>
-              event.preventDefault()
-            }
-            className="
-              group
+  href="/gallery"
+  className="
+    group
 
-              inline-flex
+    inline-flex
 
-              min-h-[46px]
-              min-w-[170px]
+    min-h-[46px]
+    min-w-[170px]
 
-              items-center
-              justify-center
+    items-center
+    justify-center
 
-              bg-[#0075FF] rounded-md
+    rounded-md
+    bg-[#0075FF]
 
-              px-8
+    px-8
 
-              font-primary
+    font-primary
 
-              text-[12px]
-              font-medium
+    text-[12px]
+    font-medium
 
-              uppercase
+    uppercase
 
-              tracking-[0.03em]
+    tracking-[0.03em]
 
-              !text-white
+    !text-white
 
-              shadow-[0_8px_20px_rgba(0,117,255,0.18)]
+    shadow-[0_8px_20px_rgba(0,117,255,0.18)]
 
-              transition-all
-              duration-300
-              ease-out
+    transition-all
+    duration-300
+    ease-out
 
-              hover:-translate-y-[3px]
+    hover:-translate-y-[3px]
+    hover:bg-[#006AE8]
+    hover:shadow-[0_14px_30px_rgba(0,117,255,0.28)]
 
-              hover:bg-[#006AE8]
+    active:translate-y-0
+    active:scale-[0.98]
+  "
+  style={{
+    color: "#ffffff",
+  }}
+>
+  <span
+    className="
+      !text-white
 
-              hover:shadow-[0_14px_30px_rgba(0,117,255,0.28)]
-            "
-            style={{
-              color: "#ffffff",
-            }}
-          >
-            <span
-              className="
-                !text-white
+      transition-transform
+      duration-300
 
-                transition-transform
-                duration-300
-
-                group-hover:scale-[1.04]
-              "
-              style={{
-                color:
-                  "#ffffff",
-              }}
-            >
-              View All
-            </span>
-          </Link>
+      group-hover:scale-[1.04]
+    "
+    style={{
+      color: "#ffffff",
+    }}
+  >
+    View All
+  </span>
+</Link>
         </motion.div>
       </div>
     </section>
