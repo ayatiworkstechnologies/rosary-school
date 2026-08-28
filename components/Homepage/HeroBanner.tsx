@@ -214,10 +214,10 @@ const banners: Banner[] = [
       "BEGIN YOUR JOURNEY\nWITH ROSARY",
 
     desktopImage:
-      "/images/banner-5.png",
+      "/images/ad-banner-5.png",
 
     mobileImage:
-      "/images/banner-mobile-5.png",
+      "/images/ad-banner-mobile-5.png",
 
     imageAlt:
       "Rosary School admissions",

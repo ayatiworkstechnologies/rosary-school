@@ -142,6 +142,19 @@ const navigation: NavigationItem[] = [
       },
 
       {
+        label: "School Council",
+
+        href:
+          "/academics/school-council",
+
+        keywords: [
+          "council",
+          
+          "student council",
+        ],
+      },
+
+      {
         label: "Clubs",
 
         href:

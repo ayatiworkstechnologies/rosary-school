@@ -136,7 +136,7 @@ const fadeUp = {
 };
 
 /* =========================================================
-   CARD
+   DOWNLOAD CARD
 ========================================================= */
 
 function DownloadCard({
@@ -178,8 +178,7 @@ function DownloadCard({
         relative
 
         flex
-        h-full
-        min-h-[138px]
+        h-[132px]
         w-full
         flex-col
 
@@ -205,7 +204,7 @@ function DownloadCard({
 
         hover:shadow-[0_16px_34px_rgba(0,117,255,0.14)]
 
-        sm:min-h-[142px]
+        sm:h-[132px]
       "
     >
       {/* =====================================================
@@ -225,7 +224,7 @@ function DownloadCard({
         "
       />
 
-      {/* animated top line */}
+      {/* HOVER BLUE LINE */}
 
       <div
         className="
@@ -252,8 +251,10 @@ function DownloadCard({
       <div
         className="
           flex
+
           items-start
           justify-between
+
           gap-[10px]
         "
       >
@@ -275,7 +276,7 @@ function DownloadCard({
             {item.title}
           </h3>
 
-          {/* underline */}
+          {/* UNDERLINE */}
 
           <motion.span
             initial={{
@@ -294,6 +295,7 @@ function DownloadCard({
             }}
             className="
               mt-[4px]
+
               block
 
               h-[1px]
@@ -307,7 +309,7 @@ function DownloadCard({
         </div>
 
         {/* =================================================
-            YELLOW ICON
+            ICON
         ================================================= */}
 
         <motion.div
@@ -365,13 +367,15 @@ function DownloadCard({
 
       {/* =====================================================
           DESCRIPTION
+
+          Same reserved height for every card.
       ====================================================== */}
 
       <p
         className="
-          mt-[10px] pt-3
+          mt-[9px]
 
-          min-h-[33px]
+          min-h-[34px]
 
           font-secondary
 
@@ -389,6 +393,8 @@ function DownloadCard({
 
       {/* =====================================================
           DOWNLOAD BUTTON
+
+          mt-auto = ALL BUTTONS ALIGN AT BOTTOM
       ====================================================== */}
 
       <motion.a
@@ -401,12 +407,14 @@ function DownloadCard({
 
           relative
 
-          mt-[9px]
+          mt-auto
 
           flex
 
           h-[30px]
           w-full
+
+          shrink-0
 
           items-center
           justify-center
@@ -447,13 +455,16 @@ function DownloadCard({
           hover:shadow-[0_8px_18px_rgba(0,117,255,0.20)]
         "
       >
-        {/* hover shine */}
+        {/* =================================================
+            SHINE ANIMATION
+        ================================================= */}
 
         <span
           className="
             pointer-events-none
 
             absolute
+
             -left-[50px]
             top-0
 
@@ -508,7 +519,7 @@ function DownloadCard({
 }
 
 /* =========================================================
-   MAIN
+   MAIN COMPONENT
 ========================================================= */
 
 export default function DownloadsSection() {
@@ -692,7 +703,7 @@ export default function DownloadsSection() {
         </motion.div>
 
         {/* =================================================
-            GRID
+            DOWNLOAD GRID
         ================================================= */}
 
         <div
@@ -790,7 +801,7 @@ export default function DownloadsSection() {
             "
           >
             {/* ===============================================
-                IMAGE
+                SUPPORT IMAGE
             ================================================ */}
 
             <motion.div

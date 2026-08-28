@@ -568,7 +568,7 @@ export default function GoalsObjectives() {
                 tracking-[-0.6px]
                 !text-[#111111]
 
-                xl:text-[30px]
+                xl:text-[30px] pt-2
               "
             >
               Goals And Objectives
@@ -583,7 +583,7 @@ export default function GoalsObjectives() {
                 max-w-[310px]
                 font-secondary
                 text-[13px]
-                font-normal
+                font-normal pt-2
                 leading-[1.48]
                 text-[#6F6F6F]
 

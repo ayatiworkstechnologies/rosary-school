@@ -825,7 +825,7 @@ export default function NewsAnnouncement() {
                   data-description
                   data-mobile-reveal
                   className="
-                    mt-4
+                    mt-4 pt-3
                     max-w-[670px]
 
                     sm:mt-5
