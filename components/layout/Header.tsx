@@ -930,8 +930,7 @@ export default function Header() {
                   sm:w-[280px]
 
                   lg:h-[55px]
-                  lg:w-[285px]
-
+                  lg:w-[285px] 
                   xl:w-[300px]
                 "
               >

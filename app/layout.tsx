@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, Urbanist } from "next/font/google";
 import "./globals.css";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import ScrollToTop from "../components/layout/ScrollToTop";
+import SiteLayout from "../components/layout/SiteLayout";
 
 const archivo = Archivo({
   variable: "--font-archivo",
@@ -37,11 +35,8 @@ export default function RootLayout({
       className={`${archivo.variable} ${urbanist.variable}`}
     >
       <body>
-        <Header />
-        {children}
-        <ScrollToTop />
-        <Footer />
-        </body>
+        <SiteLayout>{children}</SiteLayout>
+      </body>
     </html>
   );
 }

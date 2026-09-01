@@ -1,41 +1,134 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+
+# =========================================================
+# NODE / NEXT.JS DEPENDENCIES
+# =========================================================
+
 /node_modules
 /.pnp
 .pnp.*
+
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
 
-# testing
+
+# =========================================================
+# TESTING
+# =========================================================
+
 /coverage
 
-# next.js
+
+# =========================================================
+# NEXT.JS
+# =========================================================
+
 /.next/
 /out/
 
-# production
+
+# =========================================================
+# PRODUCTION
+# =========================================================
+
 /build
 
-# misc
+
+# =========================================================
+# PYTHON / FASTAPI
+# =========================================================
+
+# Python virtual environment
+backend/venv/
+backend/.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python cache anywhere inside backend
+backend/**/__pycache__/
+
+# Python test/cache folders
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Python coverage
+.coverage
+htmlcov/
+
+
+# =========================================================
+# BACKEND RUNTIME FILES
+# =========================================================
+
+backend/uploads/
+backend/storage/
+backend/logs/
+
+*.log
+
+
+# =========================================================
+# DATABASE / LOCAL FILES
+# =========================================================
+
+*.sqlite
+*.sqlite3
+*.db
+
+
+# =========================================================
+# ENVIRONMENT / SECRETS
+# =========================================================
+
+# Protects:
+# .env
+# .env.local
+# .env.production
+# backend/.env
+# etc.
+.env*
+
+# Optional example env files may be committed
+!.env.example
+!backend/.env.example
+
+
+# =========================================================
+# MISC
+# =========================================================
+
 .DS_Store
 *.pem
 
-# debug
+
+# =========================================================
+# DEBUG LOGS
+# =========================================================
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
 
-# vercel
+# =========================================================
+# VERCEL
+# =========================================================
+
 .vercel
 
-# typescript
+
+# =========================================================
+# TYPESCRIPT
+# =========================================================
+
 *.tsbuildinfo
 next-env.d.ts
