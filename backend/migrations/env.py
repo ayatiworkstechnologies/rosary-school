@@ -14,6 +14,7 @@ from app.db.session import DATABASE_URL
 # =========================================================
 
 from app.models.admin import Admin  # noqa: F401
+from app.models.news import NewsItem  # noqa: F401
 
 
 # =========================================================

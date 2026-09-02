@@ -1,11 +1,35 @@
 import logging
+from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    status,
+)
+from fastapi.middleware.cors import (
+    CORSMiddleware,
+)
+from fastapi.staticfiles import StaticFiles
+
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api.v1.admin.auth import router as admin_auth_router
+from app.api.v1.admin.auth import (
+    router as admin_auth_router,
+)
+
+from app.api.v1.admin.news import (
+    router as admin_news_router,
+)
+
+from app.api.v1.admin.uploads import (
+    router as admin_upload_router,
+)
+
+from app.api.v1.public.news import (
+    router as public_news_router,
+)
+
 from app.core.config import settings
 from app.db.session import engine
 
@@ -40,13 +64,14 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
 
-    # These frontend origins are allowed to call FastAPI.
+    # Frontend origins allowed to call FastAPI.
     allow_origins=[
         settings.FRONTEND_URL,
         "http://127.0.0.1:3000",
     ],
 
-    # Required because authentication uses cookies.
+    # Required because Admin authentication
+    # uses HttpOnly cookies.
     allow_credentials=True,
 
     allow_methods=["*"],
@@ -58,8 +83,96 @@ app.add_middleware(
 # API ROUTERS
 # =========================================================
 
+# ---------------------------------------------------------
+# ADMIN AUTHENTICATION
+# ---------------------------------------------------------
+
 app.include_router(
     admin_auth_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN NEWS + ANNOUNCEMENT MANAGEMENT
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_news_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN FILE UPLOADS
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_upload_router
+)
+
+
+# ---------------------------------------------------------
+# PUBLIC NEWS + ANNOUNCEMENTS
+# ---------------------------------------------------------
+
+app.include_router(
+    public_news_router
+)
+
+
+# =========================================================
+# UPLOAD DIRECTORY
+# =========================================================
+
+# main.py:
+#
+# backend/app/main.py
+#
+# parent        -> backend/app
+# parent.parent -> backend
+
+BACKEND_ROOT = (
+    Path(__file__)
+    .resolve()
+    .parent
+    .parent
+)
+
+
+UPLOAD_DIR = (
+    BACKEND_ROOT
+    / "uploads"
+)
+
+
+# Create backend/uploads/
+# automatically if it does not exist.
+
+UPLOAD_DIR.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+
+# =========================================================
+# SERVE UPLOADED FILES
+# =========================================================
+
+# Example:
+#
+# Physical:
+# backend/uploads/news/example.jpg
+#
+# Browser:
+# http://localhost:8000/uploads/news/example.jpg
+
+app.mount(
+    "/uploads",
+    StaticFiles(
+        directory=str(
+            UPLOAD_DIR
+        )
+    ),
+    name="uploads",
 )
 
 
@@ -120,7 +233,9 @@ def database_health_check():
         )
 
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_code=(
+                status.HTTP_503_SERVICE_UNAVAILABLE
+            ),
             detail=(
                 "Database connection failed. "
                 "Check the backend terminal for details."
