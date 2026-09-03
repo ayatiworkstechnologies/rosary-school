@@ -9,9 +9,18 @@ import {
   X,
 } from "lucide-react";
 import {
+  useEffect,
   useMemo,
   useState,
 } from "react";
+
+import {
+  formatPublicEventDate,
+  formatPublicEventTime,
+  formatPublicEventTimeRange,
+  getPublicEvents,
+  type PublicEventItem,
+} from "@/services/publicEventService";
 
 /* =========================================================
    TYPES
@@ -35,139 +44,106 @@ type UpcomingEvent = {
 };
 
 /* =========================================================
-   MAIN EVENTS
+   MAP API EVENT -> MAIN EVENT DESIGN
 ========================================================= */
 
-const events: EventItem[] = [
-  {
-    id: 1,
-    day: "15",
-    month: "Aug",
-    location: "School Campus",
-    time: "8 Am",
-    title:
-      "Independence Day Celebration",
-    description:
-      "Flag hoisting, cultural performances and student presentations celebrating India’s Independence Day.",
-  },
+function mapMainEvent(
+  event: PublicEventItem
+): EventItem {
 
-  {
-    id: 2,
-    day: "22",
-    month: "Aug",
-    location: "Classrooms",
-    time: "8 Am - 1pm",
-    title:
-      "Parent-Teacher Meeting",
-    description:
-      "An opportunity for parents and teachers to discuss students’ academic progress and overall development.",
-  },
+  const date =
+    formatPublicEventDate(
+      event.event_date
+    );
 
-  {
-    id: 3,
-    day: "25",
-    month: "Sep",
+
+  return {
+    id:
+      event.id,
+
+    day:
+      date.day,
+
+    month:
+      date.month,
+
     location:
-      "School Auditorium",
-    time: "8 Am",
-    title:
-      "Teachers’ Day Celebration",
-    description:
-      "Students honour their teachers through special performances, activities and appreciation programmes.",
-  },
+      event.venue,
 
-  {
-    id: 4,
-    day: "27",
-    month: "Sep",
-    location:
-      "School Auditorium",
-    time: "9 Am",
-    title:
-      "Inter-House Cultural Fest",
-    description:
-      "Students showcase their talents through music, dance, drama and creative competitions.",
-  },
+    time:
+      formatPublicEventTimeRange(
+        event.start_time,
+        event.end_time
+      ),
 
-  {
-    id: 5,
-    day: "15",
-    month: "Oct",
-    location:
-      "School Ground",
-    time: "8 Am",
     title:
-      "Annual Sports Meet",
+      event.title,
+
     description:
-      "A day of athletics, team events and sporting activities celebrating teamwork and sportsmanship.",
-  },
-];
+      event.description,
+  };
+}
+
 
 /* =========================================================
-   UPCOMING EVENTS
+   MAP API EVENT -> RIGHT UPCOMING DESIGN
 ========================================================= */
 
-const upcomingEvents: UpcomingEvent[] = [
-  {
-    id: 1,
-    title:
-      "Rosary Welcomes New Principal",
-    location:
-      "School Campus",
-    dateTime:
-      "AUG 15-2026 - 8 AM",
-  },
+function mapUpcomingEvent(
+  event: PublicEventItem
+): UpcomingEvent {
 
-  {
-    id: 2,
-    title:
-      "Sports Excellence at Rosary",
-    location:
-      "Classrooms",
-    dateTime:
-      "AUG 09-2026 - 8 AM",
-  },
+  const date =
+    new Date(
+      `${event.event_date}T00:00:00`
+    );
 
-  {
-    id: 3,
-    title:
-      "Celebrating Academic Excellence",
-    location:
-      "School Auditorium",
-    dateTime:
-      "AUG 09-2026 - 8 AM",
-  },
 
-  {
-    id: 4,
-    title:
-      "Student Leadership Takes Centre Stage",
-    location:
-      "School Auditorium",
-    dateTime:
-      "AUG 09-2026 - 8 AM",
-  },
+  const month =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        month: "short",
+      }
+    )
+      .format(date)
+      .toUpperCase();
 
-  {
-    id: 5,
-    title:
-      "Sports Excellence at Rosary",
-    location:
-      "School Ground",
-    dateTime:
-      "AUG 09-2026 - 8 AM",
-  },
 
-  {
-    id: 6,
+  const day =
+    new Intl.DateTimeFormat(
+      "en-US",
+      {
+        day: "2-digit",
+      }
+    ).format(date);
+
+
+  const year =
+    date.getFullYear();
+
+
+  const startTime =
+    formatPublicEventTime(
+      event.start_time
+    ).toUpperCase();
+
+
+  return {
+    id:
+      event.id,
+
     title:
-      "Celebrating Academic Excellence",
+      event.title,
+
     location:
-      "School Ground",
+      event.venue,
+
     dateTime:
-      "AUG 09-2026 - 8 AM",
-  },
-];
+      `${month} ${day}-${year} - ${startTime}`,
+  };
+}
+
 
 /* =========================================================
    ANIMATION
@@ -185,8 +161,125 @@ const ease = [
 ========================================================= */
 
 export default function SchoolEventsSection() {
+
+  const [
+    events,
+    setEvents,
+  ] = useState<EventItem[]>([]);
+
+
+  const [
+    upcomingEvents,
+    setUpcomingEvents,
+  ] = useState<UpcomingEvent[]>([]);
+
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+
   const [search, setSearch] =
     useState("");
+
+
+  /* =========================================================
+     LOAD THIS WEEK + NEXT WEEK
+  ========================================================= */
+
+  useEffect(() => {
+
+    let mounted = true;
+
+
+    const loadEvents =
+      async () => {
+
+        try {
+
+          setLoading(true);
+          setError("");
+
+
+          const [
+            thisWeekResponse,
+            nextWeekResponse,
+          ] =
+            await Promise.all([
+              getPublicEvents({
+                scope: "this_week",
+                limit: 20,
+              }),
+
+              getPublicEvents({
+                scope: "next_week",
+                limit: 20,
+              }),
+            ]);
+
+
+          if (!mounted) {
+            return;
+          }
+
+
+          setEvents(
+            thisWeekResponse.items.map(
+              mapMainEvent
+            )
+          );
+
+
+          setUpcomingEvents(
+            nextWeekResponse.items.map(
+              mapUpcomingEvent
+            )
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Unable to load public Events:",
+            error
+          );
+
+
+          if (mounted) {
+
+            setError(
+              error instanceof Error
+                ? error.message
+                : "Unable to load Events."
+            );
+
+          }
+
+        } finally {
+
+          if (mounted) {
+            setLoading(false);
+          }
+
+        }
+
+      };
+
+
+    loadEvents();
+
+
+    return () => {
+      mounted = false;
+    };
+
+  }, []);
 
   /* =========================================================
      NORMALIZED SEARCH
@@ -236,7 +329,7 @@ export default function SchoolEventsSection() {
           );
         }
       );
-    }, [query]);
+    }, [query, events]);
 
   /* =========================================================
      UPCOMING FILTER
@@ -264,7 +357,7 @@ export default function SchoolEventsSection() {
           );
         }
       );
-    }, [query]);
+    }, [query, upcomingEvents]);
 
   /* =========================================================
      CLEAR
@@ -548,7 +641,57 @@ export default function SchoolEventsSection() {
               mode="popLayout"
               initial={false}
             >
-              {filteredEvents.length >
+              {loading ? (
+                <motion.div
+                  key="loading-main-events"
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  className="
+                    flex
+                    min-h-[180px]
+                    items-center
+                    justify-center
+                    border-b
+                    border-[#E6E8EB]
+                    px-[20px]
+                    text-center
+                    font-secondary
+                    text-[11px]
+                    text-[#8C8C8C]
+                  "
+                >
+                  Loading this week&apos;s events...
+                </motion.div>
+              ) : error ? (
+                <motion.div
+                  key="main-events-error"
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  className="
+                    flex
+                    min-h-[180px]
+                    items-center
+                    justify-center
+                    border-b
+                    border-[#E6E8EB]
+                    px-[20px]
+                    text-center
+                    font-secondary
+                    text-[11px]
+                    text-[#A45A5A]
+                  "
+                >
+                  {error}
+                </motion.div>
+              ) : filteredEvents.length >
               0 ? (
                 filteredEvents.map(
                   (
@@ -1052,7 +1195,45 @@ export default function SchoolEventsSection() {
               mode="popLayout"
               initial={false}
             >
-              {filteredUpcoming.length >
+              {loading ? (
+                <motion.div
+                  key="loading-upcoming-events"
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  className="
+                    py-[35px]
+                    text-center
+                    font-secondary
+                    text-[11px]
+                    text-[#8B8B8B]
+                  "
+                >
+                  Loading next week&apos;s events...
+                </motion.div>
+              ) : error ? (
+                <motion.div
+                  key="upcoming-events-error"
+                  initial={{
+                    opacity: 0,
+                  }}
+                  animate={{
+                    opacity: 1,
+                  }}
+                  className="
+                    py-[35px]
+                    text-center
+                    font-secondary
+                    text-[11px]
+                    text-[#A45A5A]
+                  "
+                >
+                  {error}
+                </motion.div>
+              ) : filteredUpcoming.length >
               0 ? (
                 filteredUpcoming.map(
                   (

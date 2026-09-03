@@ -1,14 +1,35 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { useRef } from "react";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useGSAP } from "@gsap/react";
 
-gsap.registerPlugin(ScrollTrigger, useGSAP);
+import {
+  ScrollTrigger,
+} from "gsap/ScrollTrigger";
+
+import {
+  useGSAP,
+} from "@gsap/react";
+
+import {
+  getPublicNews,
+  getPublicNewsImageUrl,
+  type PublicNewsItem,
+} from "@/services/publicNewsService";
+
+
+gsap.registerPlugin(
+  ScrollTrigger,
+  useGSAP
+);
+
 
 /* =========================================================
    SETTINGS
@@ -16,84 +37,305 @@ gsap.registerPlugin(ScrollTrigger, useGSAP);
 
 const STICKY_TOP = 76;
 
+
 /* =========================================================
-   DATA
+   DISPLAY TYPE
 ========================================================= */
 
-const newsItems = [
-  {
-    id: 1,
-    number: "01",
-    category: "News",
-    outlineText: "News",
+type DisplayNewsItem = {
+  id: number;
 
-    title: "Rosary School Welcomes New Principal and Student Leaders",
+  number: string;
+
+  category:
+    | "News"
+    | "Announcement";
+
+  outlineText: string;
+
+  title: string;
+
+  description: string;
+
+  image: string | null;
+
+  imageAlt: string;
+
+  href: string;
+
+  isFeatured: boolean;
+};
+
+
+/* =========================================================
+   MAP BACKEND ITEM → EXISTING DESIGN
+========================================================= */
+
+function mapNewsItem(
+  item: PublicNewsItem,
+  index: number
+): DisplayNewsItem {
+
+  const category =
+    item.content_type ===
+    "ANNOUNCEMENT"
+      ? "Announcement"
+      : "News";
+
+
+  return {
+    id: item.id,
+
+    number: String(
+      index + 1
+    ).padStart(
+      2,
+      "0"
+    ),
+
+    category,
+
+    outlineText:
+      category,
+
+    title:
+      item.title,
 
     description:
-      "Rosary School begins the 2026–27 academic year with new leadership, welcoming the Principal and newly elected Student Council members.",
+      item.short_description,
 
-    image: "/images/news-01.png",
+    image:
+      getPublicNewsImageUrl(
+        item.image_url
+      ),
 
-    imageAlt: "Rosary School News",
+    imageAlt:
+      item.title,
 
+    /*
+     * Keep your current behaviour:
+     * homepage section opens /news.
+     *
+     * Later we can change this to:
+     *
+     * /news/${item.slug}
+     *
+     * if you want separate detail pages.
+     */
     href: "/news",
-  },
 
-  {
-    id: 2,
-    number: "02",
-    category: "Announcement",
-    outlineText: "Announcement",
+    isFeatured:
+      item.is_featured,
+  };
+}
 
-    title: "Parent–Teacher Meeting for Academic Progress Review",
-
-    description:
-      "Parents are invited to meet the teachers and discuss their child’s academic performance, classroom participation, and overall development.",
-
-    image: "/images/newsannouncement2.png",
-
-    imageAlt: "Rosary School Announcement",
-
-    href: "/news",
-  },
-
-  {
-    id: 3,
-    number: "03",
-    category: "Announcement",
-    outlineText: "Announcement",
-
-    title: "Annual Sports Meet 2026",
-
-    description:
-      "Students are invited to participate in the Annual Sports Meet featuring athletics, team games, and exciting competitions that celebrate talent and sportsmanship.",
-
-    image: "/images/news3.png",
-
-    imageAlt: "Rosary School latest announcement",
-
-    href: "/news",
-  },
-];
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 export default function NewsAnnouncement() {
-  const sectionRef = useRef<HTMLElement | null>(null);
 
-  const cardRefs = useRef<(HTMLElement | null)[]>([]);
+  const sectionRef =
+    useRef<HTMLElement | null>(
+      null
+    );
+
+  const cardRefs =
+    useRef<
+      (HTMLElement | null)[]
+    >([]);
+
+
+  const [
+    newsItems,
+    setNewsItems,
+  ] = useState<
+    DisplayNewsItem[]
+  >([]);
+
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+
+  /* =========================================================
+     LOAD LATEST PUBLIC CONTENT
+  ========================================================= */
+
+  useEffect(() => {
+
+    let mounted = true;
+
+
+    const loadNews =
+      async () => {
+
+        try {
+
+          setLoading(true);
+
+          setError("");
+
+
+          /*
+           * Existing homepage design
+           * had 3 items.
+           *
+           * So we keep exactly 3 latest
+           * published items.
+           */
+
+          const response =
+            await getPublicNews({
+              page: 1,
+              limit: 100,
+            });
+
+
+          if (!mounted) {
+            return;
+          }
+
+
+          const prioritizedItems =
+            [
+              ...response.items,
+            ]
+              .sort(
+                (
+                  a,
+                  b
+                ) => {
+
+                  if (
+                    a.is_featured !==
+                    b.is_featured
+                  ) {
+                    return a.is_featured
+                      ? -1
+                      : 1;
+                  }
+
+
+                  const aTime =
+                    a.published_at
+                      ? new Date(
+                          a.published_at
+                        ).getTime()
+                      : 0;
+
+
+                  const bTime =
+                    b.published_at
+                      ? new Date(
+                          b.published_at
+                        ).getTime()
+                      : 0;
+
+
+                  return (
+                    bTime -
+                    aTime
+                  );
+                }
+              )
+              .slice(
+                0,
+                3
+              );
+
+
+          const mapped =
+            prioritizedItems.map(
+              (
+                item,
+                index
+              ) =>
+                mapNewsItem(
+                  item,
+                  index
+                )
+            );
+
+
+          setNewsItems(
+            mapped
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Unable to load public News:",
+            error
+          );
+
+
+          if (mounted) {
+
+            setError(
+              error instanceof Error
+                ? error.message
+                : "Unable to load News and Announcements."
+            );
+
+          }
+
+        } finally {
+
+          if (mounted) {
+            setLoading(
+              false
+            );
+          }
+
+        }
+
+      };
+
+
+    loadNews();
+
+
+    return () => {
+      mounted = false;
+    };
+
+  }, []);
+
+
+  /* =========================================================
+     GSAP
+  ========================================================= */
 
   useGSAP(
     () => {
-      const cards = cardRefs.current.filter(
-        (card): card is HTMLElement => card !== null
-      );
 
-      if (!cards.length) return;
+      const cards =
+        cardRefs.current.filter(
+          (
+            card
+          ): card is HTMLElement =>
+            card !== null
+        );
 
-      const mm = gsap.matchMedia();
+
+      if (!cards.length) {
+        return;
+      }
+
+
+      const mm =
+        gsap.matchMedia();
+
 
       /* =====================================================
          DESKTOP
@@ -102,363 +344,448 @@ export default function NewsAnnouncement() {
       mm.add(
         "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
         () => {
-          cards.forEach((card, index) => {
-            const inner = card.querySelector("[data-card-inner]");
 
-            const number = card.querySelector("[data-number]");
-            const category = card.querySelector("[data-category]");
-            const outline = card.querySelector("[data-outline]");
+          cards.forEach(
+            (
+              card,
+              index
+            ) => {
 
-            const title = card.querySelector("[data-title]");
+              const inner =
+                card.querySelector(
+                  "[data-card-inner]"
+                );
 
-            const imageWrapper = card.querySelector(
-              "[data-image-wrapper]"
-            );
 
-            const image = card.querySelector("[data-image]");
+              const number =
+                card.querySelector(
+                  "[data-number]"
+                );
 
-            const description = card.querySelector(
-              "[data-description]"
-            );
 
-            const explore = card.querySelector("[data-explore]");
+              const category =
+                card.querySelector(
+                  "[data-category]"
+                );
 
-            const arrow = card.querySelector("[data-arrow]");
 
-            /* =================================================
-               ONE-TIME REVEAL
-            ================================================= */
+              const outline =
+                card.querySelector(
+                  "[data-outline]"
+                );
 
-            const revealTimeline = gsap.timeline({
-              scrollTrigger: {
-                trigger: card,
 
-                start: "top 78%",
+              const title =
+                card.querySelector(
+                  "[data-title]"
+                );
 
-                /*
-                  IMPORTANT:
-                  Animation runs only once.
-                */
-                once: true,
-              },
-            });
 
-            /* Number */
+              const imageWrapper =
+                card.querySelector(
+                  "[data-image-wrapper]"
+                );
 
-            revealTimeline.fromTo(
-              number,
-              {
-                autoAlpha: 0,
-                x: -35,
-              },
-              {
-                autoAlpha: 1,
-                x: 0,
 
-                duration: 0.65,
+              const image =
+                card.querySelector(
+                  "[data-image]"
+                );
 
-                ease: "power3.out",
-              },
-              0
-            );
 
-            /* Category */
+              const description =
+                card.querySelector(
+                  "[data-description]"
+                );
 
-            revealTimeline.fromTo(
-              category,
-              {
-                autoAlpha: 0,
-                x: -22,
-              },
-              {
-                autoAlpha: 1,
-                x: 0,
 
-                duration: 0.6,
+              const explore =
+                card.querySelector(
+                  "[data-explore]"
+                );
 
-                ease: "power3.out",
-              },
-              0.08
-            );
 
-            /* Outline word */
+              const arrow =
+                card.querySelector(
+                  "[data-arrow]"
+                );
 
-            revealTimeline.fromTo(
-              outline,
-              {
-                autoAlpha: 0,
-                x: -25,
-              },
-              {
-                autoAlpha: 1,
-                x: 0,
 
-                duration: 0.8,
+              /* =============================================
+                 ONE-TIME REVEAL
+              ============================================== */
 
-                ease: "power3.out",
-              },
-              0.16
-            );
+              const revealTimeline =
+                gsap.timeline({
+                  scrollTrigger: {
+                    trigger:
+                      card,
 
-            /* Title */
+                    start:
+                      "top 78%",
 
-            revealTimeline.fromTo(
-              title,
-              {
-                autoAlpha: 0,
-                y: 24,
-              },
-              {
-                autoAlpha: 1,
-                y: 0,
+                    once:
+                      true,
+                  },
+                });
 
-                duration: 0.65,
 
-                ease: "power3.out",
-              },
-              0.08
-            );
-
-            /* Image reveal */
-
-            revealTimeline.fromTo(
-              imageWrapper,
-              {
-                autoAlpha: 0,
-
-                y: 30,
-
-                clipPath: "inset(0 100% 0 0)",
-              },
-              {
-                autoAlpha: 1,
-
-                y: 0,
-
-                clipPath: "inset(0 0% 0 0)",
-
-                duration: 0.9,
-
-                ease: "power4.out",
-              },
-              0.18
-            );
-
-            /* Image zoom - ONCE */
-
-            revealTimeline.fromTo(
-              image,
-              {
-                scale: 1.08,
-              },
-              {
-                scale: 1,
-
-                duration: 1.15,
-
-                ease: "power3.out",
-              },
-              0.18
-            );
-
-            /* Description */
-
-            revealTimeline.fromTo(
-              description,
-              {
-                autoAlpha: 0,
-                y: 18,
-              },
-              {
-                autoAlpha: 1,
-                y: 0,
-
-                duration: 0.6,
-
-                ease: "power3.out",
-              },
-              0.34
-            );
-
-            /* Explore */
-
-            revealTimeline.fromTo(
-              explore,
-              {
-                autoAlpha: 0,
-                y: 14,
-              },
-              {
-                autoAlpha: 1,
-                y: 0,
-
-                duration: 0.55,
-
-                ease: "power3.out",
-              },
-              0.42
-            );
-
-            /* Right arrow */
-
-            revealTimeline.fromTo(
-              arrow,
-              {
-                autoAlpha: 0,
-                x: -12,
-              },
-              {
-                autoAlpha: 1,
-                x: 0,
-
-                duration: 0.55,
-
-                ease: "power3.out",
-              },
-              0.24
-            );
-
-            /* =================================================
-               STACK EFFECT
-
-               This remains scroll-driven because this is the
-               actual stacking interaction, not the reveal
-               animation.
-            ================================================= */
-
-            if (
-              index < cards.length - 1 &&
-              inner
-            ) {
-              const nextCard = cards[index + 1];
-
-              gsap.to(inner, {
-                y: -22,
-
-                scale: 0.99,
-
-                opacity: 0,
-
-                ease: "none",
-
-                transformOrigin: "center top",
-
-                scrollTrigger: {
-                  trigger: nextCard,
-
-                  start: "top 92%",
-
-                  end: `top ${STICKY_TOP + 130}px`,
-
-                  scrub: 0.8,
+              revealTimeline.fromTo(
+                number,
+                {
+                  autoAlpha: 0,
+                  x: -35,
                 },
-              });
+                {
+                  autoAlpha: 1,
+                  x: 0,
+                  duration: 0.65,
+                  ease:
+                    "power3.out",
+                },
+                0
+              );
+
+
+              revealTimeline.fromTo(
+                category,
+                {
+                  autoAlpha: 0,
+                  x: -22,
+                },
+                {
+                  autoAlpha: 1,
+                  x: 0,
+                  duration: 0.6,
+                  ease:
+                    "power3.out",
+                },
+                0.08
+              );
+
+
+              revealTimeline.fromTo(
+                outline,
+                {
+                  autoAlpha: 0,
+                  x: -25,
+                },
+                {
+                  autoAlpha: 1,
+                  x: 0,
+                  duration: 0.8,
+                  ease:
+                    "power3.out",
+                },
+                0.16
+              );
+
+
+              revealTimeline.fromTo(
+                title,
+                {
+                  autoAlpha: 0,
+                  y: 24,
+                },
+                {
+                  autoAlpha: 1,
+                  y: 0,
+                  duration: 0.65,
+                  ease:
+                    "power3.out",
+                },
+                0.08
+              );
+
+
+              revealTimeline.fromTo(
+                imageWrapper,
+                {
+                  autoAlpha: 0,
+
+                  y: 30,
+
+                  clipPath:
+                    "inset(0 100% 0 0)",
+                },
+                {
+                  autoAlpha: 1,
+
+                  y: 0,
+
+                  clipPath:
+                    "inset(0 0% 0 0)",
+
+                  duration: 0.9,
+
+                  ease:
+                    "power4.out",
+                },
+                0.18
+              );
+
+
+              revealTimeline.fromTo(
+                image,
+                {
+                  scale: 1.08,
+                },
+                {
+                  scale: 1,
+
+                  duration: 1.15,
+
+                  ease:
+                    "power3.out",
+                },
+                0.18
+              );
+
+
+              revealTimeline.fromTo(
+                description,
+                {
+                  autoAlpha: 0,
+                  y: 18,
+                },
+                {
+                  autoAlpha: 1,
+                  y: 0,
+
+                  duration: 0.6,
+
+                  ease:
+                    "power3.out",
+                },
+                0.34
+              );
+
+
+              revealTimeline.fromTo(
+                explore,
+                {
+                  autoAlpha: 0,
+                  y: 14,
+                },
+                {
+                  autoAlpha: 1,
+                  y: 0,
+
+                  duration: 0.55,
+
+                  ease:
+                    "power3.out",
+                },
+                0.42
+              );
+
+
+              revealTimeline.fromTo(
+                arrow,
+                {
+                  autoAlpha: 0,
+                  x: -12,
+                },
+                {
+                  autoAlpha: 1,
+                  x: 0,
+
+                  duration: 0.55,
+
+                  ease:
+                    "power3.out",
+                },
+                0.24
+              );
+
+
+              /* =============================================
+                 STACK EFFECT
+              ============================================== */
+
+              if (
+                index <
+                  cards.length -
+                    1 &&
+                inner
+              ) {
+
+                const nextCard =
+                  cards[
+                    index + 1
+                  ];
+
+
+                gsap.to(
+                  inner,
+                  {
+                    y: -22,
+
+                    scale: 0.99,
+
+                    opacity: 0,
+
+                    ease:
+                      "none",
+
+                    transformOrigin:
+                      "center top",
+
+                    scrollTrigger: {
+                      trigger:
+                        nextCard,
+
+                      start:
+                        "top 92%",
+
+                      end:
+                        `top ${
+                          STICKY_TOP +
+                          130
+                        }px`,
+
+                      scrub: 0.8,
+                    },
+                  }
+                );
+
+              }
+
             }
-          });
+          );
+
         }
       );
 
+
       /* =====================================================
          MOBILE + TABLET
-
-         IMPORTANT:
-         Every part reveals only when THAT element reaches
-         the viewport. This prevents the image/description
-         from animating before the user reaches them.
-
-         Desktop animation above is untouched.
       ====================================================== */
 
       mm.add(
         "(max-width: 1023px) and (prefers-reduced-motion: no-preference)",
         () => {
-          cards.forEach((card) => {
-            const elements = Array.from(
-              card.querySelectorAll<HTMLElement>(
-                "[data-mobile-reveal]"
-              )
-            );
 
-            elements.forEach((element) => {
-              const isImageWrapper =
-                element.hasAttribute("data-image-wrapper");
+          cards.forEach(
+            (
+              card
+            ) => {
 
-              const image = isImageWrapper
-                ? element.querySelector<HTMLElement>(
-                    "[data-image]"
+              const elements =
+                Array.from(
+                  card.querySelectorAll<HTMLElement>(
+                    "[data-mobile-reveal]"
                   )
-                : null;
+                );
 
-              const timeline = gsap.timeline({
-                scrollTrigger: {
-                  /*
-                    Trigger each section individually.
-                    Animation begins only as the actual
-                    element enters the viewport.
-                  */
-                  trigger: element,
-                  start: "top 92%",
-                  once: true,
-                  toggleActions:
-                    "play none none none",
-                },
-              });
 
-              timeline.fromTo(
-                element,
-                {
-                  autoAlpha: 0,
-                  y: isImageWrapper ? 34 : 28,
-                  scale: isImageWrapper
-                    ? 0.985
-                    : 1,
-                },
-                {
-                  autoAlpha: 1,
-                  y: 0,
-                  scale: 1,
+              elements.forEach(
+                (
+                  element
+                ) => {
 
-                  /*
-                    Deliberately slower than the
-                    previous 0.65 second animation.
-                  */
-                  duration: isImageWrapper
-                    ? 1.25
-                    : 1.05,
+                  const isImageWrapper =
+                    element.hasAttribute(
+                      "data-image-wrapper"
+                    );
 
-                  ease: "power3.out",
-                  clearProps:
-                    "transform,opacity,visibility",
+
+                  const image =
+                    isImageWrapper
+                      ? element.querySelector<HTMLElement>(
+                          "[data-image]"
+                        )
+                      : null;
+
+
+                  const timeline =
+                    gsap.timeline({
+                      scrollTrigger: {
+                        trigger:
+                          element,
+
+                        start:
+                          "top 92%",
+
+                        once:
+                          true,
+
+                        toggleActions:
+                          "play none none none",
+                      },
+                    });
+
+
+                  timeline.fromTo(
+                    element,
+                    {
+                      autoAlpha: 0,
+
+                      y:
+                        isImageWrapper
+                          ? 34
+                          : 28,
+
+                      scale:
+                        isImageWrapper
+                          ? 0.985
+                          : 1,
+                    },
+                    {
+                      autoAlpha: 1,
+
+                      y: 0,
+
+                      scale: 1,
+
+                      duration:
+                        isImageWrapper
+                          ? 1.25
+                          : 1.05,
+
+                      ease:
+                        "power3.out",
+
+                      clearProps:
+                        "transform,opacity,visibility",
+                    }
+                  );
+
+
+                  if (image) {
+
+                    timeline.fromTo(
+                      image,
+                      {
+                        scale:
+                          1.055,
+                      },
+                      {
+                        scale: 1,
+
+                        duration:
+                          1.5,
+
+                        ease:
+                          "power2.out",
+
+                        clearProps:
+                          "transform",
+                      },
+                      0
+                    );
+
+                  }
+
                 }
               );
 
-              /*
-                Soft image zoom.
-                Runs only when the image wrapper itself
-                enters the viewport.
-              */
-              if (image) {
-                timeline.fromTo(
-                  image,
-                  {
-                    scale: 1.055,
-                  },
-                  {
-                    scale: 1,
+            }
+          );
 
-                    duration: 1.5,
-
-                    ease: "power2.out",
-
-                    clearProps: "transform",
-                  },
-                  0
-                );
-              }
-            });
-          });
         }
       );
+
 
       /* =====================================================
          REDUCED MOTION
@@ -467,481 +794,794 @@ export default function NewsAnnouncement() {
       mm.add(
         "(prefers-reduced-motion: reduce)",
         () => {
-          cards.forEach((card) => {
-            gsap.set(card, {
-              clearProps:
-                "transform,opacity,visibility",
-            });
 
-            gsap.set(
-              card.querySelectorAll("*"),
-              {
-                clearProps:
-                  "transform,opacity,visibility,clipPath",
-              }
-            );
-          });
+          cards.forEach(
+            (
+              card
+            ) => {
+
+              gsap.set(
+                card,
+                {
+                  clearProps:
+                    "transform,opacity,visibility",
+                }
+              );
+
+
+              gsap.set(
+                card.querySelectorAll(
+                  "*"
+                ),
+                {
+                  clearProps:
+                    "transform,opacity,visibility,clipPath",
+                }
+              );
+
+            }
+          );
+
         }
       );
+
 
       return () => {
         mm.revert();
       };
+
     },
 
     {
-      scope: sectionRef,
+      scope:
+        sectionRef,
+
+      /*
+       * News arrives asynchronously.
+       *
+       * Re-run GSAP after the cards
+       * have been rendered.
+       */
+      dependencies: [
+        newsItems.length,
+      ],
+
+      revertOnUpdate:
+        true,
     }
   );
 
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
+
   return (
     <section
-      ref={sectionRef}
+      ref={
+        sectionRef
+      }
       className="
         relative
         isolate
         overflow-visible
-        bg-[#fff] 
+        bg-[#fff]
       "
     >
-      {newsItems.map((item, index) => {
-        const isLongOutline =
-          item.outlineText.length > 8;
 
-        return (
-          <article
-            key={item.id}
+      {/* =====================================================
+          LOADING
+      ====================================================== */}
 
-            ref={(element) => {
-              cardRefs.current[index] =
-                element;
-            }}
-
-            /*
-              Same sticky position for EVERY card.
-
-              Prevents:
-              01 + 02 + 03 collision.
-            */
-
-            style={{
-              zIndex: 20 + index,
-            }}
-
+      {loading && (
+        <div
+          className="
+            flex
+            min-h-[300px]
+            items-center
+            justify-center
+            px-5
+          "
+        >
+          <p
             className="
-              relative
-              w-full
-              border-b
-              border-black/[0.05]
-              bg-white
-
-              lg:sticky
-              lg:top-[76px]
-              lg:min-h-[640px]
-
-              xl:min-h-[680px]
+              font-secondary
+              text-[13px]
+              text-[#8B95A5]
             "
           >
-            {/* =================================================
-                INNER
-            ================================================== */}
+            Loading latest updates...
+          </p>
+        </div>
+      )}
 
-            <div
-              data-card-inner
+
+      {/* =====================================================
+          ERROR
+      ====================================================== */}
+
+      {!loading &&
+        error && (
+          <div
+            className="
+              mx-auto
+              flex
+              min-h-[250px]
+              max-w-[700px]
+              items-center
+              justify-center
+              px-5
+              text-center
+            "
+          >
+            <p
               className="
-                relative
-                mx-auto
-                grid
-                w-full
-                max-w-[1400px]
-                grid-cols-1
-                gap-6
-                px-4
-                py-8
-
-                sm:gap-7
-                sm:px-7
-                sm:py-10
-
-                md:px-10
-                md:py-12
-
-                lg:min-h-[640px]
-                lg:grid-cols-[250px_minmax(0,680px)_70px]
-                lg:gap-14
-                lg:px-10
-                lg:py-14
-
-                xl:min-h-[680px]
-                xl:grid-cols-[280px_700px_80px]
-                xl:gap-[70px]
+                font-secondary
+                text-[13px]
+                text-[#8B95A5]
               "
             >
-              {/* =================================================
-                  LEFT COLUMN
-              ================================================== */}
+              {error}
+            </p>
+          </div>
+        )}
 
-              <aside
-                data-mobile-reveal
-                className="
-                  relative
-                  flex
-                  items-start
-                  justify-between
 
-                  lg:block
-                  lg:min-h-[510px]
-                "
-              >
-                {/* Number + category */}
+      {/* =====================================================
+          EMPTY
+      ====================================================== */}
 
-                <div>
-                  <span
-                    data-number
-                    className="
-                      block
-                      font-primary
-                      text-[50px]
-                      font-semibold
-                      leading-[0.9]
-                      tracking-[-0.06em]
-                      text-[#111111]
+      {!loading &&
+        !error &&
+        newsItems.length ===
+          0 && (
+          <div
+            className="
+              flex
+              min-h-[250px]
+              items-center
+              justify-center
+            "
+          >
+            <p
+              className="
+                font-secondary
+                text-[13px]
+                text-[#8B95A5]
+              "
+            >
+              No News or
+              Announcements available.
+            </p>
+          </div>
+        )}
 
-                      sm:text-[58px]
 
-                      lg:text-[78px]
+      {/* =====================================================
+          DYNAMIC ITEMS
+      ====================================================== */}
 
-                      xl:text-[86px]
-                    "
-                  >
-                    {item.number}
-                  </span>
+      {newsItems.map(
+        (
+          item,
+          index
+        ) => {
 
-                  <div
-                    data-category
-                    className="
-                      mt-4
-                      flex
-                      items-center
-                      gap-[10px]
+          const isLongOutline =
+            item.outlineText
+              .length > 8;
 
-                      sm:mt-5
 
-                      lg:mt-6
-                    "
-                  >
-                    <span
-                      className="
-                        block
-                        h-[2px]
-                        w-[20px]
-                        shrink-0
-                        bg-primary
-                      "
-                    />
+          return (
+            <article
+              key={
+                item.id
+              }
 
-                    <span
-                      className="
-                        font-primary
-                        text-[14px]
-                        font-semibold
-                        leading-none
-                        text-primary
+              ref={(
+                element
+              ) => {
+                cardRefs.current[
+                  index
+                ] =
+                  element;
+              }}
 
-                        sm:text-[15px]
+              style={{
+                zIndex:
+                  20 +
+                  index,
+              }}
 
-                        lg:text-[16px]
-                      "
-                    >
-                      {item.category}
-                    </span>
-                  </div>
-                </div>
+              className="
+                relative
+                w-full
 
-                {/* =================================================
-                    BLUE OUTLINE WORD
-                ================================================== */}
+                border-b
+                border-black/[0.05]
 
-                <div
-                  data-outline
-                  aria-hidden="true"
-                  className="
-                    pointer-events-none
-                    absolute
-                    bottom-[50px]
-                    left-0
-                    hidden
+                bg-white
 
-                    lg:block
-                  "
-                >
-                  <span
-                    className={`
-                      block
-                      select-none
-                      whitespace-nowrap
-                      font-primary
-                      font-normal
-                      leading-none
-                      text-transparent
+                lg:sticky
+                lg:top-[76px]
+                lg:min-h-[640px]
 
-                      ${
-                        isLongOutline
-                          ? "text-[30px] xl:text-[34px]"
-                          : "text-[46px] xl:text-[52px]"
-                      }
-                    `}
-                    style={{
-                      WebkitTextStroke:
-                        "1px rgba(0,117,255,0.30)",
-                    }}
-                  >
-                    {item.outlineText}
-                  </span>
+                xl:min-h-[680px]
+              "
+            >
 
-                  <span
-                    className="
-                      mt-4
-                      block
-                      h-px
-                      w-[36px]
-                      bg-primary/40
-                    "
-                  />
-                </div>
-
-                {/* Mobile arrow */}
-
-                <Link
-                  href={item.href}
-                  aria-label={`Read ${item.title}`}
-                  className="
-                    group
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-
-                    lg:hidden
-                  "
-                >
-                  <span
-                    className="
-                      transition-transform
-                      duration-300
-
-                      group-hover:translate-x-1.5
-                    "
-                  >
-                    <ArrowIcon />
-                  </span>
-                </Link>
-              </aside>
-
-              {/* =================================================
-                  CONTENT
-              ================================================== */}
+              {/* =============================================
+                  INNER
+              ============================================== */}
 
               <div
+                data-card-inner
                 className="
-                  min-w-0
+                  relative
+
+                  mx-auto
+
+                  grid
+
                   w-full
+                  max-w-[1400px]
+
+                  grid-cols-1
+
+                  gap-6
+
+                  px-4
+                  py-8
+
+                  sm:gap-7
+                  sm:px-7
+                  sm:py-10
+
+                  md:px-10
+                  md:py-12
+
+                  lg:min-h-[640px]
+                  lg:grid-cols-[250px_minmax(0,680px)_70px]
+                  lg:gap-14
+                  lg:px-10
+                  lg:py-14
+
+                  xl:min-h-[680px]
+                  xl:grid-cols-[280px_700px_80px]
+                  xl:gap-[70px]
                 "
               >
-                {/* Title */}
 
-                <h3
-                  data-title
-                  data-mobile-reveal
-                  className="
-                    max-w-[650px]
-                    font-primary
-                    text-[18px]
-                    font-semibold
-                    leading-[1.2]
-                    tracking-[-0.02em]
-                    text-[#111111]
+                {/* ===========================================
+                    LEFT
+                ============================================ */}
 
-                    sm:text-[20px]
-
-                    lg:text-[19px]
-
-                    xl:text-[21px]
-                  "
-                >
-                  {item.title}
-                </h3>
-
-                {/* =================================================
-                    IMAGE
-                ================================================== */}
-
-                <div
-                  data-image-wrapper
+                <aside
                   data-mobile-reveal
                   className="
                     relative
-                    mt-4
-                    aspect-[16/10]
-                    w-full
-                    overflow-hidden
-                    bg-[#fff]
 
-                    sm:mt-6
-                    sm:aspect-[2/1]
+                    flex
+
+                    items-start
+                    justify-between
+
+                    lg:block
+                    lg:min-h-[510px]
                   "
                 >
-                  <div
-                    data-image
-                    className="
-                      relative
-                      h-full
-                      w-full
-                    "
-                  >
-                    <Image
-                      src={item.image}
-                      alt={item.imageAlt}
-                      fill
-                      sizes="
-                        (max-width: 640px) 100vw,
-                        (max-width: 1023px) 90vw,
-                        700px
-                      "
+
+                  <div>
+
+                    <span
+                      data-number
                       className="
-                        object-contain
+                        block
+
+                        font-primary
+
+                        text-[50px]
+                        font-semibold
+
+                        leading-[0.9]
+
+                        tracking-[-0.06em]
+
+                        text-[#111111]
+
+                        sm:text-[58px]
+
+                        lg:text-[78px]
+
+                        xl:text-[86px]
                       "
-                      onLoad={() => {
-                        ScrollTrigger.refresh();
-                      }}
-                    />
+                    >
+                      {
+                        item.number
+                      }
+                    </span>
+
+
+                    <div
+                      data-category
+                      className="
+                        mt-4
+
+                        flex
+
+                        items-center
+
+                        gap-[10px]
+
+                        sm:mt-5
+
+                        lg:mt-6
+                      "
+                    >
+
+                      <span
+                        className="
+                          block
+
+                          h-[2px]
+                          w-[20px]
+
+                          shrink-0
+
+                          bg-primary
+                        "
+                      />
+
+
+                      <span
+                        className="
+                          font-primary
+
+                          text-[14px]
+                          font-semibold
+
+                          leading-none
+
+                          text-primary
+
+                          sm:text-[15px]
+
+                          lg:text-[16px]
+                        "
+                      >
+                        {
+                          item.category
+                        }
+                      </span>
+
+                    </div>
+
                   </div>
-                </div>
 
-                {/* Description */}
 
-                <p
-                  data-description
-                  data-mobile-reveal
-                  className="
-                    mt-4 pt-3
-                    max-w-[670px]
+                  {/* OUTLINE */}
 
-                    sm:mt-5
-                    font-secondary
-                    text-[13px]
-                    font-normal
-                    leading-[1.55]
-                    text-[#898989]
-
-                    sm:text-[14px]
-                  "
-                >
-                  {item.description}
-                </p>
-
-                {/* =================================================
-                    EXPLORE
-                ================================================== */}
-
-                <div
-                  data-explore
-                  data-mobile-reveal
-                  className="
-                    mt-6
-
-                    sm:mt-8
-                  "
-                >
-                  <Link
-                    href={item.href}
+                  <div
+                    data-outline
+                    aria-hidden="true"
                     className="
-                      group
-                      inline-flex
-                      min-w-[175px]
-                      items-center
-                      justify-between
-                      gap-8
-                      border-b
-                      border-primary
-                      pb-[10px]
-                      font-primary
-                      text-[11px]
-                      font-medium
-                      uppercase
-                      tracking-[0.02em]
-                      text-[#111827]
+                      pointer-events-none
 
-                      sm:min-w-[185px]
-                      sm:text-[12px]
+                      absolute
+
+                      bottom-[50px]
+                      left-0
+
+                      hidden
+
+                      lg:block
                     "
                   >
-                    <span>
-                      Explore More
+
+                    <span
+                      className={`
+                        block
+                        select-none
+                        whitespace-nowrap
+
+                        font-primary
+                        font-normal
+
+                        leading-none
+
+                        text-transparent
+
+                        ${
+                          isLongOutline
+                            ? "text-[30px] xl:text-[34px]"
+                            : "text-[46px] xl:text-[52px]"
+                        }
+                      `}
+                      style={{
+                        WebkitTextStroke:
+                          "1px rgba(0,117,255,0.30)",
+                      }}
+                    >
+                      {
+                        item.outlineText
+                      }
                     </span>
+
 
                     <span
                       className="
-                        text-primary
+                        mt-4
+
+                        block
+
+                        h-px
+                        w-[36px]
+
+                        bg-primary/40
+                      "
+                    />
+
+                  </div>
+
+
+                  {/* MOBILE ARROW */}
+
+                  <Link
+                    href={
+                      item.href
+                    }
+                    aria-label={`Read ${item.title}`}
+                    className="
+                      group
+
+                      flex
+
+                      h-10
+                      w-10
+
+                      items-center
+                      justify-center
+
+                      lg:hidden
+                    "
+                  >
+
+                    <span
+                      className="
                         transition-transform
                         duration-300
-                        ease-out
+
+                        group-hover:translate-x-1.5
+                      "
+                    >
+                      <ArrowIcon />
+                    </span>
+
+                  </Link>
+
+                </aside>
+
+
+                {/* ===========================================
+                    CONTENT
+                ============================================ */}
+
+                <div
+                  className="
+                    min-w-0
+                    w-full
+                  "
+                >
+
+                  <h3
+                    data-title
+                    data-mobile-reveal
+                    className="
+                      max-w-[650px]
+
+                      font-primary
+
+                      text-[18px]
+                      font-semibold
+
+                      leading-[1.2]
+
+                      tracking-[-0.02em]
+
+                      text-[#111111]
+
+                      sm:text-[20px]
+
+                      lg:text-[19px]
+
+                      xl:text-[21px]
+                    "
+                  >
+                    {item.isFeatured && (
+                      <span
+                        className="
+                          mb-[7px]
+
+                          inline-flex
+                          items-center
+                          gap-[4px]
+
+                          rounded-[5px]
+
+                          bg-[#FFF7E6]
+
+                          px-[8px]
+                          py-[4px]
+
+                          font-secondary
+                          text-[9px]
+                          font-semibold
+                          text-[#B87400]
+                        "
+                      >
+                        ★ Featured
+                      </span>
+                    )}
+
+
+                    <span className="block">
+                      {
+                        item.title
+                      }
+                    </span>
+                  </h3>
+
+
+                  {/* IMAGE */}
+
+                  <div
+                    data-image-wrapper
+                    data-mobile-reveal
+                    className="
+                      relative
+
+                      mt-4
+
+                      aspect-[16/10]
+
+                      w-full
+
+                      overflow-hidden
+
+                      bg-[#fff]
+
+                      sm:mt-6
+                      sm:aspect-[2/1]
+                    "
+                  >
+
+                    <div
+                      data-image
+                      className="
+                        relative
+                        h-full
+                        w-full
+                      "
+                    >
+
+                      {item.image ? (
+
+                        <img
+                          src={
+                            item.image
+                          }
+                          alt={
+                            item.imageAlt
+                          }
+                          onLoad={() => {
+                            ScrollTrigger
+                              .refresh();
+                          }}
+                          className="
+                            h-full
+                            w-full
+                            object-contain
+                            object-center
+                          "
+                        />
+
+                      ) : (
+
+                        <div
+                          className="
+                            flex
+                            h-full
+                            w-full
+
+                            items-center
+                            justify-center
+
+                            bg-[#F5F8FC]
+
+                            font-secondary
+                            text-[12px]
+                            text-[#9AA4B1]
+                          "
+                        >
+                          No image available
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  </div>
+
+
+                  {/* DESCRIPTION */}
+
+                  <p
+                    data-description
+                    data-mobile-reveal
+                    className="
+                      mt-4
+                      pt-3
+
+                      max-w-[670px]
+
+                      font-secondary
+
+                      text-[13px]
+                      font-normal
+
+                      leading-[1.55]
+
+                      text-[#898989]
+
+                      sm:mt-5
+                      sm:text-[14px]
+                    "
+                  >
+                    {
+                      item.description
+                    }
+                  </p>
+
+
+                  {/* EXPLORE */}
+
+                  <div
+                    data-explore
+                    data-mobile-reveal
+                    className="
+                      mt-6
+
+                      sm:mt-8
+                    "
+                  >
+
+                    <Link
+                      href={
+                        item.href
+                      }
+                      className="
+                        group
+
+                        inline-flex
+
+                        min-w-[175px]
+
+                        items-center
+                        justify-between
+
+                        gap-8
+
+                        border-b
+                        border-primary
+
+                        pb-[10px]
+
+                        font-primary
+
+                        text-[11px]
+                        font-medium
+
+                        uppercase
+
+                        tracking-[0.02em]
+
+                        text-[#111827]
+
+                        sm:min-w-[185px]
+                        sm:text-[12px]
+                      "
+                    >
+
+                      <span>
+                        Explore More
+                      </span>
+
+
+                      <span
+                        className="
+                          text-primary
+
+                          transition-transform
+                          duration-300
+                          ease-out
+
+                          group-hover:translate-x-2
+                        "
+                      >
+                        <ArrowIcon
+                          blue
+                        />
+                      </span>
+
+                    </Link>
+
+                  </div>
+
+                </div>
+
+
+                {/* ===========================================
+                    DESKTOP ARROW
+                ============================================ */}
+
+                <div
+                  data-arrow
+                  className="
+                    hidden
+
+                    justify-end
+
+                    pt-1
+
+                    lg:flex
+                  "
+                >
+
+                  <Link
+                    href={
+                      item.href
+                    }
+                    aria-label={`Read ${item.title}`}
+                    className="
+                      group
+
+                      flex
+
+                      h-11
+                      w-11
+
+                      items-center
+                      justify-center
+                    "
+                  >
+
+                    <span
+                      className="
+                        transition-transform
+                        duration-300
 
                         group-hover:translate-x-2
                       "
                     >
-                      <ArrowIcon blue />
+                      <ArrowIcon />
                     </span>
+
                   </Link>
+
                 </div>
+
               </div>
 
-              {/* =================================================
-                  DESKTOP ARROW
-              ================================================== */}
+            </article>
+          );
 
-              <div
-                data-arrow
-                className="
-                  hidden
-                  justify-end
-                  pt-1
+        }
+      )}
 
-                  lg:flex
-                "
-              >
-                <Link
-                  href={item.href}
-                  aria-label={`Read ${item.title}`}
-                  className="
-                    group
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                  "
-                >
-                  <span
-                    className="
-                      transition-transform
-                      duration-300
-
-                      group-hover:translate-x-2
-                    "
-                  >
-                    <ArrowIcon />
-                  </span>
-                </Link>
-              </div>
-            </div>
-          </article>
-        );
-      })}
     </section>
   );
 }
+
 
 /* =========================================================
    ARROW
@@ -952,6 +1592,7 @@ function ArrowIcon({
 }: {
   blue?: boolean;
 }) {
+
   return (
     <svg
       width="21"
@@ -965,6 +1606,7 @@ function ArrowIcon({
           : "text-[#111111]"
       }
     >
+
       <path
         d="M5 12H19"
         stroke="currentColor"
@@ -979,6 +1621,7 @@ function ArrowIcon({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+
     </svg>
-  );
+  );          
 }

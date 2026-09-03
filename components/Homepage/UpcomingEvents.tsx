@@ -1,69 +1,168 @@
 "use client";
 
 import { motion } from "framer-motion";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  formatPublicEventDate,
+  formatPublicEventTimeRange,
+  getPublicEvents,
+  type PublicEventItem,
+} from "@/services/publicEventService";
 
 /* =========================================================
-   EVENTS DATA
+   DISPLAY TYPE
 ========================================================= */
 
-const events = [
-  {
-    id: 1,
-    day: "15",
-    month: "Aug",
-    location: "School Campus",
-    time: "8 Am",
-    title: "Independence Day Celebration",
+type DisplayEvent = {
+  id: number;
+  day: string;
+  month: string;
+  location: string;
+  time: string;
+  title: string;
+  description: string;
+};
+
+
+/* =========================================================
+   MAP API EVENT -> EXISTING DESIGN
+========================================================= */
+
+function mapPublicEvent(
+  event: PublicEventItem
+): DisplayEvent {
+
+  const date =
+    formatPublicEventDate(
+      event.event_date
+    );
+
+
+  return {
+    id:
+      event.id,
+
+    day:
+      date.day,
+
+    month:
+      date.month,
+
+    location:
+      event.venue,
+
+    time:
+      formatPublicEventTimeRange(
+        event.start_time,
+        event.end_time
+      ),
+
+    title:
+      event.title,
+
     description:
-      "Flag hoisting, cultural performances and student presentations celebrating India's Independence Day.",
-  },
-  {
-    id: 2,
-    day: "22",
-    month: "Aug",
-    location: "Classrooms",
-    time: "8 Am - 1pm",
-    title: "Parent–Teacher Meeting",
-    description:
-      "An opportunity for parents and teachers to discuss students’ academic progress and overall development.",
-  },
-  {
-    id: 3,
-    day: "25",
-    month: "Sep",
-    location: "School Auditorium",
-    time: "8 Am",
-    title: "Teachers’ Day Celebration",
-    description:
-      "Students honour their teachers through special performances, activities and appreciation programmes.",
-  },
-  {
-    id: 4,
-    day: "27",
-    month: "Sep",
-    location: "School Auditorium",
-    time: "9 Am",
-    title: "Inter-House Cultural Fest",
-    description:
-      "Students showcase their talents through music, dance, drama and creative competitions.",
-  },
-  {
-    id: 5,
-    day: "15",
-    month: "Oct",
-    location: "School Ground",
-    time: "8 Am",
-    title: "Annual Sports Meet",
-    description:
-      "A day of athletics, team events and sporting activities celebrating teamwork and sportsmanship.",
-  },
-];
+      event.description,
+  };
+}
+
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 export default function UpcomingEvents() {
+
+  const [
+    events,
+    setEvents,
+  ] = useState<DisplayEvent[]>([]);
+
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
+
+  useEffect(() => {
+
+    let mounted = true;
+
+
+    const loadEvents =
+      async () => {
+
+        try {
+
+          setLoading(true);
+          setError("");
+
+
+          const response =
+            await getPublicEvents({
+              scope: "upcoming",
+              limit: 5,
+            });
+
+
+          if (!mounted) {
+            return;
+          }
+
+
+          setEvents(
+            response.items.map(
+              mapPublicEvent
+            )
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Unable to load upcoming Events:",
+            error
+          );
+
+
+          if (mounted) {
+            setError(
+              error instanceof Error
+                ? error.message
+                : "Unable to load Events."
+            );
+          }
+
+        } finally {
+
+          if (mounted) {
+            setLoading(false);
+          }
+
+        }
+
+      };
+
+
+    loadEvents();
+
+
+    return () => {
+      mounted = false;
+    };
+
+  }, []);
+
+
   return (
     <section
       className="
@@ -226,12 +325,12 @@ export default function UpcomingEvents() {
               lg:text-[40px]
             "
           >
-            Upcoming Events
+            What's Coming Up
           </h2>
 
           <p
             className="
-              mt-3
+              mt-3 pt-2
               font-secondary
               text-[14px]
               text-[#858585]
@@ -247,6 +346,56 @@ export default function UpcomingEvents() {
             EVENTS
         ==================================================== */}
 
+        {loading && (
+          <div
+            className="
+              mt-9
+              text-center
+              font-secondary
+              text-[13px]
+              text-[#858585]
+            "
+          >
+            Loading upcoming events...
+          </div>
+        )}
+
+
+        {!loading && error && (
+          <div
+            className="
+              mt-9
+              text-center
+              font-secondary
+              text-[13px]
+              text-[#9A5A5A]
+            "
+          >
+            {error}
+          </div>
+        )}
+
+
+        {!loading &&
+          !error &&
+          events.length === 0 && (
+            <div
+              className="
+                mt-9
+                text-center
+                font-secondary
+                text-[13px]
+                text-[#858585]
+              "
+            >
+              No upcoming events available.
+            </div>
+          )}
+
+
+        {!loading &&
+          !error &&
+          events.length > 0 && (
         <div
           className="
             mt-9
@@ -598,6 +747,7 @@ export default function UpcomingEvents() {
             </motion.article>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

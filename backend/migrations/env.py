@@ -8,13 +8,15 @@ from sqlalchemy import pool
 from app.db.base import Base
 from app.db.session import DATABASE_URL
 
+
 # =========================================================
 # IMPORTANT:
-# Import models so SQLAlchemy knows about them
+# Import models so SQLAlchemy / Alembic knows about them
 # =========================================================
 
 from app.models.admin import Admin  # noqa: F401
 from app.models.news import NewsItem  # noqa: F401
+from app.models.event import Event  # noqa: F401
 
 
 # =========================================================

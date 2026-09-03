@@ -6,13 +6,22 @@ from fastapi import (
     HTTPException,
     status,
 )
+
 from fastapi.middleware.cors import (
     CORSMiddleware,
 )
-from fastapi.staticfiles import StaticFiles
+
+from fastapi.staticfiles import (
+    StaticFiles,
+)
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+
+
+# =========================================================
+# API ROUTERS
+# =========================================================
 
 from app.api.v1.admin.auth import (
     router as admin_auth_router,
@@ -26,9 +35,22 @@ from app.api.v1.admin.uploads import (
     router as admin_upload_router,
 )
 
+from app.api.v1.admin.events import (
+    router as admin_events_router,
+)
+
 from app.api.v1.public.news import (
     router as public_news_router,
 )
+
+from app.api.v1.public.events import (
+    router as public_events_router,
+)
+
+
+# =========================================================
+# CONFIG + DATABASE
+# =========================================================
 
 from app.core.config import settings
 from app.db.session import engine
@@ -38,7 +60,9 @@ from app.db.session import engine
 # LOGGING
 # =========================================================
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(
+    __name__
+)
 
 
 # =========================================================
@@ -47,12 +71,16 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.APP_NAME,
+
     description=(
         "Backend API for Rosary School Website "
         "and Admin Dashboard"
     ),
+
     version="1.0.0",
+
     docs_url="/docs",
+
     redoc_url="/redoc",
 )
 
@@ -64,9 +92,11 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
 
-    # Frontend origins allowed to call FastAPI.
+    # Frontend origins allowed
+    # to call the FastAPI backend.
     allow_origins=[
         settings.FRONTEND_URL,
+        "http://localhost:3000",
         "http://127.0.0.1:3000",
     ],
 
@@ -74,14 +104,20 @@ app.add_middleware(
     # uses HttpOnly cookies.
     allow_credentials=True,
 
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=[
+        "*"
+    ],
+
+    allow_headers=[
+        "*"
+    ],
 )
 
 
 # =========================================================
 # API ROUTERS
 # =========================================================
+
 
 # ---------------------------------------------------------
 # ADMIN AUTHENTICATION
@@ -111,6 +147,15 @@ app.include_router(
 
 
 # ---------------------------------------------------------
+# ADMIN EVENTS MANAGEMENT
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_events_router
+)
+
+
+# ---------------------------------------------------------
 # PUBLIC NEWS + ANNOUNCEMENTS
 # ---------------------------------------------------------
 
@@ -119,16 +164,28 @@ app.include_router(
 )
 
 
+# ---------------------------------------------------------
+# PUBLIC EVENTS
+# ---------------------------------------------------------
+
+app.include_router(
+    public_events_router
+)
+
+
 # =========================================================
 # UPLOAD DIRECTORY
 # =========================================================
 
-# main.py:
+# main.py location:
 #
 # backend/app/main.py
 #
-# parent        -> backend/app
-# parent.parent -> backend
+# .parent
+# -> backend/app
+#
+# .parent.parent
+# -> backend
 
 BACKEND_ROOT = (
     Path(__file__)
@@ -144,8 +201,11 @@ UPLOAD_DIR = (
 )
 
 
-# Create backend/uploads/
-# automatically if it does not exist.
+# Automatically create:
+#
+# backend/uploads/
+#
+# if it does not exist.
 
 UPLOAD_DIR.mkdir(
     parents=True,
@@ -159,19 +219,24 @@ UPLOAD_DIR.mkdir(
 
 # Example:
 #
-# Physical:
+# Physical file:
+#
 # backend/uploads/news/example.jpg
 #
-# Browser:
+#
+# Browser URL:
+#
 # http://localhost:8000/uploads/news/example.jpg
 
 app.mount(
     "/uploads",
+
     StaticFiles(
         directory=str(
             UPLOAD_DIR
         )
     ),
+
     name="uploads",
 )
 
@@ -182,13 +247,21 @@ app.mount(
 
 @app.get(
     "/",
-    tags=["System"],
+    tags=[
+        "System"
+    ],
 )
 def root():
+
     return {
-        "message": "Rosary School Backend API",
-        "status": "running",
-        "version": "1.0.0",
+        "message":
+            "Rosary School Backend API",
+
+        "status":
+            "running",
+
+        "version":
+            "1.0.0",
     }
 
 
@@ -198,12 +271,18 @@ def root():
 
 @app.get(
     "/health",
-    tags=["System"],
+    tags=[
+        "System"
+    ],
 )
 def health_check():
+
     return {
-        "status": "healthy",
-        "service": "rosary-school-backend",
+        "status":
+            "healthy",
+
+        "service":
+            "rosary-school-backend",
     }
 
 
@@ -213,29 +292,44 @@ def health_check():
 
 @app.get(
     "/health/database",
-    tags=["System"],
+    tags=[
+        "System"
+    ],
 )
 def database_health_check():
+
     try:
+
         with engine.connect() as connection:
+
             connection.execute(
-                text("SELECT 1")
+                text(
+                    "SELECT 1"
+                )
             )
 
+
         return {
-            "status": "healthy",
-            "database": "connected",
+            "status":
+                "healthy",
+
+            "database":
+                "connected",
         }
 
+
     except SQLAlchemyError as error:
+
         logger.exception(
             "Database connection failed"
         )
+
 
         raise HTTPException(
             status_code=(
                 status.HTTP_503_SERVICE_UNAVAILABLE
             ),
+
             detail=(
                 "Database connection failed. "
                 "Check the backend terminal for details."

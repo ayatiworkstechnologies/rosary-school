@@ -1,24 +1,34 @@
 "use client";
 
-import Image from "next/image";
 import {
   AnimatePresence,
   motion,
 } from "framer-motion";
+
 import {
   ArrowRight,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Newspaper,
+  LoaderCircle,
   X,
 } from "lucide-react";
+
 import {
+  useCallback,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
+
+import {
+  formatPublicNewsDate,
+  getPublicNews,
+  getPublicNewsBySlug,
+  getPublicNewsImageUrl,
+  type PublicNewsItem,
+} from "@/services/publicNewsService";
+
 
 /* =========================================================
    TYPES
@@ -26,155 +36,83 @@ import {
 
 type NewsItem = {
   id: number;
+
+  slug: string;
+
+  contentType:
+    | "NEWS"
+    | "ANNOUNCEMENT";
+
   title: string;
+
   category: string;
-  date: string;
-  image: string;
+
+  date: string | null;
+
+  image: string | null;
+
   shortDescription: string;
-  content: ReactNode;
+
+  content: string;
+
+  isFeatured: boolean;
 };
 
-/* =========================================================
-   NEWS DATA
-========================================================= */
-
-const newsItems: NewsItem[] = [
-  {
-    id: 1,
-
-    title:
-      "ROSARY MATRICULATION HR. SEC. SCHOOL",
-
-    category:
-      "School Updates",
-
-    date:
-      "2026-08-25",
-
-    image:
-      "/images/news/rosary-news-1.png",
-
-    shortDescription:
-      "Rosary School begins the 2026–27 academic year with new leadership and newly elected student leaders.",
-
-    content: (
-      <>
-        <p>
-          Rosary Matriculation Higher Secondary School begins
-          the 2026–27 academic year with renewed enthusiasm,
-          leadership and commitment towards holistic education.
-        </p>
-
-        <p className="mt-4">
-          The school community warmly welcomes its new
-          Principal and student leaders as they begin another
-          important chapter in the institution&apos;s journey.
-          Students are encouraged to grow through discipline,
-          responsibility, academic excellence and service.
-        </p>
-
-        <p className="mt-4">
-          Rosary continues to create opportunities that nurture
-          confidence, leadership, creativity and values among
-          every Rosarian.
-        </p>
-      </>
-    ),
-  },
-
-  {
-    id: 2,
-
-    title:
-      "A New Chapter of Leadership at Rosary",
-
-    category:
-      "School News",
-
-    date:
-      "2026-08-20",
-
-    image:
-      "/images/news/rosary-news-2.png",
-
-    shortDescription:
-      "Rosary School welcomes a new chapter of leadership, learning and student development.",
-
-    content: (
-      <>
-        <p>
-          Rosary School continues its legacy of nurturing young
-          minds through strong academic values, dedicated
-          leadership and meaningful learning experiences.
-        </p>
-
-        <p className="mt-4">
-          The new academic session brings fresh opportunities
-          for students to participate, lead, discover and grow
-          together as responsible members of the school
-          community.
-        </p>
-      </>
-    ),
-  },
-
-  {
-    id: 3,
-
-    title:
-      "Student Leadership Programme Begins",
-
-    category:
-      "Student Updates",
-
-    date:
-      "2026-08-18",
-
-    image:
-      "/images/news/rosary-news-3.png",
-
-    shortDescription:
-      "Student leaders begin their responsibilities with commitment, teamwork and confidence.",
-
-    content: (
-      <>
-        <p>
-          The Student Leadership Programme at Rosary School
-          encourages young Rosarians to develop responsibility,
-          confidence, teamwork and service.
-        </p>
-
-        <p className="mt-4">
-          Through active participation in school initiatives,
-          students learn the importance of leadership,
-          communication and working together towards shared
-          goals.
-        </p>
-      </>
-    ),
-  },
-];
 
 /* =========================================================
-   DATE FORMAT
+   BACKEND → FRONTEND MAPPER
 ========================================================= */
 
-function formatNewsDate(
-  date: string
-) {
-  return new Intl.DateTimeFormat(
-    "en-IN",
-    {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    }
-  ).format(
-    new Date(
-      `${date}T00:00:00`
-    )
-  );
+function mapPublicNews(
+  item: PublicNewsItem
+): NewsItem {
+
+  return {
+    id:
+      item.id,
+
+    slug:
+      item.slug,
+
+    contentType:
+      item.content_type,
+
+    title:
+      item.title,
+
+    category:
+      item.label?.trim() ||
+      (
+        item.content_type ===
+        "ANNOUNCEMENT"
+          ? "Announcement"
+          : "News"
+      ),
+
+    date:
+      item.published_at,
+
+    image:
+      getPublicNewsImageUrl(
+        item.image_url
+      ),
+
+    shortDescription:
+      item.short_description,
+
+    /*
+     * Full content is intentionally
+     * not returned by list API.
+     *
+     * It is loaded when modal opens.
+     */
+    content: "",
+
+    isFeatured:
+      item.is_featured,
+  };
 }
+
 
 /* =========================================================
    ANIMATION
@@ -187,16 +125,21 @@ const ease = [
   1,
 ] as const;
 
+
 const container = {
   hidden: {},
 
   visible: {
     transition: {
-      staggerChildren: 0.09,
-      delayChildren: 0.05,
+      staggerChildren:
+        0.09,
+
+      delayChildren:
+        0.05,
     },
   },
 };
+
 
 const fadeUp = {
   hidden: {
@@ -209,30 +152,41 @@ const fadeUp = {
     y: 0,
 
     transition: {
-      duration: 0.75,
+      duration:
+        0.75,
+
       ease,
     },
   },
 };
+
 
 const cardReveal = {
   hidden: {
     opacity: 0,
+
     y: 30,
-    scale: 0.975,
+
+    scale:
+      0.975,
   },
 
   visible: {
     opacity: 1,
+
     y: 0,
+
     scale: 1,
 
     transition: {
-      duration: 0.8,
+      duration:
+        0.8,
+
       ease,
     },
   },
 };
+
 
 /* =========================================================
    NEWS CARD
@@ -244,27 +198,34 @@ function NewsCard({
   onOpen,
 }: {
   news: NewsItem;
+
   featured?: boolean;
+
   onOpen: (
     news: NewsItem
   ) => void;
 }) {
+
   return (
     <motion.article
-      variants={cardReveal}
+      variants={
+        cardReveal
+      }
       className="
         group
-
         h-full
         w-full
       "
     >
+
       <motion.div
         whileHover={{
           y: -5,
         }}
         transition={{
-          duration: 0.4,
+          duration:
+            0.4,
+
           ease,
         }}
         className={`
@@ -277,7 +238,12 @@ function NewsCard({
           rounded-[12px]
 
           border
-          border-[#E5EDF5]
+
+          ${
+            news.isFeatured
+              ? "border-[#9CCBFF] shadow-[0_14px_38px_rgba(0,117,255,0.10)]"
+              : "border-[#E5EDF5]"
+          }
 
           bg-white
 
@@ -291,13 +257,14 @@ function NewsCard({
           ${
             featured
               ? `
-                mx-auto
-                max-w-[430px]
-              `
+                  mx-auto
+                  max-w-[430px]
+                `
               : ""
           }
         `}
       >
+
         {/* =================================================
             IMAGE
         ================================================= */}
@@ -305,7 +272,9 @@ function NewsCard({
         <button
           type="button"
           onClick={() =>
-            onOpen(news)
+            onOpen(
+              news
+            )
           }
           className="
             relative
@@ -322,29 +291,53 @@ function NewsCard({
             bg-[#F2F5F8]
           "
         >
-          <Image
-            src={
-              news.image
-            }
-            alt={
-              news.title
-            }
-            fill
-            sizes="
-              (max-width:639px) 100vw,
-              (max-width:1023px) 50vw,
-              33vw
-            "
-            className="
-              object-cover
-              object-center
 
-              transition-transform
-              duration-700
+          {news.image ? (
 
-              group-hover:scale-[1.035]
-            "
-          />
+            <img
+              src={
+                news.image
+              }
+              alt={
+                news.title
+              }
+              className="
+                h-full
+                w-full
+
+                object-cover
+                object-center
+
+                transition-transform
+                duration-700
+
+                group-hover:scale-[1.035]
+              "
+            />
+
+          ) : (
+
+            <div
+              className="
+                flex
+                h-full
+                w-full
+
+                items-center
+                justify-center
+
+                bg-[#F2F5F8]
+
+                font-secondary
+                text-[11px]
+                text-[#98A2AE]
+              "
+            >
+              No image available
+            </div>
+
+          )}
+
 
           {/* IMAGE OVERLAY */}
 
@@ -362,6 +355,7 @@ function NewsCard({
               to-transparent
             "
           />
+
 
           {/* CATEGORY */}
 
@@ -389,9 +383,46 @@ function NewsCard({
               backdrop-blur-md
             "
           >
-            {news.category}
+            {
+              news.category
+            }
           </span>
+
+
+          {news.isFeatured && (
+            <span
+              className="
+                absolute
+                right-[14px]
+                top-[14px]
+
+                inline-flex
+                items-center
+                gap-[5px]
+
+                rounded-[5px]
+
+                bg-[#FFF7E6]/95
+
+                px-[9px]
+                py-[5px]
+
+                font-secondary
+                text-[9px]
+                font-semibold
+                text-[#B87400]
+
+                backdrop-blur-md
+                shadow-sm
+              "
+            >
+              <span>★</span>
+              Featured
+            </span>
+          )}
+
         </button>
+
 
         {/* =================================================
             CONTENT
@@ -412,12 +443,12 @@ function NewsCard({
             sm:pb-[20px]
           "
         >
+
           {/* DATE */}
 
           <div
             className="
               flex
-
               items-center
 
               gap-[6px]
@@ -429,6 +460,7 @@ function NewsCard({
               text-[#9BA3AD]
             "
           >
+
             <CalendarDays
               size={12}
               className="
@@ -436,10 +468,15 @@ function NewsCard({
               "
             />
 
-            {formatNewsDate(
-              news.date
-            )}
+
+            {
+              formatPublicNewsDate(
+                news.date
+              )
+            }
+
           </div>
+
 
           {/* TITLE */}
 
@@ -461,8 +498,11 @@ function NewsCard({
               sm:text-[18px]
             "
           >
-            {news.title}
+            {
+              news.title
+            }
           </h3>
+
 
           {/* DESCRIPTION */}
 
@@ -488,12 +528,15 @@ function NewsCard({
             }
           </p>
 
+
           {/* READ MORE */}
 
           <button
             type="button"
             onClick={() =>
-              onOpen(news)
+              onOpen(
+                news
+              )
             }
             className="
               group/button
@@ -530,7 +573,9 @@ function NewsCard({
               hover:border-[#0075FF]
             "
           >
+
             Explore More
+
 
             <ArrowRight
               size={14}
@@ -541,12 +586,17 @@ function NewsCard({
                 group-hover/button:translate-x-[4px]
               "
             />
+
           </button>
+
         </div>
+
       </motion.div>
+
     </motion.article>
   );
 }
+
 
 /* =========================================================
    NEWS MODAL
@@ -557,73 +607,111 @@ function NewsModal({
   allNews,
   onClose,
   onChange,
+  loadingDetails,
+  detailError,
 }: {
-  news: NewsItem | null;
-  allNews: NewsItem[];
-  onClose: () => void;
-  onChange: (
-    news: NewsItem
-  ) => void;
+  news:
+    | NewsItem
+    | null;
+
+  allNews:
+    NewsItem[];
+
+  onClose:
+    () => void;
+
+  onChange:
+    (
+      news: NewsItem
+    ) => void;
+
+  loadingDetails:
+    boolean;
+
+  detailError:
+    string;
 }) {
+
   /* =========================================================
      BODY LOCK + ESCAPE
   ========================================================= */
 
   useEffect(() => {
+
     if (!news) {
       return;
     }
+
 
     const oldOverflow =
       document.body.style
         .overflow;
 
-    document.body.style.overflow =
+
+    document.body.style
+      .overflow =
       "hidden";
 
+
     const handleKeyboard = (
-      event: KeyboardEvent
+      event:
+        KeyboardEvent
     ) => {
+
       if (
         event.key ===
         "Escape"
       ) {
         onClose();
       }
+
     };
+
 
     window.addEventListener(
       "keydown",
       handleKeyboard
     );
 
+
     return () => {
-      document.body.style.overflow =
+
+      document.body.style
+        .overflow =
         oldOverflow;
+
 
       window.removeEventListener(
         "keydown",
         handleKeyboard
       );
+
     };
+
   }, [
     news,
     onClose,
   ]);
 
+
   if (!news) {
     return null;
   }
 
+
   const currentIndex =
     allNews.findIndex(
-      (item) =>
+      (
+        item
+      ) =>
         item.id ===
         news.id
     );
 
+
   const hasMultiple =
     allNews.length > 1;
+
 
   /* =========================================================
      PREVIOUS
@@ -631,16 +719,24 @@ function NewsModal({
 
   const previousNews =
     () => {
+
       const newIndex =
-        (currentIndex -
+        (
+          currentIndex -
           1 +
-          allNews.length) %
+          allNews.length
+        ) %
         allNews.length;
 
+
       onChange(
-        allNews[newIndex]
+        allNews[
+          newIndex
+        ]
       );
+
     };
+
 
   /* =========================================================
      NEXT
@@ -648,18 +744,34 @@ function NewsModal({
 
   const nextNews =
     () => {
+
       const newIndex =
-        (currentIndex +
-          1) %
+        (
+          currentIndex +
+          1
+        ) %
         allNews.length;
 
+
       onChange(
-        allNews[newIndex]
+        allNews[
+          newIndex
+        ]
       );
+
     };
+
+
+  const detailsLabel =
+    news.contentType ===
+    "ANNOUNCEMENT"
+      ? "Announcement Details"
+      : "News Details";
+
 
   return (
     <AnimatePresence>
+
       <motion.div
         initial={{
           opacity: 0,
@@ -671,7 +783,8 @@ function NewsModal({
           opacity: 0,
         }}
         transition={{
-          duration: 0.25,
+          duration:
+            0.25,
         }}
         onMouseDown={
           onClose
@@ -702,28 +815,37 @@ function NewsModal({
           lg:p-[25px]
         "
       >
-        {/* =================================================
-            MODAL CONTAINER
-        ================================================= */}
+
+        {/* MODAL */}
 
         <motion.div
           initial={{
             opacity: 0,
+
             y: 35,
-            scale: 0.96,
+
+            scale:
+              0.96,
           }}
           animate={{
             opacity: 1,
+
             y: 0,
+
             scale: 1,
           }}
           exit={{
             opacity: 0,
+
             y: 25,
-            scale: 0.97,
+
+            scale:
+              0.97,
           }}
           transition={{
-            duration: 0.48,
+            duration:
+              0.48,
+
             ease,
           }}
           onMouseDown={(
@@ -767,9 +889,8 @@ function NewsModal({
             lg:rounded-[20px]
           "
         >
-          {/* =================================================
-              HEADER
-          ================================================= */}
+
+          {/* HEADER */}
 
           <header
             className="
@@ -799,17 +920,20 @@ function NewsModal({
               lg:py-[17px]
             "
           >
-            {/* BLUE TOP LINE */}
 
             <motion.span
               initial={{
-                scaleX: 0,
+                scaleX:
+                  0,
               }}
               animate={{
-                scaleX: 1,
+                scaleX:
+                  1,
               }}
               transition={{
-                duration: 0.7,
+                duration:
+                  0.7,
+
                 ease,
               }}
               className="
@@ -829,7 +953,6 @@ function NewsModal({
               "
             />
 
-            {/* HEADER TEXT */}
 
             <div
               className="
@@ -837,7 +960,6 @@ function NewsModal({
                 flex-1
               "
             >
-              {/* CATEGORY + DATE */}
 
               <div
                 className="
@@ -850,6 +972,7 @@ function NewsModal({
                   gap-y-[5px]
                 "
               >
+
                 <span
                   className="
                     inline-flex
@@ -873,8 +996,38 @@ function NewsModal({
                     sm:text-[9px]
                   "
                 >
-                  {news.category}
+                  {
+                    news.category
+                  }
                 </span>
+
+
+                {news.isFeatured && (
+                  <span
+                    className="
+                      inline-flex
+                      items-center
+                      gap-[4px]
+
+                      rounded-[5px]
+
+                      bg-[#FFF7E6]
+
+                      px-[8px]
+                      py-[5px]
+
+                      font-secondary
+                      text-[8px]
+                      font-semibold
+                      text-[#B87400]
+
+                      sm:text-[9px]
+                    "
+                  >
+                    ★ Featured
+                  </span>
+                )}
+
 
                 <span
                   className="
@@ -887,17 +1040,15 @@ function NewsModal({
                     sm:text-[9px]
                   "
                 >
-                  {formatNewsDate(
-                    news.date
-                  )}
+                  {
+                    formatPublicNewsDate(
+                      news.date
+                    )
+                  }
                 </span>
+
               </div>
 
-              {/* TITLE
-
-                  IMPORTANT:
-                  NO truncate
-              */}
 
               <h3
                 className="
@@ -926,11 +1077,13 @@ function NewsModal({
                   lg:text-[24px]
                 "
               >
-                {news.title}
+                {
+                  news.title
+                }
               </h3>
+
             </div>
 
-            {/* CLOSE */}
 
             <motion.button
               type="button"
@@ -938,10 +1091,12 @@ function NewsModal({
                 onClose
               }
               whileHover={{
-                rotate: 90,
+                rotate:
+                  90,
               }}
               whileTap={{
-                scale: 0.9,
+                scale:
+                  0.9,
               }}
               aria-label="Close news"
               className="
@@ -980,13 +1135,11 @@ function NewsModal({
                 size={18}
               />
             </motion.button>
+
           </header>
 
-          {/* =================================================
-              BODY SCROLLER
 
-              Main cropping fix
-          ================================================= */}
+          {/* BODY */}
 
           <div
             className="
@@ -1004,22 +1157,25 @@ function NewsModal({
               [scrollbar-width:thin]
             "
           >
-            {/* =================================================
-                IMAGE
-            ================================================= */}
+
+            {/* IMAGE */}
 
             <motion.div
               key={`image-${news.id}`}
               initial={{
                 opacity: 0,
+
                 y: 16,
               }}
               animate={{
                 opacity: 1,
+
                 y: 0,
               }}
               transition={{
-                duration: 0.55,
+                duration:
+                  0.55,
+
                 ease,
               }}
               className="
@@ -1044,41 +1200,59 @@ function NewsModal({
                 bg-[#F3F6F8]
 
                 sm:mt-[20px]
-
                 sm:aspect-[16/9]
-
                 sm:w-[calc(100%-40px)]
 
                 md:mt-[24px]
-
                 md:w-[calc(100%-48px)]
 
                 lg:rounded-[12px]
               "
             >
-              <Image
-                src={
-                  news.image
-                }
-                alt={
-                  news.title
-                }
-                fill
-                sizes="
-                  (max-width:640px) 100vw,
-                  (max-width:1024px) 90vw,
-                  820px
-                "
-                className="
-                  object-contain
-                  object-center
-                "
-              />
+
+              {news.image ? (
+
+                <img
+                  src={
+                    news.image
+                  }
+                  alt={
+                    news.title
+                  }
+                  className="
+                    h-full
+                    w-full
+
+                    object-contain
+                    object-center
+                  "
+                />
+
+              ) : (
+
+                <div
+                  className="
+                    flex
+                    h-full
+                    w-full
+
+                    items-center
+                    justify-center
+
+                    font-secondary
+                    text-[11px]
+                    text-[#98A2AE]
+                  "
+                >
+                  No image available
+                </div>
+
+              )}
+
             </motion.div>
 
-            {/* =================================================
-                ARTICLE
-            ================================================= */}
+
+            {/* ARTICLE */}
 
             <article
               className="
@@ -1102,14 +1276,12 @@ function NewsModal({
                 md:pt-[28px]
               "
             >
-              {/* NEWS DETAILS */}
 
               <div
                 className="
                   mb-[16px]
 
                   flex
-
                   items-center
 
                   gap-[9px]
@@ -1117,16 +1289,23 @@ function NewsModal({
                   sm:mb-[18px]
                 "
               >
+
                 <motion.span
                   initial={{
-                    scaleX: 0,
+                    scaleX:
+                      0,
                   }}
                   animate={{
-                    scaleX: 1,
+                    scaleX:
+                      1,
                   }}
                   transition={{
-                    duration: 0.65,
-                    delay: 0.12,
+                    duration:
+                      0.65,
+
+                    delay:
+                      0.12,
+
                     ease,
                   }}
                   className="
@@ -1140,6 +1319,7 @@ function NewsModal({
                     bg-[#0075FF]
                   "
                 />
+
 
                 <span
                   className="
@@ -1157,28 +1337,32 @@ function NewsModal({
                     sm:text-[10px]
                   "
                 >
-                  News Details
+                  {
+                    detailsLabel
+                  }
                 </span>
+
               </div>
 
-              {/* =================================================
-                  FULL CONTENT
 
-                  Prevents paragraph from being cut.
-              ================================================= */}
+              {/* FULL CONTENT */}
 
               <motion.div
                 key={`content-${news.id}`}
                 initial={{
                   opacity: 0,
+
                   y: 12,
                 }}
                 animate={{
                   opacity: 1,
+
                   y: 0,
                 }}
                 transition={{
-                  duration: 0.5,
+                  duration:
+                    0.5,
+
                   ease,
                 }}
                 className="
@@ -1208,20 +1392,61 @@ function NewsModal({
                   [&_p]:whitespace-normal
                   [&_p]:break-words
                   [&_p]:[overflow-wrap:anywhere]
-
-                  [&_strong]:font-semibold
-                  [&_strong]:text-[#171B22]
                 "
               >
-                {news.content}
+
+                {loadingDetails ? (
+
+                  <div
+                    className="
+                      flex
+                      min-h-[120px]
+
+                      items-center
+                      justify-center
+
+                      gap-2
+                    "
+                  >
+                    <LoaderCircle
+                      size={18}
+                      className="
+                        animate-spin
+                        text-[#0075FF]
+                      "
+                    />
+
+                    <span>
+                      Loading details...
+                    </span>
+                  </div>
+
+                ) : detailError ? (
+
+                  <p
+                    className="
+                      text-[#D14343]
+                    "
+                  >
+                    {
+                      detailError
+                    }
+                  </p>
+
+                ) : (
+
+                  <NewsContent
+                    content={
+                      news.content
+                    }
+                  />
+
+                )}
+
               </motion.div>
 
-              {/* =================================================
-                  PREVIOUS / NEXT NEWS
 
-                  MOBILE = stacked
-                  TABLET/DESKTOP = row
-              ================================================= */}
+              {/* PREVIOUS / NEXT */}
 
               {hasMultiple && (
                 <div
@@ -1251,7 +1476,6 @@ function NewsModal({
                     sm:pt-[18px]
                   "
                 >
-                  {/* PREVIOUS */}
 
                   <motion.button
                     type="button"
@@ -1262,11 +1486,11 @@ function NewsModal({
                       x: -3,
                     }}
                     whileTap={{
-                      scale: 0.97,
+                      scale:
+                        0.97,
                     }}
                     className="
                       inline-flex
-
                       min-w-0
 
                       items-center
@@ -1294,23 +1518,17 @@ function NewsModal({
                       sm:text-[12px]
                     "
                   >
+
                     <ChevronLeft
                       size={16}
-                      className="
-                        shrink-0
-                      "
                     />
 
-                    <span
-                      className="
-                        whitespace-nowrap
-                      "
-                    >
-                      Previous News
+                    <span className="whitespace-nowrap">
+                      Previous
                     </span>
+
                   </motion.button>
 
-                  {/* NEXT */}
 
                   <motion.button
                     type="button"
@@ -1321,7 +1539,8 @@ function NewsModal({
                       x: 3,
                     }}
                     whileTap={{
-                      scale: 0.97,
+                      scale:
+                        0.97,
                     }}
                     className="
                       inline-flex
@@ -1348,94 +1567,441 @@ function NewsModal({
                       sm:text-[12px]
                     "
                   >
-                    <span
-                      className="
-                        whitespace-nowrap
-                      "
-                    >
-                      Next News
+
+                    <span className="whitespace-nowrap">
+                      Next
                     </span>
 
                     <ChevronRight
                       size={16}
-                      className="
-                        shrink-0
-                      "
                     />
+
                   </motion.button>
+
                 </div>
               )}
+
             </article>
+
           </div>
+
         </motion.div>
+
       </motion.div>
+
     </AnimatePresence>
   );
 }
+
+
+/* =========================================================
+   CONTENT PARAGRAPHS
+========================================================= */
+
+function NewsContent({
+  content,
+}: {
+  content: string;
+}) {
+
+  if (!content.trim()) {
+
+    return (
+      <p>
+        Content is not available.
+      </p>
+    );
+
+  }
+
+
+  const paragraphs =
+    content
+      .split(
+        /\r?\n\s*\r?\n|\r?\n/
+      )
+      .map(
+        (
+          paragraph
+        ) =>
+          paragraph.trim()
+      )
+      .filter(
+        Boolean
+      );
+
+
+  return (
+    <>
+      {paragraphs.map(
+        (
+          paragraph,
+          index
+        ) => (
+          <p
+            key={
+              `${index}-${paragraph.slice(
+                0,
+                30
+              )}`
+            }
+            className={
+              index > 0
+                ? "mt-4"
+                : ""
+            }
+          >
+            {
+              paragraph
+            }
+          </p>
+        )
+      )}
+    </>
+  );
+}
+
 
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
 
 export default function SchoolNews() {
+
+  const [
+    newsItems,
+    setNewsItems,
+  ] = useState<
+    NewsItem[]
+  >([]);
+
+
   const [
     selectedNews,
     setSelectedNews,
-  ] =
-    useState<NewsItem | null>(
-      null
+  ] = useState<
+    NewsItem | null
+  >(null);
+
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(
+    true
+  );
+
+
+  const [
+    error,
+    setError,
+  ] = useState(
+    ""
+  );
+
+
+  const [
+    loadingDetails,
+    setLoadingDetails,
+  ] = useState(
+    false
+  );
+
+
+  const [
+    detailError,
+    setDetailError,
+  ] = useState(
+    ""
+  );
+
+
+  /* =========================================================
+     LOAD PUBLIC LIST
+  ========================================================= */
+
+  useEffect(() => {
+
+    let mounted =
+      true;
+
+
+    const loadNews =
+      async () => {
+
+        try {
+
+          setLoading(
+            true
+          );
+
+          setError(
+            ""
+          );
+
+
+          const response =
+            await getPublicNews({
+              page: 1,
+
+              /*
+               * Change this number later
+               * if you want pagination.
+               */
+              limit: 100,
+            });
+
+
+          if (!mounted) {
+            return;
+          }
+
+
+          setNewsItems(
+            response.items.map(
+              mapPublicNews
+            )
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Unable to load public News:",
+            error
+          );
+
+
+          if (mounted) {
+
+            setError(
+              error instanceof Error
+                ? error.message
+                : "Unable to load News and Announcements."
+            );
+
+          }
+
+        } finally {
+
+          if (mounted) {
+
+            setLoading(
+              false
+            );
+
+          }
+
+        }
+
+      };
+
+
+    loadNews();
+
+
+    return () => {
+      mounted =
+        false;
+    };
+
+  }, []);
+
+
+  /* =========================================================
+     OPEN MODAL + LOAD FULL CONTENT
+  ========================================================= */
+
+  const handleOpenNews =
+    useCallback(
+      async (
+        news:
+          NewsItem
+      ) => {
+
+        /*
+         * Show modal immediately using
+         * card data.
+         */
+        setSelectedNews(
+          news
+        );
+
+
+        setLoadingDetails(
+          true
+        );
+
+
+        setDetailError(
+          ""
+        );
+
+
+        try {
+
+          const detail =
+            await getPublicNewsBySlug(
+              news.slug
+            );
+
+
+          setSelectedNews(
+            (
+              current
+            ) => {
+
+              if (
+                !current ||
+                current.id !==
+                  news.id
+              ) {
+                return current;
+              }
+
+
+              return {
+                ...current,
+
+                content:
+                  detail.content,
+
+                image:
+                  getPublicNewsImageUrl(
+                    detail.image_url
+                  ),
+
+                date:
+                  detail.published_at,
+
+                category:
+                  detail.label?.trim() ||
+                  (
+                    detail.content_type ===
+                    "ANNOUNCEMENT"
+                      ? "Announcement"
+                      : "News"
+                  ),
+
+                isFeatured:
+                  detail.is_featured,
+              };
+
+            }
+          );
+
+        } catch (error) {
+
+          console.error(
+            "Unable to load News details:",
+            error
+          );
+
+
+          setDetailError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load this content."
+          );
+
+        } finally {
+
+          setLoadingDetails(
+            false
+          );
+
+        }
+
+      },
+      []
     );
+
 
   /* =========================================================
      LATEST FIRST
   ========================================================= */
 
   const sortedNews =
-    useMemo(() => {
-      return [
-        ...newsItems,
-      ].sort(
-        (a, b) =>
-          new Date(
-            `${b.date}T00:00:00`
-          ).getTime() -
-          new Date(
-            `${a.date}T00:00:00`
-          ).getTime()
-      );
-    }, []);
+    useMemo(
+      () => {
+
+        return [
+          ...newsItems,
+        ].sort(
+          (
+            a,
+            b
+          ) => {
+
+            if (
+              a.isFeatured !==
+              b.isFeatured
+            ) {
+              return a.isFeatured
+                ? -1
+                : 1;
+            }
+
+
+            const aTime =
+              a.date
+                ? new Date(
+                    a.date
+                  ).getTime()
+                : 0;
+
+
+            const bTime =
+              b.date
+                ? new Date(
+                    b.date
+                  ).getTime()
+                : 0;
+
+
+            return (
+              bTime -
+              aTime
+            );
+
+          }
+        );
+
+      },
+      [
+        newsItems,
+      ]
+    );
+
 
   /* =========================================================
      RESPONSIVE SMART LAYOUT
   ========================================================= */
 
   const gridClass =
-    sortedNews.length === 1
+    sortedNews.length ===
+    1
       ? `
-        grid-cols-1
-
-        max-w-[430px]
-      `
-      : sortedNews.length === 2
-        ? `
           grid-cols-1
-
-          sm:grid-cols-2
-
-          max-w-[860px]
+          max-w-[430px]
         `
+      : sortedNews.length ===
+          2
+        ? `
+            grid-cols-1
+            sm:grid-cols-2
+            max-w-[860px]
+          `
         : `
-          grid-cols-1
+            grid-cols-1
+            sm:grid-cols-2
+            lg:grid-cols-3
+            max-w-[1120px]
+          `;
 
-          sm:grid-cols-2
-
-          lg:grid-cols-3
-
-          max-w-[1120px]
-        `;
 
   return (
     <>
+
       <section
         className="
           relative
@@ -1454,9 +2020,8 @@ export default function SchoolNews() {
           lg:py-[82px]
         "
       >
-        {/* =================================================
-            VERY LIGHT GRID
-        ================================================= */}
+
+        {/* GRID BACKGROUND */}
 
         <div
           className="
@@ -1486,6 +2051,7 @@ export default function SchoolNews() {
           }}
         />
 
+
         <div
           className="
             pointer-events-none
@@ -1498,6 +2064,7 @@ export default function SchoolNews() {
             bg-white/55
           "
         />
+
 
         <div
           className="
@@ -1513,9 +2080,8 @@ export default function SchoolNews() {
             lg:px-[42px]
           "
         >
-          {/* =================================================
-              HEADING
-          ================================================= */}
+
+          {/* HEADING */}
 
           <motion.div
             variants={
@@ -1529,13 +2095,12 @@ export default function SchoolNews() {
             }}
             className="
               flex
-
               flex-col
               items-center
-
               text-center
             "
           >
+
             <motion.span
               variants={
                 fadeUp
@@ -1564,10 +2129,9 @@ export default function SchoolNews() {
                 sm:text-[11px]
               "
             >
-              
-
               News
             </motion.span>
+
 
             <motion.h2
               variants={
@@ -1575,7 +2139,6 @@ export default function SchoolNews() {
               }
               className="
                 mt-[14px]
-
                 pt-3
 
                 font-primary
@@ -1596,6 +2159,7 @@ export default function SchoolNews() {
             >
               Welcome News
             </motion.h2>
+
 
             <motion.p
               variants={
@@ -1620,79 +2184,194 @@ export default function SchoolNews() {
                 sm:text-[13px]
               "
             >
-              Rosary School begins
-              the 2026–27 academic
-              year with new
-              leadership and
+              Stay updated with the
+              latest News,
+              Announcements and
               inspiring stories from
-              our school community.
+              the Rosary School
+              community.
             </motion.p>
+
           </motion.div>
 
-          {/* =================================================
-              NEWS GRID
-          ================================================= */}
 
-          <motion.div
-            variants={
-              container
-            }
-            initial="hidden"
-            whileInView="visible"
-            viewport={{
-              once: true,
-              amount: 0.07,
-            }}
-            className={`
-              mx-auto
+          {/* LOADING */}
 
-              mt-[40px]
+          {loading && (
+            <div
+              className="
+                flex
+                min-h-[280px]
 
-              grid
+                items-center
+                justify-center
 
-              w-full
+                gap-2
+              "
+            >
 
-              items-stretch
+              <LoaderCircle
+                size={22}
+                className="
+                  animate-spin
+                  text-[#0075FF]
+                "
+              />
 
-              gap-[18px]
 
-              sm:mt-[48px]
-              sm:gap-[21px]
+              <span
+                className="
+                  font-secondary
+                  text-[12px]
+                  text-[#8C939B]
+                "
+              >
+                Loading latest News...
+              </span>
 
-              lg:mt-[55px]
-              lg:gap-[25px]
+            </div>
+          )}
 
-              ${gridClass}
-            `}
-          >
-            {sortedNews.map(
-              (
-                news
-              ) => (
-                <NewsCard
-                  key={
-                    news.id
-                  }
-                  news={
-                    news
-                  }
-                  featured={
-                    sortedNews.length ===
-                    1
-                  }
-                  onOpen={
-                    setSelectedNews
-                  }
-                />
-              )
+
+          {/* ERROR */}
+
+          {!loading &&
+            error && (
+              <div
+                className="
+                  mx-auto
+
+                  mt-[40px]
+
+                  max-w-[600px]
+
+                  rounded-[10px]
+
+                  border
+                  border-[#FFD8D8]
+
+                  bg-[#FFF7F7]
+
+                  px-5
+                  py-4
+
+                  text-center
+
+                  font-secondary
+                  text-[12px]
+                  text-[#D14343]
+                "
+              >
+                {error}
+              </div>
             )}
-          </motion.div>
+
+
+          {/* EMPTY */}
+
+          {!loading &&
+            !error &&
+            sortedNews.length ===
+              0 && (
+              <div
+                className="
+                  flex
+                  min-h-[260px]
+
+                  items-center
+                  justify-center
+
+                  text-center
+
+                  font-secondary
+                  text-[12px]
+                  text-[#8C939B]
+                "
+              >
+                No published News or
+                Announcements are
+                available at the moment.
+              </div>
+            )}
+
+
+          {/* NEWS GRID */}
+
+          {!loading &&
+            !error &&
+            sortedNews.length >
+              0 && (
+
+              <motion.div
+                variants={
+                  container
+                }
+                initial="hidden"
+                whileInView="visible"
+                viewport={{
+                  once:
+                    true,
+
+                  amount:
+                    0.07,
+                }}
+                className={`
+                  mx-auto
+
+                  mt-[40px]
+
+                  grid
+
+                  w-full
+
+                  items-stretch
+
+                  gap-[18px]
+
+                  sm:mt-[48px]
+                  sm:gap-[21px]
+
+                  lg:mt-[55px]
+                  lg:gap-[25px]
+
+                  ${gridClass}
+                `}
+              >
+
+                {sortedNews.map(
+                  (
+                    news
+                  ) => (
+
+                    <NewsCard
+                      key={
+                        news.id
+                      }
+                      news={
+                        news
+                      }
+                      featured={
+                        sortedNews.length ===
+                        1
+                      }
+                      onOpen={
+                        handleOpenNews
+                      }
+                    />
+
+                  )
+                )}
+
+              </motion.div>
+
+            )}
+
         </div>
+
       </section>
 
-      {/* =====================================================
-          NEWS MODAL
-      ====================================================== */}
+
+      {/* NEWS MODAL */}
 
       <NewsModal
         news={
@@ -1701,15 +2380,28 @@ export default function SchoolNews() {
         allNews={
           sortedNews
         }
-        onClose={() =>
+        loadingDetails={
+          loadingDetails
+        }
+        detailError={
+          detailError
+        }
+        onClose={() => {
+
           setSelectedNews(
             null
-          )
-        }
+          );
+
+          setDetailError(
+            ""
+          );
+
+        }}
         onChange={
-          setSelectedNews
+          handleOpenNews
         }
       />
+
     </>
   );
 }
