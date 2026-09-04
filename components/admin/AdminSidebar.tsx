@@ -57,7 +57,7 @@ const menuItems = [
   },
   {
     label: "Circulars & Notices",
-    href: "/admin/notices",
+    href: "/admin/circular-notices",
     icon: BellRing,
   },
   {

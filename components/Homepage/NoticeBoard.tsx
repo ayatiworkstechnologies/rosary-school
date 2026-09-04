@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   AnimatePresence,
   motion,
@@ -12,66 +11,67 @@ import {
   useState,
 } from "react";
 
+import {
+  formatCircularNoticeType,
+  formatPublicCircularNoticeDate,
+  getPublicCircularNoticePdfUrl,
+  getPublicCircularNotices,
+  type PublicCircularNoticeItem,
+} from "@/services/publicCircularNoticeService";
+
 /* =========================================================
-   NOTICE DATA
+   NOTICE DISPLAY TYPE
 ========================================================= */
 
-const notices = [
-  {
-    id: 1,
-    featured: true,
-    badge: "New",
-    date: "12 AUG 2026",
-    title: "Quarterly Examination Timetable",
-    description:
-      "The examination timetable for Classes VI–XII is now available.",
-    href: "#",
-  },
+type Notice = {
+  id: number;
+  featured: boolean;
+  badge: string;
+  date: string;
+  title: string;
+  description: string;
+  href: string | null;
+};
 
-  {
-    id: 2,
-    featured: false,
-    badge: "New",
-    date: "14 AUG 2026",
-    title: "Parent–Teacher Meeting",
-    description:
-      "Parents are invited to attend the upcoming Parent–Teacher Meeting and discuss students’ academic progress.",
-    href: "#",
-  },
 
-  {
-    id: 3,
-    featured: false,
-    badge: "New",
-    date: "18 AUG 2026",
-    title: "Holiday Announcement",
-    description:
-      "Please note the upcoming school holiday and revised working schedule.",
-    href: "#",
-  },
+/* =========================================================
+   MAP API ITEM -> EXISTING UI DESIGN
+========================================================= */
 
-  {
-    id: 4,
-    featured: false,
-    badge: "Circular",
-    date: "22 AUG 2026",
-    title: "Academic Calendar Update",
-    description:
-      "The revised academic calendar for the current term is now available.",
-    href: "#",
-  },
+function mapPublicNotice(
+  item: PublicCircularNoticeItem
+): Notice {
+  const formattedDate =
+    formatPublicCircularNoticeDate(
+      item.notice_date
+    );
 
-  {
-    id: 5,
-    featured: false,
-    badge: "Notice",
-    date: "28 AUG 2026",
-    title: "School Cultural Programme",
+  return {
+    id: item.id,
+
+    featured:
+      item.is_featured,
+
+    badge:
+      formatCircularNoticeType(
+        item.content_type
+      ),
+
+    date:
+      formattedDate.fullDate,
+
+    title:
+      item.title,
+
     description:
-      "Students and parents are invited to our upcoming cultural programme.",
-    href: "#",
-  },
-];
+      item.description,
+
+    href:
+      getPublicCircularNoticePdfUrl(
+        item.pdf_url
+      ),
+  };
+}
 
 /* =========================================================
    SMOOTH ANIMATION SYSTEM
@@ -322,19 +322,150 @@ export default function NoticeBoard() {
   const [direction, setDirection] =
     useState(1);
 
+  const [
+    featuredNoticeData,
+    setFeaturedNoticeData,
+  ] = useState<Notice | null>(
+    null
+  );
+
+  const [
+    announcements,
+    setAnnouncements,
+  ] = useState<Notice[]>([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
+
   /* =========================================================
-     SPLIT ARRAY
+     LOAD PUBLIC CIRCULARS + NOTICES
+  ========================================================= */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadNoticeBoard =
+      async () => {
+        try {
+          setLoading(true);
+          setError("");
+
+          const response =
+            await getPublicCircularNotices({
+              limit: 5,
+            });
+
+          if (!mounted) {
+            return;
+          }
+
+          setFeaturedNoticeData(
+            response.featured
+              ? mapPublicNotice(
+                  response.featured
+                )
+              : null
+          );
+
+          setAnnouncements(
+            response.items.map(
+              mapPublicNotice
+            )
+          );
+
+          setActiveIndex(0);
+        } catch (err) {
+          console.error(
+            "Unable to load public Circulars & Notices:",
+            err
+          );
+
+          if (mounted) {
+            setError(
+              err instanceof Error
+                ? err.message
+                : "Unable to load school updates."
+            );
+          }
+        } finally {
+          if (mounted) {
+            setLoading(false);
+          }
+        }
+      };
+
+    loadNoticeBoard();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  /* =========================================================
+     FEATURED DISPLAY FALLBACK
+
+     We do not automatically promote a normal item to
+     featured. The admin's Featured setting remains the
+     source of truth.
   ========================================================= */
 
   const featuredNotice =
-    notices.find(
-      (notice) => notice.featured
-    ) ?? notices[0];
+    useMemo<Notice>(() => {
+      if (featuredNoticeData) {
+        return featuredNoticeData;
+      }
 
-  const announcements =
-    notices.filter(
-      (notice) => !notice.featured
-    );
+      if (loading) {
+        return {
+          id: -1,
+          featured: false,
+          badge: "Loading",
+          date: "",
+          title:
+            "Loading school updates...",
+          description:
+            "Please wait while the latest Circulars and Notices are loaded.",
+          href: null,
+        };
+      }
+
+      if (error) {
+        return {
+          id: -2,
+          featured: false,
+          badge: "Notice Board",
+          date: "",
+          title:
+            "Unable to load updates",
+          description:
+            error,
+          href: null,
+        };
+      }
+
+      return {
+        id: -3,
+        featured: false,
+        badge: "Notice Board",
+        date: "",
+        title:
+          "No featured update available",
+        description:
+          "Published Circulars and Notices will appear here when an item is marked as Featured.",
+        href: null,
+      };
+    }, [
+      featuredNoticeData,
+      loading,
+      error,
+    ]);
 
   /* =========================================================
      AUTO VERTICAL CAROUSEL
@@ -363,6 +494,9 @@ export default function NoticeBoard() {
 
   /* =========================================================
      TWO VISIBLE RIGHT CARDS
+
+     If there is only one latest item, show it once
+     instead of duplicating the same card.
   ========================================================= */
 
   const visibleNotices =
@@ -376,6 +510,12 @@ export default function NoticeBoard() {
           activeIndex %
             announcements.length
         ];
+
+      if (
+        announcements.length === 1
+      ) {
+        return [first];
+      }
 
       const second =
         announcements[
@@ -906,7 +1046,9 @@ export default function NoticeBoard() {
               "
             >
               <DownloadLink
-                href="#"
+                href={
+                  featuredNotice.href
+                }
               />
             </motion.div>
           </motion.article>
@@ -1028,6 +1170,77 @@ export default function NoticeBoard() {
                         }
                       />
                     )
+                  )}
+
+                  {visibleNotices.length ===
+                    0 && (
+                    <motion.div
+                      initial={{
+                        opacity: 0,
+                        y: 18,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        y: 0,
+                      }}
+                      transition={{
+                        duration: 0.7,
+                        ease: smoothEase,
+                      }}
+                      className="
+                        flex
+                        min-h-[157px]
+                        flex-1
+                        items-center
+                        justify-center
+
+                        rounded-[10px]
+
+                        bg-white/85
+
+                        px-6
+                        py-8
+
+                        text-center
+
+                        shadow-[0_5px_25px_rgba(0,0,0,0.025)]
+
+                        backdrop-blur-[4px]
+                      "
+                    >
+                      <div>
+                        <p
+                          className="
+                            font-primary
+                            text-[16px]
+                            font-semibold
+                            text-[#111111]
+                          "
+                        >
+                          {loading
+                            ? "Loading latest updates..."
+                            : error
+                            ? "Unable to load latest updates"
+                            : "No latest updates available"}
+                        </p>
+
+                        <p
+                          className="
+                            mt-2
+                            font-secondary
+                            text-[12px]
+                            leading-[1.5]
+                            text-[#8F8F8F]
+                          "
+                        >
+                          {loading
+                            ? "Please wait a moment."
+                            : error
+                            ? error
+                            : "Published Circulars and Notices will appear here."}
+                        </p>
+                      </div>
+                    </motion.div>
                   )}
                 </motion.div>
               </AnimatePresence>
@@ -1213,13 +1426,6 @@ export default function NoticeBoard() {
     </section>
   );
 }
-
-/* =========================================================
-   NOTICE TYPE
-========================================================= */
-
-type Notice =
-  (typeof notices)[number];
 
 /* =========================================================
    ANNOUNCEMENT CARD
@@ -1524,7 +1730,9 @@ function AnnouncementCard({
           "
         >
           <DownloadLink
-            href="#"
+            href={
+              notice.href
+            }
           />
         </motion.div>
       </motion.div>
@@ -1558,10 +1766,43 @@ function AnnouncementCard({
 ========================================================= */
 
 function DownloadLink({
-  href = "#",
+  href,
 }: {
-  href?: string;
+  href?: string | null;
 }) {
+  if (!href) {
+    return (
+      <div
+        className="
+          inline-flex
+
+          min-w-[140px]
+
+          items-center
+          justify-between
+
+          gap-6
+
+          border-b
+          border-[#C8D8E8]
+
+          pb-[9px]
+
+          font-primary
+
+          text-[13px]
+          font-medium
+
+          text-[#8CA4BA]
+        "
+      >
+        <span>
+          PDF Not Available
+        </span>
+      </div>
+    );
+  }
+
   return (
     <motion.div
       initial="rest"
@@ -1570,13 +1811,10 @@ function DownloadLink({
         w-fit
       "
     >
-      <Link
+      <a
         href={href}
-        onClick={(event) => {
-          if (href === "#") {
-            event.preventDefault();
-          }
-        }}
+        target="_blank"
+        rel="noopener noreferrer"
         className="
           group/link
 
@@ -1628,7 +1866,7 @@ function DownloadLink({
         >
           <ArrowIcon />
         </motion.span>
-      </Link>
+      </a>
     </motion.div>
   );
 }

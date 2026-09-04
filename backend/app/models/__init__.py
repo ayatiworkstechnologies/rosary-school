@@ -7,10 +7,20 @@ from app.models.news import (
 
 from app.models.event import Event
 
+from app.models.circular_notice import (
+    CircularNotice,
+    CircularNoticeType,
+)
+
 
 __all__ = [
     "Admin",
+
     "NewsItem",
     "NewsContentType",
+
     "Event",
+
+    "CircularNotice",
+    "CircularNoticeType",
 ]

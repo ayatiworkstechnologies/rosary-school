@@ -39,12 +39,24 @@ from app.api.v1.admin.events import (
     router as admin_events_router,
 )
 
+from app.api.v1.admin.circular_notices import (
+    router as admin_circular_notices_router,
+)
+
+from app.api.v1.admin.circular_notice_uploads import (
+    router as admin_circular_notice_upload_router,
+)
+
 from app.api.v1.public.news import (
     router as public_news_router,
 )
 
 from app.api.v1.public.events import (
     router as public_events_router,
+)
+
+from app.api.v1.public.circular_notices import (
+    router as public_circular_notices_router,
 )
 
 
@@ -92,8 +104,6 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
 
-    # Frontend origins allowed
-    # to call the FastAPI backend.
     allow_origins=[
         settings.FRONTEND_URL,
         "http://localhost:3000",
@@ -138,7 +148,7 @@ app.include_router(
 
 
 # ---------------------------------------------------------
-# ADMIN FILE UPLOADS
+# ADMIN GENERAL FILE UPLOADS
 # ---------------------------------------------------------
 
 app.include_router(
@@ -152,6 +162,24 @@ app.include_router(
 
 app.include_router(
     admin_events_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN CIRCULARS + NOTICES MANAGEMENT
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_circular_notices_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN CIRCULAR / NOTICE PDF UPLOAD
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_circular_notice_upload_router
 )
 
 
@@ -173,18 +201,27 @@ app.include_router(
 )
 
 
+# ---------------------------------------------------------
+# PUBLIC CIRCULARS + NOTICES
+# ---------------------------------------------------------
+
+app.include_router(
+    public_circular_notices_router
+)
+
+
 # =========================================================
 # UPLOAD DIRECTORY
 # =========================================================
 
-# main.py location:
+# main.py:
 #
 # backend/app/main.py
 #
-# .parent
+# parent
 # -> backend/app
 #
-# .parent.parent
+# parent.parent
 # -> backend
 
 BACKEND_ROOT = (
@@ -217,16 +254,26 @@ UPLOAD_DIR.mkdir(
 # SERVE UPLOADED FILES
 # =========================================================
 
-# Example:
+# Example News image:
 #
-# Physical file:
+# Physical:
 #
 # backend/uploads/news/example.jpg
 #
-#
-# Browser URL:
+# URL:
 #
 # http://localhost:8000/uploads/news/example.jpg
+#
+#
+# Circular / Notice PDF:
+#
+# Physical:
+#
+# backend/uploads/circulars/example.pdf
+#
+# URL:
+#
+# http://localhost:8000/uploads/circulars/example.pdf
 
 app.mount(
     "/uploads",
