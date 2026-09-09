@@ -75,7 +75,7 @@ const quickActions = [
   },
   {
     title: "Add Notice",
-    href: "/admin/notices",
+    href: "/admin/circular-notices",
     icon: BellRing,
   },
   {

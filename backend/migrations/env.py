@@ -28,6 +28,11 @@ from app.models.circular_notice import (
     CircularNoticeType,
 )  # noqa: F401
 
+from app.models.gallery import (
+    GalleryAlbum,
+    GalleryImage,
+)  # noqa: F401
+
 
 # =========================================================
 # ALEMBIC CONFIG
@@ -123,4 +128,3 @@ if context.is_offline_mode():
 else:
 
     run_migrations_online()
-    

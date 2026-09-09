@@ -21,6 +21,13 @@ import {
   useState,
 } from "react";
 
+import {
+  getPublicGalleryAlbums,
+  getPublicGalleryImageUrl,
+  sortGalleryImages,
+  type PublicGalleryAlbum,
+} from "@/services/publicGalleryService";
+
 /* =========================================================
    TYPES
 ========================================================= */
@@ -40,154 +47,64 @@ type GalleryAlbum = {
 };
 
 /* =========================================================
-   GALLERY DATA
+   NEXT IMAGE REMOTE URL HELPER
 ========================================================= */
 
-const galleryAlbums: GalleryAlbum[] = [
-  /* =======================================================
-     2026
-  ======================================================= */
+function isRemoteImage(
+  src: string
+) {
+  return (
+    src.startsWith("http://") ||
+    src.startsWith("https://")
+  );
+}
 
-  {
-    id: 1,
-    year: 2026,
-    title: "Our School Campus",
-    category: "Campus",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/c-1.png",
-        alt: "Rosary School Campus",
-      },
-      {
-        id: 2,
-        src: "/images/gallery/c-1.png",
-        alt: "Rosary School Campus Building",
-      },
-    ],
-  },
+function remoteImageLoader({
+  src,
+}: {
+  src: string;
+}) {
+  return src;
+}
 
-  {
-    id: 2,
-    year: 2026,
-    title: "Teachers' Annual Orientation",
-    category: "Faculty",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/teachers-orientation-01.png",
-        alt: "Teachers Annual Orientation",
-      },
-      {
-        id: 2,
-        src: "/images/gallery/teachers-orientation-01.png",
-        alt: "Teachers Orientation Programme",
-      },
-    ],
-  },
+/* =========================================================
+   MAP PUBLIC API DATA -> EXISTING UI STRUCTURE
 
-  {
-    id: 3,
-    year: 2026,
-    title: "Annual Cultural Celebration",
-    category: "Celebration",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/cultural-01.png",
-        alt: "Annual Cultural Celebration",
-      },
-      {
-        id: 2,
-        src: "/images/gallery/cultural-01.png",
-        alt: "Rosary Cultural Programme",
-      },
-    ],
-  },
+   Backend:
+   image_url / alt_text / sort_order
 
-  /* =======================================================
-     2025
-  ======================================================= */
+   Existing UI:
+   src / alt
 
-  {
-    id: 4,
-    year: 2025,
-    title: "Sports Achievements 2025",
-    category: "Achievements",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/sports-2025-01.png",
-        alt: "Rosary School Sports Achievement",
-      },
-      {
-        id: 2,
-        src: "/images/gallery/sports-2025-01.png",
-        alt: "Sports Award Ceremony",
-      },
-    ],
-  },
+   Mapping here lets the existing cards, modal,
+   arrows, thumbnails and responsive design stay unchanged.
+========================================================= */
 
-  {
-    id: 5,
-    year: 2025,
-    title: "Science Exhibition",
-    category: "Academics",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/science-01.png",
-        alt: "Rosary Science Exhibition",
-      },
-      {
-        id: 2,
-        src: "/images/gallery/science-01.png",
-        alt: "Student Science Projects",
-      },
-    ],
-  },
+function mapPublicGalleryAlbum(
+  album: PublicGalleryAlbum
+): GalleryAlbum {
+  return {
+    id: album.id,
+    year: album.year,
+    title: album.title,
+    category: album.category,
 
-  /* =======================================================
-     2024
-  ======================================================= */
+    images: sortGalleryImages(
+      album.images
+    ).map((image) => ({
+      id: image.id,
 
-  {
-    id: 6,
-    year: 2024,
-    title: "Annual Day Celebration",
-    category: "Events",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/annual-day-2024.png",
-        alt: "Annual Day Celebration",
-      },
-    ],
-  },
+      src:
+        getPublicGalleryImageUrl(
+          image.image_url
+        ),
 
-  /* =======================================================
-     2023
-  ======================================================= */
+      alt:
+        image.alt_text,
+    })),
+  };
+}
 
-  {
-    id: 7,
-    year: 2023,
-    title: "Children's Day 2023",
-    category: "Celebration",
-    images: [
-      {
-        id: 1,
-        src: "/images/gallery/children-day-01.png",
-        alt: "Children's Day Celebration",
-      },
-      {
-        id: 2,
-        src: "/images/gallery/children-day-01.png",
-        alt: "Children's Day Cultural Programme",
-      },
-    ],
-  },
-];
 
 /* =========================================================
    ANIMATION
@@ -638,6 +555,22 @@ function GalleryCard({
               "
             >
               <Image
+                loader={
+                  isRemoteImage(
+                    album.images[
+                      imageIndex
+                    ].src
+                  )
+                    ? remoteImageLoader
+                    : undefined
+                }
+                unoptimized={
+                  isRemoteImage(
+                    album.images[
+                      imageIndex
+                    ].src
+                  )
+                }
                 src={
                   album.images[
                     imageIndex
@@ -1828,6 +1761,22 @@ function GalleryModal({
                 "
               >
                 <Image
+                  loader={
+                    isRemoteImage(
+                      album.images[
+                        index
+                      ].src
+                    )
+                      ? remoteImageLoader
+                      : undefined
+                  }
+                  unoptimized={
+                    isRemoteImage(
+                      album.images[
+                        index
+                      ].src
+                    )
+                  }
                   src={
                     album.images[
                       index
@@ -1895,6 +1844,22 @@ function GalleryModal({
                   "
                 >
                   <Image
+                    loader={
+                      isRemoteImage(
+                        album.images[
+                          index
+                        ].src
+                      )
+                        ? remoteImageLoader
+                        : undefined
+                    }
+                    unoptimized={
+                      isRemoteImage(
+                        album.images[
+                          index
+                        ].src
+                      )
+                    }
                     src={
                       album.images[
                         index
@@ -2336,6 +2301,18 @@ function GalleryModal({
                           `}
                         >
                           <Image
+                            loader={
+                              isRemoteImage(
+                                image.src
+                              )
+                                ? remoteImageLoader
+                                : undefined
+                            }
+                            unoptimized={
+                              isRemoteImage(
+                                image.src
+                              )
+                            }
                             src={image.src}
                             alt={image.alt}
                             fill
@@ -2543,34 +2520,98 @@ function GalleryModal({
 }
 
 /* =========================================================
+   LOADING CARD
+========================================================= */
+
+function GalleryLoadingCard() {
+  return (
+    <div
+      className="
+        animate-pulse
+
+        overflow-hidden
+
+        rounded-[14px]
+
+        border
+        border-[#E5EBF1]
+
+        bg-white
+
+        shadow-[0_8px_26px_rgba(24,50,80,0.04)]
+      "
+    >
+      <div
+        className="
+          aspect-[1.48/1]
+
+          bg-[#EAF0F5]
+        "
+      />
+
+      <div
+        className="
+          p-[15px]
+        "
+      >
+        <div
+          className="
+            h-[16px]
+            w-[65%]
+
+            rounded
+
+            bg-[#EAF0F5]
+          "
+        />
+
+        <div
+          className="
+            mt-[10px]
+
+            h-[10px]
+            w-[35%]
+
+            rounded
+
+            bg-[#EEF2F6]
+          "
+        />
+      </div>
+    </div>
+  );
+}
+
+
+/* =========================================================
    MAIN COMPONENT
 ========================================================= */
 
 export default function SchoolHighlightsGallery() {
   /* =========================================================
-     YEARS — LATEST FIRST
+     DYNAMIC PUBLIC GALLERY
   ========================================================= */
 
-  const years =
-    useMemo(() => {
-      return Array.from(
-        new Set(
-          galleryAlbums.map(
-            (album) =>
-              album.year
-          )
-        )
-      ).sort(
-        (a, b) =>
-          b - a
-      );
-    }, []);
+  const [
+    galleryAlbums,
+    setGalleryAlbums,
+  ] = useState<GalleryAlbum[]>([]);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState("");
 
   const [
     selectedYear,
     setSelectedYear,
-  ] = useState(
-    years[0]
+  ] = useState<number | null>(
+    null
   );
 
   const [
@@ -2586,25 +2627,147 @@ export default function SchoolHighlightsGallery() {
     setModalImageIndex,
   ] = useState(0);
 
+
+  /* =========================================================
+     LOAD PUBLIC GALLERY
+  ========================================================= */
+
+  const loadGallery =
+    useCallback(
+      async () => {
+        try {
+          setLoading(true);
+          setError("");
+
+          const response =
+            await getPublicGalleryAlbums();
+
+          const mappedAlbums =
+            response.items
+              .map(
+                mapPublicGalleryAlbum
+              )
+              .filter(
+                (album) =>
+                  album.images.length >
+                  0
+              );
+
+          setGalleryAlbums(
+            mappedAlbums
+          );
+
+          const availableYears =
+            Array.from(
+              new Set(
+                mappedAlbums.map(
+                  (album) =>
+                    album.year
+                )
+              )
+            ).sort(
+              (first, second) =>
+                second - first
+            );
+
+          setSelectedYear(
+            (current) => {
+              if (
+                current !== null &&
+                availableYears.includes(
+                  current
+                )
+              ) {
+                return current;
+              }
+
+              return (
+                availableYears[0] ??
+                null
+              );
+            }
+          );
+        } catch (err) {
+          console.error(
+            "Unable to load public Gallery:",
+            err
+          );
+
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load Gallery."
+          );
+
+          setGalleryAlbums([]);
+          setSelectedYear(null);
+        } finally {
+          setLoading(false);
+        }
+      },
+      []
+    );
+
+
+  useEffect(() => {
+    void loadGallery();
+  }, [
+    loadGallery,
+  ]);
+
+
+  /* =========================================================
+     YEARS — LATEST FIRST
+  ========================================================= */
+
+  const years =
+    useMemo(() => {
+      return Array.from(
+        new Set(
+          galleryAlbums.map(
+            (album) =>
+              album.year
+          )
+        )
+      ).sort(
+        (first, second) =>
+          second - first
+      );
+    }, [
+      galleryAlbums,
+    ]);
+
+
   /* =========================================================
      FILTER
   ========================================================= */
 
   const visibleAlbums =
     useMemo(() => {
-      return galleryAlbums
+      if (
+        selectedYear === null
+      ) {
+        return [];
+      }
+
+      return [
+        ...galleryAlbums,
+      ]
         .filter(
           (album) =>
             album.year ===
             selectedYear
         )
         .sort(
-          (a, b) =>
-            b.id - a.id
+          (first, second) =>
+            second.id -
+            first.id
         );
     }, [
+      galleryAlbums,
       selectedYear,
     ]);
+
 
   /* =========================================================
      OPEN MODAL
@@ -2838,68 +3001,57 @@ export default function SchoolHighlightsGallery() {
 
           {/* YEAR */}
 
-          <motion.div
-            initial={{
-              opacity: 0,
-              y: 15,
-            }}
-            whileInView={{
-              opacity: 1,
-              y: 0,
-            }}
-            viewport={{
-              once: true,
-            }}
-            transition={{
-              duration: 0.7,
-              delay: 0.15,
-              ease,
-            }}
-            className="
-              mt-[28px]
+          {!loading &&
+            !error &&
+            years.length > 0 &&
+            selectedYear !==
+              null && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                }}
+                whileInView={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                viewport={{
+                  once: true,
+                }}
+                transition={{
+                  duration: 0.7,
+                  delay: 0.15,
+                  ease,
+                }}
+                className="
+                  mt-[28px]
 
-              flex
-              justify-center
+                  flex
+                  justify-center
 
-              sm:justify-end
+                  sm:justify-end
 
-              lg:mt-[32px]
-            "
-          >
-            <YearSelector
-              years={years}
-              selectedYear={
-                selectedYear
-              }
-              onChange={
-                setSelectedYear
-              }
-            />
-          </motion.div>
+                  lg:mt-[32px]
+                "
+              >
+                <YearSelector
+                  years={years}
+                  selectedYear={
+                    selectedYear
+                  }
+                  onChange={
+                    setSelectedYear
+                  }
+                />
+              </motion.div>
+            )}
 
-          {/* CARDS */}
 
-          <AnimatePresence
-            mode="wait"
-            initial={false}
-          >
-            <motion.div
-              key={
-                selectedYear
-              }
-              variants={
-                sectionContainer
-              }
-              initial="hidden"
-              animate="visible"
-              exit={{
-                opacity: 0,
-                y: 15,
-              }}
-              transition={{
-                duration: 0.3,
-              }}
-              className={`
+          {/* LOADING */}
+
+          {loading && (
+            <div
+              className="
                 mx-auto
 
                 mt-[36px]
@@ -2907,35 +3059,285 @@ export default function SchoolHighlightsGallery() {
                 grid
 
                 w-full
+                max-w-[1200px]
+
+                grid-cols-1
 
                 gap-[18px]
 
                 sm:mt-[44px]
+                sm:grid-cols-2
                 sm:gap-[20px]
 
                 lg:mt-[50px]
+                lg:grid-cols-3
                 lg:gap-[26px]
-
-                ${gridClass}
-              `}
+              "
             >
-              {visibleAlbums.map(
-                (album) => (
-                  <GalleryCard
+              {Array.from({
+                length: 3,
+              }).map(
+                (
+                  _,
+                  index
+                ) => (
+                  <GalleryLoadingCard
                     key={
-                      album.id
-                    }
-                    album={
-                      album
-                    }
-                    onOpen={
-                      openGallery
+                      index
                     }
                   />
                 )
               )}
-            </motion.div>
-          </AnimatePresence>
+            </div>
+          )}
+
+
+          {/* ERROR */}
+
+          {!loading &&
+            error && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 18,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="
+                  mx-auto
+
+                  mt-[42px]
+
+                  max-w-[560px]
+
+                  rounded-[14px]
+
+                  border
+                  border-[#D9E7F5]
+
+                  bg-white
+
+                  px-[22px]
+                  py-[28px]
+
+                  text-center
+
+                  shadow-[0_10px_30px_rgba(24,50,80,0.05)]
+                "
+              >
+                <p
+                  className="
+                    font-primary
+
+                    text-[16px]
+                    font-semibold
+
+                    text-[#171B22]
+                  "
+                >
+                  Gallery is temporarily unavailable
+                </p>
+
+                <p
+                  className="
+                    mt-[8px]
+
+                    font-secondary
+
+                    text-[11px]
+
+                    leading-[1.55]
+
+                    text-[#8A94A3]
+                  "
+                >
+                  {error}
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    void loadGallery()
+                  }
+                  className="
+                    mt-[18px]
+
+                    inline-flex
+
+                    h-[38px]
+
+                    items-center
+                    justify-center
+
+                    rounded-[8px]
+
+                    bg-[#0075FF]
+
+                    px-[18px]
+
+                    font-secondary
+
+                    text-[10px]
+                    font-medium
+
+                    text-white
+
+                    transition-all
+                    duration-300
+
+                    hover:bg-[#0066DD]
+                  "
+                >
+                  Try Again
+                </button>
+              </motion.div>
+            )}
+
+
+          {/* EMPTY */}
+
+          {!loading &&
+            !error &&
+            galleryAlbums.length ===
+              0 && (
+              <motion.div
+                initial={{
+                  opacity: 0,
+                  y: 18,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                }}
+                className="
+                  mx-auto
+
+                  mt-[42px]
+
+                  max-w-[560px]
+
+                  rounded-[14px]
+
+                  border
+                  border-dashed
+                  border-[#CFDCE8]
+
+                  bg-white/75
+
+                  px-[22px]
+                  py-[34px]
+
+                  text-center
+                "
+              >
+                <Images
+                  size={25}
+                  className="
+                    mx-auto
+                    text-[#0075FF]
+                  "
+                />
+
+                <p
+                  className="
+                    mt-[13px]
+
+                    font-primary
+
+                    text-[16px]
+                    font-semibold
+
+                    text-[#171B22]
+                  "
+                >
+                  Gallery updates coming soon
+                </p>
+
+                <p
+                  className="
+                    mt-[7px]
+
+                    font-secondary
+
+                    text-[10px]
+
+                    leading-[1.55]
+
+                    text-[#8A94A3]
+                  "
+                >
+                  Published Gallery albums will appear here.
+                </p>
+              </motion.div>
+            )}
+
+
+          {/* CARDS */}
+
+          {!loading &&
+            !error &&
+            visibleAlbums.length >
+              0 && (
+              <AnimatePresence
+                mode="wait"
+                initial={false}
+              >
+                <motion.div
+                  key={
+                    selectedYear
+                  }
+                  variants={
+                    sectionContainer
+                  }
+                  initial="hidden"
+                  animate="visible"
+                  exit={{
+                    opacity: 0,
+                    y: 15,
+                  }}
+                  transition={{
+                    duration: 0.3,
+                  }}
+                  className={`
+                    mx-auto
+
+                    mt-[36px]
+
+                    grid
+
+                    w-full
+
+                    gap-[18px]
+
+                    sm:mt-[44px]
+                    sm:gap-[20px]
+
+                    lg:mt-[50px]
+                    lg:gap-[26px]
+
+                    ${gridClass}
+                  `}
+                >
+                  {visibleAlbums.map(
+                    (album) => (
+                      <GalleryCard
+                        key={
+                          album.id
+                        }
+                        album={
+                          album
+                        }
+                        onOpen={
+                          openGallery
+                        }
+                      />
+                    )
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )}
         </div>
       </section>
 

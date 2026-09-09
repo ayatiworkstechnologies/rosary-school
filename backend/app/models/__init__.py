@@ -12,6 +12,11 @@ from app.models.circular_notice import (
     CircularNoticeType,
 )
 
+from app.models.gallery import (
+    GalleryAlbum,
+    GalleryImage,
+)
+
 
 __all__ = [
     "Admin",
@@ -23,4 +28,7 @@ __all__ = [
 
     "CircularNotice",
     "CircularNoticeType",
+
+    "GalleryAlbum",
+    "GalleryImage",
 ]

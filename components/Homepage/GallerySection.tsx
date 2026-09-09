@@ -11,83 +11,300 @@ import {
   useState,
 } from "react";
 
+import {
+  getPublicGalleryImageUrl,
+  getPublicHomepageGallery,
+  sortHomepageGalleryImages,
+  type PublicHomepageGalleryImage,
+} from "@/services/publicGalleryService";
+
 /* =========================================================
-   GALLERY DATA
-
-   Replace image paths with your images.
-
-   Recommended maximum source size:
-   483x × 373px
+   TYPES
 ========================================================= */
 
-const galleryImages = [
+type GalleryItem = {
+  id: number;
+
+  image: string;
+
+  alt: string;
+
+  homepageOrder: number;
+};
+
+
+type AnimationDirection =
+  | "left"
+  | "right"
+  | "top"
+  | "bottom";
+
+
+/* =========================================================
+   NEXT IMAGE HELPER
+
+   Gallery API images are served by FastAPI, for example:
+   http://localhost:8000/uploads/gallery/example.jpg
+
+   A small passthrough loader lets this component render
+   backend images without requiring a hard-coded hostname
+   in next.config.ts during local development.
+========================================================= */
+
+function isRemoteImage(
+  src: string
+) {
+  return (
+    src.startsWith("http://") ||
+    src.startsWith("https://")
+  );
+}
+
+
+function remoteImageLoader({
+  src,
+}: {
+  src: string;
+}) {
+  return src;
+}
+
+
+/* =========================================================
+   FALLBACK IMAGES
+
+   These preserve the existing homepage design while the
+   admin is still filling Homepage Positions 1–6.
+
+   As soon as an Admin assigns a position through Gallery
+   Management, that position is replaced by API data.
+========================================================= */
+
+const fallbackGalleryImages: GalleryItem[] = [
   {
-    id: 1,
+    id: -1,
     image: "/images/g-1.png",
     alt: "Rosary School campus",
+    homepageOrder: 1,
   },
   {
-    id: 2,
+    id: -2,
     image: "/images/g-2.png",
     alt: "Rosary School student activity",
+    homepageOrder: 2,
   },
   {
-    id: 3,
+    id: -3,
     image: "/images/g-3.png",
     alt: "Students at Rosary School",
+    homepageOrder: 3,
   },
   {
-    id: 4,
+    id: -4,
     image: "/images/g-4.png",
     alt: "Rosary School classroom activity",
+    homepageOrder: 4,
   },
   {
-    id: 5,
+    id: -5,
     image: "/images/g-5.png",
     alt: "Students learning at Rosary School",
+    homepageOrder: 5,
   },
   {
-    id: 6,
+    id: -6,
     image: "/images/g-6.png",
     alt: "Rosary School building",
+    homepageOrder: 6,
   },
 ];
+
+
+/* =========================================================
+   BUILD THE SIX HOMEPAGE POSITIONS
+========================================================= */
+
+function buildHomepageGallery(
+  apiImages:
+    PublicHomepageGalleryImage[]
+): GalleryItem[] {
+  const sorted =
+    sortHomepageGalleryImages(
+      apiImages
+    );
+
+  return fallbackGalleryImages.map(
+    (fallback) => {
+      const apiImage =
+        sorted.find(
+          (image) =>
+            image.homepage_order ===
+            fallback.homepageOrder
+        );
+
+      if (!apiImage) {
+        return fallback;
+      }
+
+      return {
+        id:
+          apiImage.id,
+
+        image:
+          getPublicGalleryImageUrl(
+            apiImage.image_url
+          ),
+
+        alt:
+          apiImage.alt_text,
+
+        homepageOrder:
+          apiImage.homepage_order,
+      };
+    }
+  );
+}
+
 
 /* =========================================================
    COMPONENT
 ========================================================= */
 
 export default function GallerySection() {
-  const [activeIndex, setActiveIndex] =
-    useState(0);
+  const [
+    galleryImages,
+    setGalleryImages,
+  ] = useState<GalleryItem[]>(
+    fallbackGalleryImages
+  );
 
-  const [direction, setDirection] =
-    useState(1);
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(0);
 
-  const [isPaused, setIsPaused] =
-    useState(false);
+  const [
+    direction,
+    setDirection,
+  ] = useState(1);
+
+  const [
+    isPaused,
+    setIsPaused,
+  ] = useState(false);
+
+
+  /* =========================================================
+     LOAD HOMEPAGE GALLERY
+
+     API:
+     GET /api/v1/gallery/homepage
+
+     Positions:
+     1 -> Large Left Top
+     2 -> Small Left Bottom 1
+     3 -> Small Left Bottom 2
+     4 -> Small Right Top 1
+     5 -> Small Right Top 2
+     6 -> Large Right Bottom
+  ========================================================= */
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadHomepageGallery =
+      async () => {
+        try {
+          const response =
+            await getPublicHomepageGallery();
+
+          if (!mounted) {
+            return;
+          }
+
+          setGalleryImages(
+            buildHomepageGallery(
+              response.items
+            )
+          );
+
+          setActiveIndex(0);
+        } catch (error) {
+          /*
+           * Keep the existing local images as a safe
+           * visual fallback if the public Gallery API is
+           * temporarily unavailable.
+           */
+
+          console.error(
+            "Unable to load homepage Gallery:",
+            error
+          );
+        }
+      };
+
+    void loadHomepageGallery();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+
+  /* =========================================================
+     KEEP ACTIVE INDEX SAFE
+  ========================================================= */
+
+  useEffect(() => {
+    if (
+      galleryImages.length === 0
+    ) {
+      setActiveIndex(0);
+      return;
+    }
+
+    setActiveIndex(
+      (current) =>
+        Math.min(
+          current,
+          galleryImages.length - 1
+        )
+    );
+  }, [
+    galleryImages.length,
+  ]);
+
 
   /* =========================================================
      AUTOPLAY
   ========================================================= */
 
   useEffect(() => {
-    if (isPaused) return;
+    if (
+      isPaused ||
+      galleryImages.length <= 1
+    ) {
+      return;
+    }
 
-    const timer = window.setInterval(() => {
-      setDirection(1);
+    const timer =
+      window.setInterval(() => {
+        setDirection(1);
 
-      setActiveIndex(
-        (current) =>
-          (current + 1) %
-          galleryImages.length
-      );
-    }, 3500);
+        setActiveIndex(
+          (current) =>
+            (current + 1) %
+            galleryImages.length
+        );
+      }, 3500);
 
     return () => {
       window.clearInterval(timer);
     };
-  }, [isPaused]);
+  }, [
+    isPaused,
+    galleryImages.length,
+  ]);
 
   /* =========================================================
      MANUAL NAVIGATION
@@ -106,13 +323,31 @@ export default function GallerySection() {
   };
 
   const activeImage =
-    galleryImages[activeIndex];
+    galleryImages[
+      Math.min(
+        activeIndex,
+        galleryImages.length - 1
+      )
+    ];
 
   const nextImage =
     galleryImages[
-      (activeIndex + 1) %
-        galleryImages.length
+      galleryImages.length > 0
+        ? (
+            activeIndex + 1
+          ) %
+          galleryImages.length
+        : 0
     ];
+
+
+  if (
+    !activeImage ||
+    !nextImage
+  ) {
+    return null;
+  }
+
 
   return (
     <section
@@ -155,8 +390,8 @@ export default function GallerySection() {
           BLUE RIGHT GLOW
       ====================================================== */}
 
-     <div
-  className="
+      <div
+        className="
     pointer-events-none
     absolute
 
@@ -177,8 +412,8 @@ export default function GallerySection() {
 
     lg:h-[260px]
     lg:w-[260px]
-  "
-/>
+        "
+      />
 
       {/* =====================================================
           SOFT WHITE GLOW
@@ -604,6 +839,9 @@ export default function GallerySection() {
           </AnimatePresence>
 
           <SliderDots
+            items={
+              galleryImages
+            }
             activeIndex={
               activeIndex
             }
@@ -711,6 +949,18 @@ export default function GallerySection() {
                   "
                 >
                   <Image
+                    loader={
+                      isRemoteImage(
+                        activeImage.image
+                      )
+                        ? remoteImageLoader
+                        : undefined
+                    }
+                    unoptimized={
+                      isRemoteImage(
+                        activeImage.image
+                      )
+                    }
                     src={
                       activeImage.image
                     }
@@ -729,6 +979,9 @@ export default function GallerySection() {
             </div>
 
             <SliderDots
+              items={
+                galleryImages
+              }
               activeIndex={
                 activeIndex
               }
@@ -779,85 +1032,74 @@ export default function GallerySection() {
           "
         >
           <Link
-  href="/gallery"
-  className="
-    group
+            href="/gallery"
+            className="
+              group
 
-    inline-flex
+              inline-flex
 
-    min-h-[46px]
-    min-w-[170px]
+              min-h-[46px]
+              min-w-[170px]
 
-    items-center
-    justify-center
+              items-center
+              justify-center
 
-    rounded-md
-    bg-[#0075FF]
+              rounded-md
 
-    px-8
+              bg-[#0075FF]
 
-    font-primary
+              px-8
 
-    text-[12px]
-    font-medium
+              font-primary
 
-    uppercase
+              text-[12px]
+              font-medium
 
-    tracking-[0.03em]
+              uppercase
 
-    !text-white
+              tracking-[0.03em]
 
-    shadow-[0_8px_20px_rgba(0,117,255,0.18)]
+              !text-white
 
-    transition-all
-    duration-300
-    ease-out
+              shadow-[0_8px_20px_rgba(0,117,255,0.18)]
 
-    hover:-translate-y-[3px]
-    hover:bg-[#006AE8]
-    hover:shadow-[0_14px_30px_rgba(0,117,255,0.28)]
+              transition-all
+              duration-300
+              ease-out
 
-    active:translate-y-0
-    active:scale-[0.98]
-  "
-  style={{
-    color: "#ffffff",
-  }}
->
-  <span
-    className="
-      !text-white
+              hover:-translate-y-[3px]
+              hover:bg-[#006AE8]
+              hover:shadow-[0_14px_30px_rgba(0,117,255,0.28)]
 
-      transition-transform
-      duration-300
+              active:translate-y-0
+              active:scale-[0.98]
+            "
+            style={{
+              color: "#ffffff",
+            }}
+          >
+            <span
+              className="
+                !text-white
 
-      group-hover:scale-[1.04]
-    "
-    style={{
-      color: "#ffffff",
-    }}
-  >
-    View All
-  </span>
-</Link>
+                transition-transform
+                duration-300
+
+                group-hover:scale-[1.04]
+              "
+              style={{
+                color:
+                  "#ffffff",
+              }}
+            >
+              View All
+            </span>
+          </Link>
         </motion.div>
       </div>
     </section>
   );
 }
-
-/* =========================================================
-   TYPES
-========================================================= */
-
-type GalleryItem =
-  (typeof galleryImages)[number];
-
-type AnimationDirection =
-  | "left"
-  | "right"
-  | "top"
-  | "bottom";
 
 /* =========================================================
    DESKTOP GALLERY IMAGE
@@ -948,6 +1190,18 @@ function GalleryImage({
       `}
     >
       <Image
+        loader={
+          isRemoteImage(
+            item.image
+          )
+            ? remoteImageLoader
+            : undefined
+        }
+        unoptimized={
+          isRemoteImage(
+            item.image
+          )
+        }
         src={item.image}
         alt={item.alt}
         fill
@@ -1017,6 +1271,18 @@ function TabletGalleryImage({
       "
     >
       <Image
+        loader={
+          isRemoteImage(
+            item.image
+          )
+            ? remoteImageLoader
+            : undefined
+        }
+        unoptimized={
+          isRemoteImage(
+            item.image
+          )
+        }
         src={item.image}
         alt={item.alt}
         fill
@@ -1039,9 +1305,12 @@ function TabletGalleryImage({
 ========================================================= */
 
 function SliderDots({
+  items,
   activeIndex,
   goToSlide,
 }: {
+  items: GalleryItem[];
+
   activeIndex: number;
 
   goToSlide: (
@@ -1060,7 +1329,7 @@ function SliderDots({
         gap-[8px]
       "
     >
-      {galleryImages.map(
+      {items.map(
         (image, index) => {
           const active =
             index === activeIndex;

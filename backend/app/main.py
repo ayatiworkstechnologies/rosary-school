@@ -20,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 # =========================================================
-# API ROUTERS
+# ADMIN API ROUTERS
 # =========================================================
 
 from app.api.v1.admin.auth import (
@@ -47,6 +47,19 @@ from app.api.v1.admin.circular_notice_uploads import (
     router as admin_circular_notice_upload_router,
 )
 
+from app.api.v1.admin.gallery_uploads import (
+    router as admin_gallery_upload_router,
+)
+
+from app.api.v1.admin.gallery import (
+    router as admin_gallery_router,
+)
+
+
+# =========================================================
+# PUBLIC API ROUTERS
+# =========================================================
+
 from app.api.v1.public.news import (
     router as public_news_router,
 )
@@ -57,6 +70,10 @@ from app.api.v1.public.events import (
 
 from app.api.v1.public.circular_notices import (
     router as public_circular_notices_router,
+)
+
+from app.api.v1.public.gallery import (
+    router as public_gallery_router,
 )
 
 
@@ -125,7 +142,7 @@ app.add_middleware(
 
 
 # =========================================================
-# API ROUTERS
+# ADMIN ROUTERS
 # =========================================================
 
 
@@ -184,6 +201,64 @@ app.include_router(
 
 
 # ---------------------------------------------------------
+# ADMIN GALLERY IMAGE UPLOAD
+#
+# POST
+# /api/v1/admin/uploads/gallery-images
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_gallery_upload_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN GALLERY MANAGEMENT
+#
+# Albums:
+#
+# GET
+# /api/v1/admin/gallery/albums
+#
+# POST
+# /api/v1/admin/gallery/albums
+#
+# GET
+# /api/v1/admin/gallery/albums/{album_id}
+#
+# PATCH
+# /api/v1/admin/gallery/albums/{album_id}
+#
+# DELETE
+# /api/v1/admin/gallery/albums/{album_id}
+#
+#
+# Images:
+#
+# POST
+# /api/v1/admin/gallery/albums/{album_id}/images
+#
+# GET
+# /api/v1/admin/gallery/images/{image_id}
+#
+# PATCH
+# /api/v1/admin/gallery/images/{image_id}
+#
+# DELETE
+# /api/v1/admin/gallery/images/{image_id}
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_gallery_router
+)
+
+
+# =========================================================
+# PUBLIC ROUTERS
+# =========================================================
+
+
+# ---------------------------------------------------------
 # PUBLIC NEWS + ANNOUNCEMENTS
 # ---------------------------------------------------------
 
@@ -207,6 +282,24 @@ app.include_router(
 
 app.include_router(
     public_circular_notices_router
+)
+
+
+# ---------------------------------------------------------
+# PUBLIC GALLERY
+#
+# GET
+# /api/v1/gallery/albums
+#
+# GET
+# /api/v1/gallery/albums?year=2026
+#
+# GET
+# /api/v1/gallery/homepage
+# ---------------------------------------------------------
+
+app.include_router(
+    public_gallery_router
 )
 
 
@@ -274,6 +367,17 @@ UPLOAD_DIR.mkdir(
 # URL:
 #
 # http://localhost:8000/uploads/circulars/example.pdf
+#
+#
+# Gallery image:
+#
+# Physical:
+#
+# backend/uploads/gallery/example.jpg
+#
+# URL:
+#
+# http://localhost:8000/uploads/gallery/example.jpg
 
 app.mount(
     "/uploads",
