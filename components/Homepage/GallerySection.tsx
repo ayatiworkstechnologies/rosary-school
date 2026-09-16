@@ -44,7 +44,7 @@ type AnimationDirection =
    NEXT IMAGE HELPER
 
    Gallery API images are served by FastAPI, for example:
-   http://localhost:8000/uploads/gallery/example.jpg
+   /backend/uploads/gallery/example.jpg
 
    A small passthrough loader lets this component render
    backend images without requiring a hard-coded hostname

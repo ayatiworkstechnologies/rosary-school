@@ -651,7 +651,7 @@ async def upload_gallery_images(
             #
             # becomes accessible from:
             #
-            # http://localhost:8000/uploads/gallery/uuid.jpg
+            # /backend/uploads/gallery/uuid.jpg
             # ---------------------------------------------
 
             image_url = (

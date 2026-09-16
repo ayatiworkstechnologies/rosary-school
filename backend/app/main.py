@@ -355,7 +355,7 @@ UPLOAD_DIR.mkdir(
 #
 # URL:
 #
-# http://localhost:8000/uploads/news/example.jpg
+# /backend/uploads/news/example.jpg
 #
 #
 # Circular / Notice PDF:
@@ -366,7 +366,7 @@ UPLOAD_DIR.mkdir(
 #
 # URL:
 #
-# http://localhost:8000/uploads/circulars/example.pdf
+# /backend/uploads/circulars/example.pdf
 #
 #
 # Gallery image:
@@ -377,7 +377,7 @@ UPLOAD_DIR.mkdir(
 #
 # URL:
 #
-# http://localhost:8000/uploads/gallery/example.jpg
+# /backend/uploads/gallery/example.jpg
 
 app.mount(
     "/uploads",
