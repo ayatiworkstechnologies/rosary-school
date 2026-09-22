@@ -55,6 +55,14 @@ from app.api.v1.admin.gallery import (
     router as admin_gallery_router,
 )
 
+from app.api.v1.admin.faculty_uploads import (
+    router as admin_faculty_upload_router,
+)
+
+from app.api.v1.admin.faculty import (
+    router as admin_faculty_router,
+)
+
 
 # =========================================================
 # PUBLIC API ROUTERS
@@ -74,6 +82,10 @@ from app.api.v1.public.circular_notices import (
 
 from app.api.v1.public.gallery import (
     router as public_gallery_router,
+)
+
+from app.api.v1.public.faculty import (
+    router as public_faculty_router,
 )
 
 
@@ -253,6 +265,62 @@ app.include_router(
 )
 
 
+# ---------------------------------------------------------
+# ADMIN FACULTY IMAGE UPLOAD
+#
+# POST
+# /api/v1/admin/uploads/faculty-image
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_faculty_upload_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN FACULTY MANAGEMENT
+#
+# Categories:
+#
+# GET
+# /api/v1/admin/faculty/categories
+#
+# POST
+# /api/v1/admin/faculty/categories
+#
+# GET
+# /api/v1/admin/faculty/categories/{category_id}
+#
+# PATCH
+# /api/v1/admin/faculty/categories/{category_id}
+#
+# DELETE
+# /api/v1/admin/faculty/categories/{category_id}
+#
+#
+# Members:
+#
+# GET
+# /api/v1/admin/faculty/members
+#
+# POST
+# /api/v1/admin/faculty/members
+#
+# GET
+# /api/v1/admin/faculty/members/{member_id}
+#
+# PATCH
+# /api/v1/admin/faculty/members/{member_id}
+#
+# DELETE
+# /api/v1/admin/faculty/members/{member_id}
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_faculty_router
+)
+
+
 # =========================================================
 # PUBLIC ROUTERS
 # =========================================================
@@ -303,6 +371,24 @@ app.include_router(
 )
 
 
+# ---------------------------------------------------------
+# PUBLIC FACULTY
+#
+# GET
+# /api/v1/faculty/categories
+#
+# GET
+# /api/v1/faculty
+#
+# GET
+# /api/v1/faculty?category=primary
+# ---------------------------------------------------------
+
+app.include_router(
+    public_faculty_router
+)
+
+
 # =========================================================
 # UPLOAD DIRECTORY
 # =========================================================
@@ -347,37 +433,40 @@ UPLOAD_DIR.mkdir(
 # SERVE UPLOADED FILES
 # =========================================================
 
-# Example News image:
+# News image:
 #
 # Physical:
-#
 # backend/uploads/news/example.jpg
 #
-# URL:
-#
-# /backend/uploads/news/example.jpg
+# Public URL:
+# http://localhost:8000/uploads/news/example.jpg
 #
 #
 # Circular / Notice PDF:
 #
 # Physical:
-#
 # backend/uploads/circulars/example.pdf
 #
-# URL:
-#
-# /backend/uploads/circulars/example.pdf
+# Public URL:
+# http://localhost:8000/uploads/circulars/example.pdf
 #
 #
 # Gallery image:
 #
 # Physical:
-#
 # backend/uploads/gallery/example.jpg
 #
-# URL:
+# Public URL:
+# http://localhost:8000/uploads/gallery/example.jpg
 #
-# /backend/uploads/gallery/example.jpg
+#
+# Faculty image:
+#
+# Physical:
+# backend/uploads/faculty/example.jpg
+#
+# Public URL:
+# http://localhost:8000/uploads/faculty/example.jpg
 
 app.mount(
     "/uploads",
@@ -459,7 +548,6 @@ def database_health_check():
                 )
             )
 
-
         return {
             "status":
                 "healthy",
@@ -468,13 +556,11 @@ def database_health_check():
                 "connected",
         }
 
-
     except SQLAlchemyError as error:
 
         logger.exception(
             "Database connection failed"
         )
-
 
         raise HTTPException(
             status_code=(

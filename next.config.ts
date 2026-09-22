@@ -1,15 +1,18 @@
 import type { NextConfig } from "next";
 
+const backendUrl =
+  process.env.ROSARY_BACKEND_URL || "http://127.0.0.1:8000";
+
 const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
         source: "/backend/:path*",
-        destination: `${process.env.ROSARY_BACKEND_URL}/:path*`,
+        destination: `${backendUrl}/:path*`,
       },
       {
         source: "/uploads/:path*",
-        destination: `${process.env.ROSARY_BACKEND_URL}/uploads/:path*`,
+        destination: `${backendUrl}/uploads/:path*`,
       },
     ];
   },

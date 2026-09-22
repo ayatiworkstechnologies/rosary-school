@@ -1,11 +1,15 @@
-from app.models.admin import Admin
+from app.models.admin import (
+    Admin,
+)
 
 from app.models.news import (
     NewsContentType,
     NewsItem,
 )
 
-from app.models.event import Event
+from app.models.event import (
+    Event,
+)
 
 from app.models.circular_notice import (
     CircularNotice,
@@ -15,6 +19,11 @@ from app.models.circular_notice import (
 from app.models.gallery import (
     GalleryAlbum,
     GalleryImage,
+)
+
+from app.models.faculty import (
+    FacultyCategory,
+    FacultyMember,
 )
 
 
@@ -31,4 +40,7 @@ __all__ = [
 
     "GalleryAlbum",
     "GalleryImage",
+
+    "FacultyCategory",
+    "FacultyMember",
 ]

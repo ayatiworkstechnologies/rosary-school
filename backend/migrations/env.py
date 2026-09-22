@@ -14,23 +14,67 @@ from app.db.session import DATABASE_URL
 # Import models so SQLAlchemy / Alembic knows about them
 # =========================================================
 
-from app.models.admin import Admin  # noqa: F401
+
+# ---------------------------------------------------------
+# ADMIN
+# ---------------------------------------------------------
+
+from app.models.admin import (
+    Admin,
+)  # noqa: F401
+
+
+# ---------------------------------------------------------
+# NEWS
+# ---------------------------------------------------------
 
 from app.models.news import (
     NewsItem,
     NewsContentType,
 )  # noqa: F401
 
-from app.models.event import Event  # noqa: F401
+
+# ---------------------------------------------------------
+# EVENTS
+# ---------------------------------------------------------
+
+from app.models.event import (
+    Event,
+)  # noqa: F401
+
+
+# ---------------------------------------------------------
+# CIRCULARS + NOTICES
+# ---------------------------------------------------------
 
 from app.models.circular_notice import (
     CircularNotice,
     CircularNoticeType,
 )  # noqa: F401
 
+
+# ---------------------------------------------------------
+# GALLERY
+# ---------------------------------------------------------
+
 from app.models.gallery import (
     GalleryAlbum,
     GalleryImage,
+)  # noqa: F401
+
+
+# ---------------------------------------------------------
+# FACULTY
+#
+# Tables:
+#
+# faculty_categories
+# faculty_members
+# ---------------------------------------------------------
+
+from app.models.faculty import (
+    FacultyCategory,
+    FacultyMember,
 )  # noqa: F401
 
 
@@ -42,6 +86,7 @@ config = context.config
 
 
 if config.config_file_name is not None:
+
     fileConfig(
         config.config_file_name
     )
@@ -51,7 +96,9 @@ if config.config_file_name is not None:
 # SQLALCHEMY METADATA
 # =========================================================
 
-target_metadata = Base.metadata
+target_metadata = (
+    Base.metadata
+)
 
 
 # =========================================================
@@ -60,8 +107,10 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
 
-    url = DATABASE_URL.render_as_string(
-        hide_password=False
+    url = (
+        DATABASE_URL.render_as_string(
+            hide_password=False
+        )
     )
 
 
@@ -83,6 +132,7 @@ def run_migrations_offline() -> None:
 
 
     with context.begin_transaction():
+
         context.run_migrations()
 
 
@@ -92,11 +142,13 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
 
-    connectable = create_engine(
-        DATABASE_URL,
+    connectable = (
+        create_engine(
+            DATABASE_URL,
 
-        poolclass=
-            pool.NullPool,
+            poolclass=
+                pool.NullPool,
+        )
     )
 
 
@@ -114,6 +166,7 @@ def run_migrations_online() -> None:
 
 
         with context.begin_transaction():
+
             context.run_migrations()
 
 

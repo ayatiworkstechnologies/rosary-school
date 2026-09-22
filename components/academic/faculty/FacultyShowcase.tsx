@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import {
   AnimatePresence,
   motion,
   type PanInfo,
 } from "framer-motion";
+
 import {
   useCallback,
   useEffect,
@@ -14,105 +14,37 @@ import {
   useState,
 } from "react";
 
+import {
+  formatPublicFacultyExperience,
+  getPublicFacultyCategories,
+  getPublicFacultyImageUrl,
+  getPublicFacultyMembers,
+  type PublicFacultyCategory,
+  type PublicFacultyMember,
+  sortPublicFacultyCategories,
+} from "@/services/publicFacultyService";
+
+
 /* =========================================================
    TYPES
 ========================================================= */
 
-type FacultyCategory =
-  | "All Faculty"
-  | "Leadership"
-  | "Kindergarten"
-  | "Primary"
-  | "Middle School"
-  | "High School"
-  | "Higher Secondary";
+type ActiveCategory =
+  | "all"
+  | string;
 
-type FacultyMember = {
-  id: number;
-  name: string;
-  designation: string;
-  subject: string;
-  experience: string;
-  category: Exclude<FacultyCategory, "All Faculty">;
-  image: string;
-};
-
-/* =========================================================
-   DATA
-========================================================= */
-
-const facultyMembers: FacultyMember[] = [
-  {
-    id: 1,
-    name: "Mrs. Maria Joseph",
-    designation: "Senior Mathematics Teacher",
-    subject: "Mathematics",
-    experience: "12 Years Exp",
-    category: "Higher Secondary",
-    image: "/images/faculty/faculty-01.png",
-  },
-  {
-    id: 2,
-    name: "Ms. Anitha Raj",
-    designation: "English Teacher",
-    subject: "English",
-    experience: "8 Years Exp",
-    category: "High School",
-    image: "/images/faculty/faculty-02.png",
-  },
-  {
-    id: 3,
-    name: "Mrs. Grace Mary",
-    designation: "Science Teacher",
-    subject: "Science",
-    experience: "10 Years Exp",
-    category: "Middle School",
-    image: "/images/faculty/faculty-03.png",
-  },
-  {
-    id: 4,
-    name: "Mrs. Stella Thomas",
-    designation: "Primary School Teacher",
-    subject: "Primary",
-    experience: "9 Years Exp",
-    category: "Primary",
-    image: "/images/faculty/faculty-01.png",
-  },
-  {
-    id: 5,
-    name: "Ms. Janet Mary",
-    designation: "Kindergarten Educator",
-    subject: "Kindergarten",
-    experience: "7 Years Exp",
-    category: "Kindergarten",
-    image: "/images/faculty/faculty-02.png",
-  },
-  {
-    id: 6,
-    name: "Mrs. Teresa John",
-    designation: "Academic Coordinator",
-    subject: "Leadership",
-    experience: "18 Years Exp",
-    category: "Leadership",
-    image: "/images/faculty/faculty-03.png",
-  },
-];
-
-const categories: FacultyCategory[] = [
-  "All Faculty",
-  "Leadership",
-  "Kindergarten",
-  "Primary",
-  "Middle School",
-  "High School",
-  "Higher Secondary",
-];
 
 /* =========================================================
    MOTION
 ========================================================= */
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const ease = [
+  0.22,
+  1,
+  0.36,
+  1,
+] as const;
+
 
 const container = {
   hidden: {},
@@ -124,6 +56,7 @@ const container = {
     },
   },
 };
+
 
 const fadeUp = {
   hidden: {
@@ -142,35 +75,10 @@ const fadeUp = {
   },
 };
 
+
 /* =========================================================
    ICONS
 ========================================================= */
-
-function ArrowIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      className="h-[13px] w-[13px]"
-      aria-hidden="true"
-    >
-      <path
-        d="M5 12H18"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-      />
-
-      <path
-        d="M13 7L18 12L13 17"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
 
 function ChevronLeft() {
   return (
@@ -190,6 +98,7 @@ function ChevronLeft() {
   );
 }
 
+
 function ChevronRight() {
   return (
     <svg
@@ -207,6 +116,7 @@ function ChevronRight() {
     </svg>
   );
 }
+
 
 function ExperienceIcon() {
   return (
@@ -233,6 +143,65 @@ function ExperienceIcon() {
   );
 }
 
+
+function LoadingIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      className="
+        h-[24px]
+        w-[24px]
+
+        animate-spin
+
+        text-[#0075FF]
+      "
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeOpacity="0.2"
+      />
+
+      <path
+        d="M21 12A9 9 0 0 0 12 3"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+
+/* =========================================================
+   INITIALS
+========================================================= */
+
+function getInitials(
+  name: string
+) {
+  return name
+    .replace("Mrs. ", "")
+    .replace("Ms. ", "")
+    .replace("Mr. ", "")
+    .replace("Dr. ", "")
+    .split(" ")
+    .filter(Boolean)
+    .map(
+      (item) =>
+        item[0]
+    )
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+
 /* =========================================================
    FACULTY CARD
 ========================================================= */
@@ -241,10 +210,25 @@ function FacultyCard({
   faculty,
   index,
 }: {
-  faculty: FacultyMember;
+  faculty: PublicFacultyMember;
   index: number;
 }) {
-  const [imageError, setImageError] = useState(false);
+  const [
+    imageError,
+    setImageError,
+  ] = useState(false);
+
+
+  const imageUrl =
+    getPublicFacultyImageUrl(
+      faculty.image_url
+    );
+
+
+  const showImage =
+    Boolean(imageUrl) &&
+    !imageError;
+
 
   return (
     <motion.article
@@ -264,7 +248,13 @@ function FacultyCard({
       }}
       transition={{
         duration: 0.8,
-        delay: Math.min(index, 3) * 0.07,
+
+        delay:
+          Math.min(
+            index,
+            3
+          ) * 0.07,
+
         ease,
       }}
       whileHover={{
@@ -292,12 +282,17 @@ function FacultyCard({
         hover:shadow-[0_24px_55px_rgba(25,45,70,0.13)]
       "
     >
-      {/* IMAGE */}
+
+      {/* ===================================================
+          IMAGE
+      =================================================== */}
 
       <div
         className="
           relative
+
           aspect-[1.28/1]
+
           w-full
 
           overflow-hidden
@@ -307,18 +302,17 @@ function FacultyCard({
           lg:aspect-[1.34/1]
         "
       >
-        {!imageError ? (
-          <Image
-            src={faculty.image}
+        {showImage ? (
+          <img
+            src={imageUrl!}
             alt={faculty.name}
-            fill
-            sizes="
-              (max-width: 639px) 90vw,
-              (max-width: 1023px) 45vw,
-              31vw
-            "
-            onError={() => setImageError(true)}
+            onError={() =>
+              setImageError(true)
+            }
             className="
+              h-full
+              w-full
+
               object-cover
               object-center
 
@@ -346,6 +340,7 @@ function FacultyCard({
             <div
               className="
                 flex
+
                 h-[74px]
                 w-[74px]
 
@@ -357,30 +352,30 @@ function FacultyCard({
                 bg-[#EAF4FF]
 
                 font-primary
+
                 text-[21px]
                 font-semibold
 
                 text-[#0075FF]
               "
             >
-              {faculty.name
-                .replace("Mrs. ", "")
-                .replace("Ms. ", "")
-                .split(" ")
-                .map((item) => item[0])
-                .slice(0, 2)
-                .join("")}
+              {getInitials(
+                faculty.name
+              )}
             </div>
           </div>
         )}
 
+
         <div
           className="
             pointer-events-none
+
             absolute
             inset-0
 
             bg-gradient-to-t
+
             from-black/[0.08]
             to-transparent
 
@@ -394,7 +389,10 @@ function FacultyCard({
         />
       </div>
 
-      {/* GOLD LINE */}
+
+      {/* ===================================================
+          GOLD LINE
+      =================================================== */}
 
       <motion.div
         initial={{
@@ -412,6 +410,7 @@ function FacultyCard({
         }}
         className="
           h-[3px]
+
           w-full
 
           origin-left
@@ -420,24 +419,39 @@ function FacultyCard({
         "
       />
 
-      {/* CONTENT */}
+
+      {/* ===================================================
+          CONTENT
+      =================================================== */}
 
       <div
         className="
-          px-[17px]
-          pb-[18px]
-          pt-[14px]
+          px-[20px]
 
-          sm:px-[18px]
+          pb-[22px]
+          pt-[18px]
 
-          lg:px-[20px]
-          lg:pb-[21px]
-          lg:pt-[16px]
+          sm:px-[21px]
+          sm:pb-[23px]
+          sm:pt-[18px]
+
+          lg:px-[22px]
+          lg:pb-[24px]
+          lg:pt-[19px]
         "
       >
+
         {/* TAGS */}
 
-        <div className="flex flex-wrap items-center gap-[6px]">
+        <div
+          className="
+            flex
+            flex-wrap
+            items-center
+
+            gap-[6px]
+          "
+        >
           <span
             className="
               inline-flex
@@ -464,6 +478,7 @@ function FacultyCard({
           >
             {faculty.subject}
           </span>
+
 
           <span
             className="
@@ -492,15 +507,20 @@ function FacultyCard({
           >
             <ExperienceIcon />
 
-            {faculty.experience}
+            {formatPublicFacultyExperience(
+              faculty.experience_years
+            )}
           </span>
         </div>
+
 
         {/* NAME */}
 
         <h3
           className="
-            mt-[10px]
+            mt-[12px]
+
+            py-1
 
             font-primary
 
@@ -521,11 +541,12 @@ function FacultyCard({
           {faculty.name}
         </h3>
 
+
         {/* DESIGNATION */}
 
         <p
           className="
-            mt-[4px]
+            mt-[6px]
 
             font-secondary
 
@@ -540,227 +561,504 @@ function FacultyCard({
         >
           {faculty.designation}
         </p>
-
-        {/* PROFILE */}
-
-        <motion.button
-          type="button"
-          whileHover={{
-            x: 4,
-          }}
-          whileTap={{
-            scale: 0.97,
-          }}
-          className="
-            mt-[15px]
-
-            inline-flex
-            items-center
-
-            gap-[7px]
-
-            font-secondary
-
-            text-[9.5px]
-            font-semibold
-
-            text-[#0075FF]
-
-            sm:text-[10px]
-          "
-        >
-          View Profile
-
-          <ArrowIcon />
-        </motion.button>
       </div>
     </motion.article>
   );
 }
+
 
 /* =========================================================
    MAIN COMPONENT
 ========================================================= */
 
 export default function FacultyShowcase() {
-  const [activeCategory, setActiveCategory] =
-    useState<FacultyCategory>("All Faculty");
 
-  const [currentIndex, setCurrentIndex] =
-    useState(0);
+  /* =======================================================
+     API DATA
+  ======================================================= */
 
-  const [visibleCards, setVisibleCards] =
-    useState(1);
+  const [
+    facultyMembers,
+    setFacultyMembers,
+  ] = useState<
+    PublicFacultyMember[]
+  >([]);
 
-  const [cardWidth, setCardWidth] =
-    useState(0);
+
+  const [
+    categories,
+    setCategories,
+  ] = useState<
+    PublicFacultyCategory[]
+  >([]);
+
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+
+  const [
+    error,
+    setError,
+  ] = useState<
+    string | null
+  >(null);
+
+
+  /* =======================================================
+     FILTER
+  ======================================================= */
+
+  const [
+    activeCategory,
+    setActiveCategory,
+  ] = useState<ActiveCategory>(
+    "all"
+  );
+
+
+  /* =======================================================
+     CAROUSEL
+  ======================================================= */
+
+  const [
+    currentIndex,
+    setCurrentIndex,
+  ] = useState(0);
+
+
+  const [
+    visibleCards,
+    setVisibleCards,
+  ] = useState(1);
+
+
+  const [
+    cardWidth,
+    setCardWidth,
+  ] = useState(0);
+
 
   const carouselViewportRef =
-    useRef<HTMLDivElement | null>(null);
+    useRef<
+      HTMLDivElement | null
+    >(null);
+
 
   const filterContainerRef =
-    useRef<HTMLDivElement | null>(null);
+    useRef<
+      HTMLDivElement | null
+    >(null);
+
 
   const filterButtonRefs =
-    useRef<Record<string, HTMLButtonElement | null>>({});
+    useRef<
+      Record<
+        string,
+        HTMLButtonElement | null
+      >
+    >({});
+
 
   const gap = 18;
 
-  /* =========================================================
-     FILTERED FACULTY
-  ========================================================= */
 
-  const filteredFaculty = useMemo(() => {
-    if (activeCategory === "All Faculty") {
-      return facultyMembers;
-    }
+  /* =======================================================
+     LOAD API DATA
+  ======================================================= */
 
-    return facultyMembers.filter(
-      (faculty) =>
-        faculty.category === activeCategory
+  const loadFacultyData =
+    useCallback(
+      async () => {
+        try {
+          setLoading(true);
+
+          setError(null);
+
+
+          const [
+            categoryResponse,
+            facultyResponse,
+          ] =
+            await Promise.all([
+              getPublicFacultyCategories(),
+
+              getPublicFacultyMembers(),
+            ]);
+
+
+          setCategories(
+            sortPublicFacultyCategories(
+              categoryResponse.items
+            )
+          );
+
+
+          setFacultyMembers(
+            facultyResponse.items
+          );
+        } catch (err) {
+          console.error(
+            "Faculty public API error:",
+            err
+          );
+
+
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load Faculty information."
+          );
+        } finally {
+          setLoading(false);
+        }
+      },
+      []
     );
-  }, [activeCategory]);
 
-  /* =========================================================
+
+  useEffect(() => {
+    loadFacultyData();
+  }, [
+    loadFacultyData,
+  ]);
+
+
+  /* =======================================================
+     FILTERED FACULTY
+  ======================================================= */
+
+  const filteredFaculty =
+    useMemo(
+      () => {
+        if (
+          activeCategory ===
+          "all"
+        ) {
+          return facultyMembers;
+        }
+
+
+        return facultyMembers.filter(
+          (
+            faculty
+          ) =>
+            faculty.category
+              .slug ===
+            activeCategory
+        );
+      },
+      [
+        activeCategory,
+        facultyMembers,
+      ]
+    );
+
+
+  /* =======================================================
      RESPONSIVE CAROUSEL
-  ========================================================= */
+  ======================================================= */
 
-  const calculateCarousel = useCallback(() => {
-    if (typeof window === "undefined") return;
+  const calculateCarousel =
+    useCallback(
+      () => {
+        if (
+          typeof window ===
+          "undefined"
+        ) {
+          return;
+        }
 
-    let cards = 1;
 
-    if (
-      window.innerWidth >= 640 &&
-      window.innerWidth < 1024
-    ) {
-      cards = 2;
-    }
+        let cards = 1;
 
-    setVisibleCards(cards);
 
-    requestAnimationFrame(() => {
-      const viewport =
-        carouselViewportRef.current;
+        if (
+          window.innerWidth >=
+            640 &&
+          window.innerWidth <
+            1024
+        ) {
+          cards = 2;
+        }
 
-      if (!viewport) return;
 
-      const availableWidth =
-        viewport.clientWidth;
+        setVisibleCards(
+          cards
+        );
 
-      const calculatedWidth =
-        (availableWidth -
-          gap * (cards - 1)) /
-        cards;
 
-      setCardWidth(calculatedWidth);
-    });
-  }, []);
+        requestAnimationFrame(
+          () => {
+            const viewport =
+              carouselViewportRef.current;
+
+
+            if (!viewport) {
+              return;
+            }
+
+
+            const availableWidth =
+              viewport.clientWidth;
+
+
+            const calculatedWidth =
+              (
+                availableWidth -
+                gap *
+                  (
+                    cards -
+                    1
+                  )
+              ) /
+              cards;
+
+
+            setCardWidth(
+              calculatedWidth
+            );
+          }
+        );
+      },
+      []
+    );
+
 
   useEffect(() => {
     calculateCarousel();
+
 
     window.addEventListener(
       "resize",
       calculateCarousel
     );
 
+
     return () =>
       window.removeEventListener(
         "resize",
         calculateCarousel
       );
-  }, [calculateCarousel]);
+  }, [
+    calculateCarousel,
+  ]);
+
+
+  /* =======================================================
+     RECALCULATE AFTER API LOAD
+  ======================================================= */
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+
+    const timer =
+      window.setTimeout(
+        () => {
+          calculateCarousel();
+        },
+        80
+      );
+
+
+    return () =>
+      window.clearTimeout(
+        timer
+      );
+  }, [
+    loading,
+    facultyMembers.length,
+    calculateCarousel,
+  ]);
+
+
+  /* =======================================================
+     RESET SLIDER AFTER FILTER
+  ======================================================= */
 
   useEffect(() => {
     setCurrentIndex(0);
 
-    const timer = window.setTimeout(
-      calculateCarousel,
-      60
-    );
+
+    const timer =
+      window.setTimeout(
+        () => {
+          calculateCarousel();
+        },
+        60
+      );
+
 
     return () =>
-      window.clearTimeout(timer);
-  }, [activeCategory, calculateCarousel]);
+      window.clearTimeout(
+        timer
+      );
+  }, [
+    activeCategory,
+    calculateCarousel,
+  ]);
 
-  const maxIndex = Math.max(
-    0,
-    filteredFaculty.length - visibleCards
-  );
 
-  /* =========================================================
+  /* =======================================================
+     MAX INDEX
+  ======================================================= */
+
+  const maxIndex =
+    Math.max(
+      0,
+      filteredFaculty.length -
+        visibleCards
+    );
+
+
+  /* =======================================================
+     KEEP CURRENT INDEX VALID
+  ======================================================= */
+
+  useEffect(() => {
+    setCurrentIndex(
+      (
+        current
+      ) =>
+        Math.min(
+          current,
+          maxIndex
+        )
+    );
+  }, [
+    maxIndex,
+  ]);
+
+
+  /* =======================================================
      CAROUSEL CONTROLS
-  ========================================================= */
+  ======================================================= */
 
-  const nextSlide = () => {
-    setCurrentIndex((current) =>
-      Math.min(
-        current + 1,
-        maxIndex
-      )
-    );
-  };
+  const nextSlide =
+    () => {
+      setCurrentIndex(
+        (
+          current
+        ) =>
+          Math.min(
+            current + 1,
+            maxIndex
+          )
+      );
+    };
 
-  const previousSlide = () => {
-    setCurrentIndex((current) =>
-      Math.max(
-        current - 1,
-        0
-      )
-    );
-  };
 
-  const handleDragEnd = (
-    _:
-      | MouseEvent
-      | TouchEvent
-      | PointerEvent,
-    info: PanInfo
-  ) => {
-    if (info.offset.x < -45) {
-      nextSlide();
-    }
+  const previousSlide =
+    () => {
+      setCurrentIndex(
+        (
+          current
+        ) =>
+          Math.max(
+            current - 1,
+            0
+          )
+      );
+    };
 
-    if (info.offset.x > 45) {
-      previousSlide();
-    }
-  };
 
-  /* =========================================================
-     FILTER CLICK
-  ========================================================= */
+  const handleDragEnd =
+    (
+      _:
+        | MouseEvent
+        | TouchEvent
+        | PointerEvent,
 
-  const selectCategory = (
-    category: FacultyCategory
-  ) => {
-    setActiveCategory(category);
-    setCurrentIndex(0);
-
-    requestAnimationFrame(() => {
-      const container =
-        filterContainerRef.current;
-
-      const button =
-        filterButtonRefs.current[
-          category
-        ];
-
-      if (!container || !button) {
-        return;
+      info:
+        PanInfo
+    ) => {
+      if (
+        info.offset.x <
+        -45
+      ) {
+        nextSlide();
       }
 
-      const target =
-        button.offsetLeft +
-        button.offsetWidth / 2 -
-        container.clientWidth / 2;
 
-      container.scrollTo({
-        left: Math.max(0, target),
-        behavior: "smooth",
-      });
-    });
-  };
+      if (
+        info.offset.x >
+        45
+      ) {
+        previousSlide();
+      }
+    };
+
+
+  /* =======================================================
+     FILTER CLICK
+  ======================================================= */
+
+  const selectCategory =
+    (
+      category:
+        ActiveCategory
+    ) => {
+      setActiveCategory(
+        category
+      );
+
+
+      setCurrentIndex(
+        0
+      );
+
+
+      requestAnimationFrame(
+        () => {
+          const container =
+            filterContainerRef.current;
+
+
+          const button =
+            filterButtonRefs.current[
+              category
+            ];
+
+
+          if (
+            !container ||
+            !button
+          ) {
+            return;
+          }
+
+
+          const target =
+            button.offsetLeft +
+            button.offsetWidth /
+              2 -
+            container.clientWidth /
+              2;
+
+
+          container.scrollTo({
+            left:
+              Math.max(
+                0,
+                target
+              ),
+
+            behavior:
+              "smooth",
+          });
+        }
+      );
+    };
+
+
+  /* =======================================================
+     UI
+  ======================================================= */
 
   return (
     <section
@@ -783,9 +1081,10 @@ export default function FacultyShowcase() {
         lg:py-[78px]
       "
     >
-      {/* =====================================================
+
+      {/* ===================================================
           BACKGROUND
-      ====================================================== */}
+      =================================================== */}
 
       <div
         className="
@@ -811,9 +1110,11 @@ export default function FacultyShowcase() {
         }}
       />
 
+
       <div
         className="
           pointer-events-none
+
           absolute
           inset-0
 
@@ -823,9 +1124,10 @@ export default function FacultyShowcase() {
         "
       />
 
-      {/* =====================================================
+
+      {/* ===================================================
           HEADER
-      ====================================================== */}
+      =================================================== */}
 
       <motion.div
         variants={container}
@@ -880,10 +1182,13 @@ export default function FacultyShowcase() {
           Faculty
         </motion.span>
 
+
         <motion.h2
           variants={fadeUp}
           className="
             mt-[13px]
+
+            pt-3
 
             font-primary
 
@@ -900,11 +1205,12 @@ export default function FacultyShowcase() {
 
             md:text-[33px]
 
-            lg:text-[35px] pt-3
+            lg:text-[35px]
           "
         >
           Meet Our Educators
         </motion.h2>
+
 
         <motion.p
           variants={fadeUp}
@@ -915,6 +1221,8 @@ export default function FacultyShowcase() {
 
             max-w-[490px]
 
+            pt-3
+
             font-secondary
 
             text-[10px]
@@ -923,7 +1231,7 @@ export default function FacultyShowcase() {
 
             text-[#848484]
 
-            sm:text-[12px] pt-3
+            sm:text-[12px]
           "
         >
           Dedicated educators nurturing knowledge,
@@ -931,97 +1239,233 @@ export default function FacultyShowcase() {
         </motion.p>
       </motion.div>
 
-      {/* =====================================================
-          FILTERS
 
-          TRUE CAPSULE SHAPE
-      ====================================================== */}
+      {/* ===================================================
+          LOADING
+      =================================================== */}
 
-      <motion.div
-        initial={{
-          opacity: 0,
-          y: 18,
-        }}
-        whileInView={{
-          opacity: 1,
-          y: 0,
-        }}
-        viewport={{
-          once: true,
-        }}
-        transition={{
-          duration: 0.75,
-          delay: 0.2,
-          ease,
-        }}
-        className="
-          relative
-          z-20
-
-          mt-[30px]
-
-          w-full
-
-          lg:mt-[34px]
-        "
-      >
+      {loading && (
         <div
-          ref={filterContainerRef}
           className="
+            relative
+            z-10
+
+            mx-auto
+
+            mt-[45px]
+
+            flex
+            min-h-[240px]
+
             w-full
+            max-w-[1180px]
 
-            overflow-x-auto
-            overflow-y-visible
-
-            scroll-smooth
-
-            [scrollbar-width:none]
-
-            [&::-webkit-scrollbar]:hidden
+            flex-col
+            items-center
+            justify-center
           "
         >
-          <div
+          <LoadingIcon />
+
+          <p
             className="
-              mx-auto
+              mt-[12px]
 
-              flex
+              font-secondary
 
-              w-max
-              min-w-full
+              text-[10px]
 
-              items-center
-
-              gap-[8px]
-
-              px-[16px]
-              py-[6px]
-
-              sm:px-[24px]
-
-              md:px-[30px]
-
-              lg:justify-center
-              lg:px-[40px]
+              text-[#848484]
             "
           >
-            {categories.map(
-              (category) => {
-                const active =
-                  category ===
-                  activeCategory;
+            Loading Faculty...
+          </p>
+        </div>
+      )}
 
-                return (
+
+      {/* ===================================================
+          ERROR
+      =================================================== */}
+
+      {!loading &&
+        error && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              y: 15,
+            }}
+            animate={{
+              opacity: 1,
+              y: 0,
+            }}
+            className="
+              relative
+              z-10
+
+              mx-auto
+
+              mt-[42px]
+
+              w-[calc(100%-36px)]
+              max-w-[520px]
+
+              rounded-[14px]
+
+              border
+              border-red-100
+
+              bg-white
+
+              px-[24px]
+              py-[34px]
+
+              text-center
+
+              shadow-[0_12px_35px_rgba(25,45,70,0.05)]
+            "
+          >
+            <p
+              className="
+                font-secondary
+
+                text-[10px]
+
+                leading-[1.6]
+
+                text-red-600
+              "
+            >
+              {error}
+            </p>
+
+
+            <button
+              type="button"
+              onClick={
+                loadFacultyData
+              }
+              className="
+                mt-[15px]
+
+                rounded-full
+
+                bg-[#0075FF]
+
+                px-[16px]
+                py-[8px]
+
+                font-secondary
+
+                text-[9px]
+                font-medium
+
+                text-white
+              "
+            >
+              Try Again
+            </button>
+          </motion.div>
+        )}
+
+
+      {/* ===================================================
+          API CONTENT
+      =================================================== */}
+
+      {!loading &&
+        !error && (
+          <>
+
+            {/* =============================================
+                FILTERS
+            ============================================= */}
+
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 18,
+              }}
+              whileInView={{
+                opacity: 1,
+                y: 0,
+              }}
+              viewport={{
+                once: true,
+              }}
+              transition={{
+                duration: 0.75,
+                delay: 0.2,
+                ease,
+              }}
+              className="
+                relative
+                z-20
+
+                mt-[30px]
+
+                w-full
+
+                lg:mt-[34px]
+              "
+            >
+              <div
+                ref={
+                  filterContainerRef
+                }
+                className="
+                  w-full
+
+                  overflow-x-auto
+                  overflow-y-visible
+
+                  scroll-smooth
+
+                  [scrollbar-width:none]
+
+                  [&::-webkit-scrollbar]:hidden
+                "
+              >
+                <div
+                  className="
+                    mx-auto
+
+                    flex
+
+                    w-max
+                    min-w-full
+
+                    items-center
+
+                    gap-[8px]
+
+                    px-[16px]
+                    py-[6px]
+
+                    sm:px-[24px]
+
+                    md:px-[30px]
+
+                    lg:justify-center
+                    lg:px-[40px]
+                  "
+                >
+
+                  {/* ALL FACULTY */}
+
                   <motion.button
-                    key={category}
-                    ref={(element) => {
+                    ref={(
+                      element
+                    ) => {
                       filterButtonRefs.current[
-                        category
-                      ] = element;
+                        "all"
+                      ] =
+                        element;
                     }}
                     type="button"
                     onClick={() =>
                       selectCategory(
-                        category
+                        "all"
                       )
                     }
                     whileHover={{
@@ -1032,22 +1476,26 @@ export default function FacultyShowcase() {
                     }}
                     animate={{
                       backgroundColor:
-                        active
+                        activeCategory ===
+                        "all"
                           ? "#0075FF"
                           : "#FFFFFF",
 
                       borderColor:
-                        active
+                        activeCategory ===
+                        "all"
                           ? "#0075FF"
                           : "#DED8CF",
 
                       color:
-                        active
+                        activeCategory ===
+                        "all"
                           ? "#FFFFFF"
                           : "#555555",
 
                       boxShadow:
-                        active
+                        activeCategory ===
+                        "all"
                           ? "0 7px 18px rgba(0,117,255,0.16)"
                           : "0 2px 8px rgba(20,40,60,0.025)",
                     }}
@@ -1100,338 +1548,679 @@ export default function FacultyShowcase() {
                       lg:text-[8.5px]
                     "
                   >
-                    {category}
+                    All Faculty
                   </motion.button>
-                );
-              }
-            )}
-          </div>
-        </div>
-      </motion.div>
 
-      {/* =====================================================
-          MOBILE + TABLET CAROUSEL
-      ====================================================== */}
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeCategory}
-          initial={{
-            opacity: 0,
-            y: 18,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          exit={{
-            opacity: 0,
-            y: 8,
-          }}
-          transition={{
-            duration: 0.45,
-            ease,
-          }}
-          className="
-            relative
-            z-10
+                  {/* DYNAMIC CATEGORIES */}
 
-            mt-[40px]
+                  {categories.map(
+                    (
+                      category
+                    ) => {
+                      const active =
+                        activeCategory ===
+                        category.slug;
 
-            lg:hidden
-          "
-        >
-          <div
-            className="
-              px-[16px]
 
-              sm:px-[24px]
+                      return (
+                        <motion.button
+                          key={
+                            category.id
+                          }
+                          ref={(
+                            element
+                          ) => {
+                            filterButtonRefs.current[
+                              category.slug
+                            ] =
+                              element;
+                          }}
+                          type="button"
+                          onClick={() =>
+                            selectCategory(
+                              category.slug
+                            )
+                          }
+                          whileHover={{
+                            y: -1,
+                          }}
+                          whileTap={{
+                            scale: 0.97,
+                          }}
+                          animate={{
+                            backgroundColor:
+                              active
+                                ? "#0075FF"
+                                : "#FFFFFF",
 
-              md:px-[30px]
-            "
-          >
-            <div
-              ref={carouselViewportRef}
-              className="
-                w-full
+                            borderColor:
+                              active
+                                ? "#0075FF"
+                                : "#DED8CF",
 
-                overflow-hidden
-              "
-            >
-              <motion.div
-                drag="x"
-                dragConstraints={{
-                  left: 0,
-                  right: 0,
-                }}
-                dragElastic={0.07}
-                onDragEnd={handleDragEnd}
-                animate={{
-                  x:
-                    -currentIndex *
-                    (cardWidth + gap),
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 180,
-                  damping: 27,
-                  mass: 0.82,
-                }}
-                className="
-                  flex
+                            color:
+                              active
+                                ? "#FFFFFF"
+                                : "#555555",
 
-                  cursor-grab
+                            boxShadow:
+                              active
+                                ? "0 7px 18px rgba(0,117,255,0.16)"
+                                : "0 2px 8px rgba(20,40,60,0.025)",
+                          }}
+                          transition={{
+                            duration: 0.3,
+                            ease,
+                          }}
+                          style={{
+                            borderRadius:
+                              "9999px",
+                          }}
+                          className="
+                            relative
 
-                  gap-[18px]
+                            flex
 
-                  pb-[8px]
+                            h-[28px]
 
-                  active:cursor-grabbing
-                "
-              >
-                {filteredFaculty.map(
-                  (
-                    faculty,
-                    index
-                  ) => (
+                            shrink-0
+
+                            items-center
+                            justify-center
+
+                            !rounded-full
+
+                            border
+
+                            px-[13px]
+
+                            font-secondary
+
+                            text-[8px]
+                            font-medium
+
+                            leading-none
+
+                            whitespace-nowrap
+
+                            outline-none
+
+                            sm:h-[29px]
+                            sm:px-[14px]
+                            sm:text-[8.5px]
+
+                            md:h-[30px]
+                            md:px-[15px]
+
+                            lg:h-[29px]
+                            lg:px-[15px]
+                            lg:text-[8.5px]
+                          "
+                        >
+                          {
+                            category.name
+                          }
+                        </motion.button>
+                      );
+                    }
+                  )}
+                </div>
+              </div>
+            </motion.div>
+
+
+            {/* =============================================
+                NO FACULTY DATA
+            ============================================= */}
+
+            {facultyMembers.length ===
+            0 ? (
+              <EmptyFacultyState />
+            ) : filteredFaculty.length ===
+              0 ? (
+              <EmptyCategoryState />
+            ) : (
+              <>
+
+                {/* =========================================
+                    MOBILE + TABLET CAROUSEL
+                ========================================= */}
+
+                <AnimatePresence
+                  mode="wait"
+                >
+                  <motion.div
+                    key={
+                      activeCategory
+                    }
+                    initial={{
+                      opacity: 0,
+                      y: 18,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: 8,
+                    }}
+                    transition={{
+                      duration: 0.45,
+                      ease,
+                    }}
+                    className="
+                      relative
+                      z-10
+
+                      mt-[40px]
+
+                      lg:hidden
+                    "
+                  >
                     <div
-                      key={faculty.id}
-                      style={{
-                        width:
-                          cardWidth ||
-                          "100%",
-                      }}
                       className="
-                        shrink-0
+                        px-[16px]
+
+                        sm:px-[24px]
+
+                        md:px-[30px]
                       "
                     >
-                      <FacultyCard
-                        faculty={
-                          faculty
+                      <div
+                        ref={
+                          carouselViewportRef
                         }
-                        index={index}
-                      />
+                        className="
+                          w-full
+
+                          overflow-hidden
+                        "
+                      >
+                        <motion.div
+                          drag="x"
+                          dragConstraints={{
+                            left: 0,
+                            right: 0,
+                          }}
+                          dragElastic={
+                            0.07
+                          }
+                          onDragEnd={
+                            handleDragEnd
+                          }
+                          animate={{
+                            x:
+                              -currentIndex *
+                              (
+                                cardWidth +
+                                gap
+                              ),
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 180,
+                            damping: 27,
+                            mass: 0.82,
+                          }}
+                          className="
+                            flex
+
+                            cursor-grab
+
+                            gap-[18px]
+
+                            pb-[8px]
+
+                            active:cursor-grabbing
+                          "
+                        >
+                          {filteredFaculty.map(
+                            (
+                              faculty,
+                              index
+                            ) => (
+                              <div
+                                key={
+                                  faculty.id
+                                }
+                                style={{
+                                  width:
+                                    cardWidth ||
+                                    "100%",
+                                }}
+                                className="
+                                  shrink-0
+                                "
+                              >
+                                <FacultyCard
+                                  faculty={
+                                    faculty
+                                  }
+                                  index={
+                                    index
+                                  }
+                                />
+                              </div>
+                            )
+                          )}
+                        </motion.div>
+                      </div>
                     </div>
-                  )
-                )}
-              </motion.div>
-            </div>
-          </div>
 
-          {/* CONTROLS */}
 
-          {maxIndex > 0 && (
-            <div
-              className="
-                mx-auto
+                    {/* CONTROLS */}
 
-                mt-[18px]
+                    {maxIndex >
+                      0 && (
+                      <div
+                        className="
+                          mx-auto
 
-                flex
-                w-full
-                max-w-[960px]
+                          mt-[18px]
 
-                items-center
-                justify-between
+                          flex
+                          w-full
+                          max-w-[960px]
 
-                px-[18px]
+                          items-center
+                          justify-between
 
-                sm:px-[24px]
+                          px-[18px]
 
-                md:px-[30px]
-              "
-            >
-              {/* DOTS */}
+                          sm:px-[24px]
 
-              <div className="flex items-center gap-[7px]">
-                {Array.from({
-                  length:
-                    maxIndex + 1,
-                }).map(
-                  (_, index) => (
-                    <motion.button
-                      key={index}
-                      type="button"
-                      onClick={() =>
-                        setCurrentIndex(
-                          index
-                        )
-                      }
-                      animate={{
-                        width:
-                          currentIndex ===
-                          index
-                            ? 20
-                            : 6,
+                          md:px-[30px]
+                        "
+                      >
 
-                        opacity:
-                          currentIndex ===
-                          index
-                            ? 1
-                            : 0.25,
-                      }}
-                      transition={{
-                        duration: 0.3,
-                        ease,
-                      }}
-                      className="
-                        h-[6px]
+                        {/* DOTS */}
 
-                        rounded-full
+                        <div
+                          className="
+                            flex
+                            items-center
 
-                        bg-[#0075FF]
-                      "
-                    />
-                  )
-                )}
-              </div>
+                            gap-[7px]
+                          "
+                        >
+                          {Array.from({
+                            length:
+                              maxIndex +
+                              1,
+                          }).map(
+                            (
+                              _,
+                              index
+                            ) => (
+                              <motion.button
+                                key={
+                                  index
+                                }
+                                type="button"
+                                aria-label={`Go to slide ${
+                                  index +
+                                  1
+                                }`}
+                                onClick={() =>
+                                  setCurrentIndex(
+                                    index
+                                  )
+                                }
+                                animate={{
+                                  width:
+                                    currentIndex ===
+                                    index
+                                      ? 20
+                                      : 6,
 
-              {/* ARROWS */}
+                                  opacity:
+                                    currentIndex ===
+                                    index
+                                      ? 1
+                                      : 0.25,
+                                }}
+                                transition={{
+                                  duration:
+                                    0.3,
 
-              <div className="flex items-center gap-[8px]">
-                <motion.button
-                  type="button"
-                  onClick={
-                    previousSlide
-                  }
-                  disabled={
-                    currentIndex === 0
-                  }
-                  whileTap={{
-                    scale: 0.94,
-                  }}
-                  className="
-                    flex
+                                  ease,
+                                }}
+                                className="
+                                  h-[6px]
 
-                    h-[40px]
-                    w-[40px]
+                                  rounded-full
 
-                    items-center
-                    justify-center
+                                  bg-[#0075FF]
+                                "
+                              />
+                            )
+                          )}
+                        </div>
 
-                    rounded-[10px]
 
-                    border
-                    border-[#DCE5EE]
+                        {/* ARROWS */}
 
-                    bg-white
+                        <div
+                          className="
+                            flex
+                            items-center
 
-                    text-[#0075FF]
+                            gap-[8px]
+                          "
+                        >
+                          <motion.button
+                            type="button"
+                            aria-label="Previous Faculty"
+                            onClick={
+                              previousSlide
+                            }
+                            disabled={
+                              currentIndex ===
+                              0
+                            }
+                            whileTap={{
+                              scale: 0.94,
+                            }}
+                            className="
+                              flex
 
-                    shadow-[0_7px_20px_rgba(25,60,90,0.07)]
+                              h-[40px]
+                              w-[40px]
 
-                    disabled:cursor-not-allowed
-                    disabled:opacity-30
-                  "
+                              items-center
+                              justify-center
+
+                              rounded-[10px]
+
+                              border
+                              border-[#DCE5EE]
+
+                              bg-white
+
+                              text-[#0075FF]
+
+                              shadow-[0_7px_20px_rgba(25,60,90,0.07)]
+
+                              disabled:cursor-not-allowed
+                              disabled:opacity-30
+                            "
+                          >
+                            <ChevronLeft />
+                          </motion.button>
+
+
+                          <motion.button
+                            type="button"
+                            aria-label="Next Faculty"
+                            onClick={
+                              nextSlide
+                            }
+                            disabled={
+                              currentIndex ===
+                              maxIndex
+                            }
+                            whileTap={{
+                              scale: 0.94,
+                            }}
+                            className="
+                              flex
+
+                              h-[40px]
+                              w-[40px]
+
+                              items-center
+                              justify-center
+
+                              rounded-[10px]
+
+                              bg-[#0075FF]
+
+                              text-white
+
+                              shadow-[0_8px_22px_rgba(0,117,255,0.18)]
+
+                              disabled:cursor-not-allowed
+                              disabled:opacity-30
+                            "
+                          >
+                            <ChevronRight />
+                          </motion.button>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+
+
+                {/* =========================================
+                    DESKTOP GRID
+                ========================================= */}
+
+                <AnimatePresence
+                  mode="wait"
                 >
-                  <ChevronLeft />
-                </motion.button>
+                  <motion.div
+                    key={`desktop-${activeCategory}`}
+                    initial={{
+                      opacity: 0,
+                      y: 18,
+                    }}
+                    animate={{
+                      opacity: 1,
+                      y: 0,
+                    }}
+                    exit={{
+                      opacity: 0,
+                      y: 8,
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      ease,
+                    }}
+                    className="
+                      relative
+                      z-10
 
-                <motion.button
-                  type="button"
-                  onClick={nextSlide}
-                  disabled={
-                    currentIndex ===
-                    maxIndex
-                  }
-                  whileTap={{
-                    scale: 0.94,
-                  }}
-                  className="
-                    flex
+                      mx-auto
 
-                    h-[40px]
-                    w-[40px]
+                      mt-[46px]
 
-                    items-center
-                    justify-center
+                      hidden
 
-                    rounded-[10px]
+                      w-full
+                      max-w-[1180px]
 
-                    bg-[#0075FF]
+                      grid-cols-3
 
-                    text-white
+                      gap-[24px]
 
-                    shadow-[0_8px_22px_rgba(0,117,255,0.18)]
+                      px-[38px]
 
-                    disabled:cursor-not-allowed
-                    disabled:opacity-30
-                  "
-                >
-                  <ChevronRight />
-                </motion.button>
-              </div>
-            </div>
-          )}
-        </motion.div>
-      </AnimatePresence>
+                      lg:grid
 
-      {/* =====================================================
-          DESKTOP GRID
-      ====================================================== */}
+                      xl:gap-[28px]
+                      xl:px-[44px]
+                    "
+                  >
+                    {filteredFaculty.map(
+                      (
+                        faculty,
+                        index
+                      ) => (
+                        <FacultyCard
+                          key={
+                            faculty.id
+                          }
+                          faculty={
+                            faculty
+                          }
+                          index={
+                            index
+                          }
+                        />
+                      )
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </>
+            )}
+          </>
+        )}
+    </section>
+  );
+}
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`desktop-${activeCategory}`}
-          initial={{
-            opacity: 0,
-            y: 18,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          exit={{
-            opacity: 0,
-            y: 8,
-          }}
-          transition={{
-            duration: 0.5,
-            ease,
-          }}
+
+/* =========================================================
+   EMPTY FACULTY STATE
+========================================================= */
+
+function EmptyFacultyState() {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 15,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      className="
+        relative
+        z-10
+
+        mx-auto
+
+        mt-[45px]
+
+        max-w-[520px]
+
+        px-[20px]
+
+        text-center
+      "
+    >
+      <div
+        className="
+          rounded-[14px]
+
+          border
+          border-[#E5E0D7]
+
+          bg-white
+
+          px-[24px]
+          py-[40px]
+
+          shadow-[0_12px_35px_rgba(25,45,70,0.05)]
+        "
+      >
+        <p
           className="
-            relative
-            z-10
+            font-primary
 
-            mx-auto
+            text-[16px]
+            font-semibold
 
-            mt-[46px]
-
-            hidden
-
-            w-full
-            max-w-[1180px]
-
-            grid-cols-3
-
-            gap-[24px]
-
-            px-[38px]
-
-            lg:grid
-
-            xl:gap-[28px]
-            xl:px-[44px]
+            text-[#151515]
           "
         >
-          {filteredFaculty.map(
-            (
-              faculty,
-              index
-            ) => (
-              <FacultyCard
-                key={
-                  faculty.id
-                }
-                faculty={
-                  faculty
-                }
-                index={index}
-              />
-            )
-          )}
-        </motion.div>
-      </AnimatePresence>
-    </section>
+          Faculty details
+          will be available
+          soon.
+        </p>
+
+
+        <p
+          className="
+            mx-auto
+
+            mt-[7px]
+
+            max-w-[330px]
+
+            font-secondary
+
+            text-[10px]
+
+            leading-[1.6]
+
+            text-[#848484]
+          "
+        >
+          Our Faculty
+          information is
+          currently being
+          updated.
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+
+/* =========================================================
+   EMPTY CATEGORY STATE
+========================================================= */
+
+function EmptyCategoryState() {
+  return (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 15,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      className="
+        relative
+        z-10
+
+        mx-auto
+
+        mt-[45px]
+
+        max-w-[520px]
+
+        px-[20px]
+
+        text-center
+      "
+    >
+      <div
+        className="
+          rounded-[14px]
+
+          border
+          border-[#E5E0D7]
+
+          bg-white
+
+          px-[24px]
+          py-[38px]
+
+          shadow-[0_12px_35px_rgba(25,45,70,0.05)]
+        "
+      >
+        <p
+          className="
+            font-primary
+
+            text-[15px]
+            font-semibold
+
+            text-[#151515]
+          "
+        >
+          No Faculty members
+          in this category.
+        </p>
+      </div>
+    </motion.div>
   );
 }
