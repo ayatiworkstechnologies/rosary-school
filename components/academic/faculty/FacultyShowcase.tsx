@@ -2223,4 +2223,4 @@ function EmptyCategoryState() {
       </div>
     </motion.div>
   );
-}
+} 
