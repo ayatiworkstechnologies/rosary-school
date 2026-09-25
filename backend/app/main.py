@@ -64,6 +64,19 @@ from app.api.v1.admin.faculty import (
 )
 
 
+# ---------------------------------------------------------
+# DOWNLOADS
+# ---------------------------------------------------------
+
+from app.api.v1.admin.download_uploads import (
+    router as admin_download_upload_router,
+)
+
+from app.api.v1.admin.downloads import (
+    router as admin_downloads_router,
+)
+
+
 # =========================================================
 # PUBLIC API ROUTERS
 # =========================================================
@@ -86,6 +99,10 @@ from app.api.v1.public.gallery import (
 
 from app.api.v1.public.faculty import (
     router as public_faculty_router,
+)
+
+from app.api.v1.public.downloads import (
+    router as public_downloads_router,
 )
 
 
@@ -321,6 +338,62 @@ app.include_router(
 )
 
 
+# ---------------------------------------------------------
+# ADMIN DOWNLOAD FILE + ICON UPLOAD
+#
+# PDF:
+#
+# POST
+# /api/v1/admin/uploads/download-file
+#
+# PDF only
+# Maximum size: 50 MB
+#
+#
+# Custom Icon:
+#
+# POST
+# /api/v1/admin/uploads/download-icon
+#
+# JPG / JPEG / PNG / WEBP
+# Maximum size: 5 MB
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_download_upload_router
+)
+
+
+# ---------------------------------------------------------
+# ADMIN DOWNLOADS MANAGEMENT
+#
+# GET
+# /api/v1/admin/downloads
+#
+# POST
+# /api/v1/admin/downloads
+#
+# GET
+# /api/v1/admin/downloads/{download_id}
+#
+# PATCH
+# /api/v1/admin/downloads/{download_id}
+#
+# DELETE
+# /api/v1/admin/downloads/{download_id}
+#
+# PATCH
+# /api/v1/admin/downloads/{download_id}/status
+#
+# PATCH
+# /api/v1/admin/downloads/{download_id}/order
+# ---------------------------------------------------------
+
+app.include_router(
+    admin_downloads_router
+)
+
+
 # =========================================================
 # PUBLIC ROUTERS
 # =========================================================
@@ -386,6 +459,23 @@ app.include_router(
 
 app.include_router(
     public_faculty_router
+)
+
+
+# ---------------------------------------------------------
+# PUBLIC DOWNLOADS
+#
+# GET
+# /api/v1/downloads
+#
+# Returns:
+#
+# only active Downloads
+# ordered by display_order
+# ---------------------------------------------------------
+
+app.include_router(
+    public_downloads_router
 )
 
 
@@ -467,6 +557,24 @@ UPLOAD_DIR.mkdir(
 #
 # Public URL:
 # http://localhost:8000/uploads/faculty/example.jpg
+#
+#
+# Download PDF:
+#
+# Physical:
+# backend/uploads/downloads/files/example.pdf
+#
+# Public URL:
+# http://localhost:8000/uploads/downloads/files/example.pdf
+#
+#
+# Download custom icon:
+#
+# Physical:
+# backend/uploads/downloads/icons/example.png
+#
+# Public URL:
+# http://localhost:8000/uploads/downloads/icons/example.png
 
 app.mount(
     "/uploads",
@@ -487,6 +595,7 @@ app.mount(
 
 @app.get(
     "/",
+
     tags=[
         "System"
     ],
@@ -511,6 +620,7 @@ def root():
 
 @app.get(
     "/health",
+
     tags=[
         "System"
     ],
@@ -532,6 +642,7 @@ def health_check():
 
 @app.get(
     "/health/database",
+
     tags=[
         "System"
     ],
@@ -548,6 +659,7 @@ def database_health_check():
                 )
             )
 
+
         return {
             "status":
                 "healthy",
@@ -556,11 +668,13 @@ def database_health_check():
                 "connected",
         }
 
+
     except SQLAlchemyError as error:
 
         logger.exception(
             "Database connection failed"
         )
+
 
         raise HTTPException(
             status_code=(

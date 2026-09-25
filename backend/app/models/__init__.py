@@ -26,6 +26,7 @@ from app.models.faculty import (
     FacultyMember,
 )
 
+from app.models.download import Download
 
 __all__ = [
     "Admin",
@@ -43,4 +44,6 @@ __all__ = [
 
     "FacultyCategory",
     "FacultyMember",
+
+    "Download",
 ]

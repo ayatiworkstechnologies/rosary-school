@@ -55,6 +55,11 @@ from app.models.circular_notice import (
 
 # ---------------------------------------------------------
 # GALLERY
+#
+# Tables:
+#
+# gallery_albums
+# gallery_images
 # ---------------------------------------------------------
 
 from app.models.gallery import (
@@ -75,6 +80,19 @@ from app.models.gallery import (
 from app.models.faculty import (
     FacultyCategory,
     FacultyMember,
+)  # noqa: F401
+
+
+# ---------------------------------------------------------
+# DOWNLOADS
+#
+# Table:
+#
+# downloads
+# ---------------------------------------------------------
+
+from app.models.download import (
+    Download,
 )  # noqa: F401
 
 
