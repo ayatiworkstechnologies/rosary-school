@@ -105,7 +105,7 @@ function getDownloadIcon(
 
   return (
     downloadIconMap[
-      iconKey
+    iconKey
     ] || FileText
   );
 }
@@ -133,19 +133,19 @@ function buildDownloadItems(
 
       icon:
         item.icon_type ===
-        "lucide"
+          "lucide"
           ? getDownloadIcon(
-              item.icon_key,
-            )
+            item.icon_key,
+          )
           : FileText,
 
       iconUrl:
         item.icon_type ===
           "image" &&
-        item.icon_url
+          item.icon_url
           ? getPublicDownloadIconUrl(
-              item.icon_url,
-            )
+            item.icon_url,
+          )
           : null,
 
       href:
@@ -355,7 +355,7 @@ function DownloadCard({
 
               delay:
                 index *
-                  0.04 +
+                0.04 +
                 0.15,
 
               ease,
@@ -394,7 +394,7 @@ function DownloadCard({
 
             delay:
               index *
-                0.045 +
+              0.045 +
               0.12,
 
             ease,
@@ -608,11 +608,11 @@ export default function DownloadsSection() {
         setDownloads(
           buildDownloadItems(
             response.items ||
-              [],
+            [],
           ),
         );
       } catch (
-        error
+      error
       ) {
         console.error(
           "Unable to load public Downloads:",
@@ -798,65 +798,73 @@ export default function DownloadsSection() {
 
         {/* DOWNLOAD GRID */}
 
+
+
         <div
           className="
-            mx-auto
-            mt-[27px]
-            grid
-            w-full
-            grid-cols-1
-            items-stretch
-            gap-[17px]
-            sm:grid-cols-2
-            sm:gap-[19px]
-            lg:mt-[30px]
-            lg:grid-cols-4
-            lg:gap-x-[44px]
-            lg:gap-y-[26px]
-          "
+    mx-auto
+    mt-[27px]
+
+    flex
+    w-full
+    flex-wrap
+    justify-center
+
+    gap-[17px]
+
+    sm:gap-[19px]
+
+    lg:mt-[30px]
+    lg:gap-x-[44px]
+    lg:gap-y-[26px]
+  "
         >
           {loading ? (
             <>
               {Array.from({
                 length: 8,
-              }).map(
-                (
-                  _,
-                  index,
-                ) => (
-                  <div
-                    key={
-                      index
-                    }
-                    className="
-                      h-[132px]
-                      animate-pulse
-                      rounded-[13px]
-                      border
-                      border-[#E4E9EF]
-                      bg-white/80
-                    "
-                  />
-                ),
-              )}
+              }).map((_, index) => (
+                <div
+                  key={index}
+                  className="
+            h-[132px]
+
+            w-full
+
+            animate-pulse
+
+            rounded-[13px]
+
+            border
+            border-[#E4E9EF]
+
+            bg-white/80
+
+            sm:w-[calc(50%-9.5px)]
+
+            lg:w-[calc(25%-33px)]
+          "
+                />
+              ))}
             </>
           ) : (
             downloads.map(
-              (
-                item,
-                index,
-              ) => (
-                <DownloadCard
-                  key={
-                    item.id
-                  }
-                  item={
-                    item
-                  }
-                  index={
-                    index
-                  }
-                />
+              (item, index) => (
+                <div
+                  key={item.id}
+                  className="
+            w-full
+
+            sm:w-[calc(50%-9.5px)]
+
+            lg:w-[calc(25%-33px)]
+          "
+                >
+                  <DownloadCard
+                    item={item}
+                    index={index}
+                  />
+                </div>
               ),
             )
           )}
@@ -867,7 +875,7 @@ export default function DownloadsSection() {
 
         {!loading &&
           downloads.length ===
-            0 && (
+          0 && (
             <motion.div
               initial={{
                 opacity:
