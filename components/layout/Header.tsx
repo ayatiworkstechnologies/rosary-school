@@ -1,8 +1,8 @@
+
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
-
 import {
   FormEvent,
   useEffect,
@@ -10,15 +10,11 @@ import {
   useRef,
   useState,
 } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
-import {
-  usePathname,
-  useRouter,
-} from "next/navigation";
-
-/* =========================================================
+/* =====================================================
    TYPES
-========================================================= */
+===================================================== */
 
 type SubMenuItem = {
   label: string;
@@ -40,26 +36,29 @@ type SearchablePage = {
   keywords: string[];
 };
 
-/* =========================================================
+/* =====================================================
+   LINKS
+===================================================== */
+
+const PORTAL_URL =
+  "https://rosary-frontend.vercel.app/login";
+
+const FEES_URL =
+  "https://feebook.southindianbank.bank.in/FeeBookUser/userhome";
+
+/* =====================================================
    NAVIGATION
-========================================================= */
+===================================================== */
 
 const navigation: NavigationItem[] = [
   {
     label: "Home",
     href: "/",
-
-    keywords: [
-      "home",
-      "rosary",
-      "school",
-    ],
+    keywords: ["home", "rosary", "school"],
   },
-
   {
     label: "About",
     href: "/about",
-
     keywords: [
       "about",
       "school",
@@ -68,166 +67,78 @@ const navigation: NavigationItem[] = [
       "mission",
       "principal",
     ],
-
     children: [
       {
         label: "History",
-
-        href:
-          "/about/history",
-
-        keywords: [
-          "history",
-          "school history",
-          "rosary history",
-        ],
+        href: "/about/history",
+        keywords: ["history", "school history"],
       },
     ],
   },
-
   {
     label: "Academics",
     href: "/academics",
-
     keywords: [
       "academics",
       "education",
-      "learning",
       "curriculum",
       "departments",
       "faculty",
       "clubs",
     ],
-
     children: [
       {
-        label:
-          "Curriculum",
-
-        href:
-          "/academics/curriculum",
-
-        keywords: [
-          "curriculum",
-          "syllabus",
-          "subjects",
-        ],
+        label: "Curriculum",
+        href: "/academics/curriculum",
+        keywords: ["curriculum", "syllabus"],
       },
-
       {
-        label:
-          "Departments",
-
-        href:
-          "/academics/departments",
-
-        keywords: [
-          "departments",
-          "department",
-        ],
+        label: "Departments",
+        href: "/academics/departments",
+        keywords: ["departments"],
       },
-
       {
         label: "Faculty",
-
-        href:
-          "/academics/faculty",
-
-        keywords: [
-          "faculty",
-          "teacher",
-          "teachers",
-          "staff",
-        ],
+        href: "/academics/faculty",
+        keywords: ["faculty", "teachers", "staff"],
       },
-
       {
         label: "School Council",
-
-        href:
-          "/academics/school-council",
-
-        keywords: [
-          "council",
-          
-          "student council",
-        ],
+        href: "/academics/school-council",
+        keywords: ["school council", "student council"],
       },
-
       {
         label: "Clubs",
-
-        href:
-          "/academics/clubs",
-
-        keywords: [
-          "clubs",
-          "activities",
-          "student clubs",
-        ],
+        href: "/academics/clubs",
+        keywords: ["clubs", "activities"],
       },
     ],
   },
-
   {
     label: "Community",
     href: "/community",
-
-    keywords: [
-      "community",
-      "student",
-      "parent",
-      "alumni",
-    ],
-
+    keywords: ["community", "student", "parent", "alumni"],
     children: [
       {
-        label:
-          "Student Corner",
-
-        href:
-          "/community/student-corner",
-
-        keywords: [
-          "student",
-          "students",
-          "student corner",
-        ],
+        label: "Student Corner",
+        href: "/community/student-corner",
+        keywords: ["student", "student corner"],
       },
-
       {
-        label:
-          "Parent Corner",
-
-        href:
-          "/community/parent-corner",
-
-        keywords: [
-          "parent",
-          "parents",
-          "parent corner",
-        ],
+        label: "Parent Corner",
+        href: "/community/parent-corner",
+        keywords: ["parent", "parent corner"],
       },
-
       {
         label: "Alumni",
-
-        href:
-          "/community/alumni",
-
-        keywords: [
-          "alumni",
-          "former students",
-          "old students",
-        ],
+        href: "/community/alumni",
+        keywords: ["alumni", "former students"],
       },
     ],
   },
-
   {
     label: "Information",
     href: "/information",
-
     keywords: [
       "information",
       "gallery",
@@ -236,447 +147,288 @@ const navigation: NavigationItem[] = [
       "achievements",
       "downloads",
     ],
-
     children: [
       {
         label: "Gallery",
-
         href: "/gallery",
-
-        keywords: [
-          "gallery",
-          "photos",
-          "images",
-        ],
+        keywords: ["gallery", "photos"],
       },
-
       {
         label: "News",
-
         href: "/news",
-
-        keywords: [
-          "news",
-          "announcement",
-          "announcements",
-        ],
+        keywords: ["news", "announcements"],
       },
-
       {
         label: "Events",
-
         href: "/events",
-
-        keywords: [
-          "events",
-          "programmes",
-          "programs",
-          "upcoming",
-        ],
+        keywords: ["events", "programmes"],
       },
-
       {
-        label:
-          "Achievements",
-
-        href:
-          "/achievements",
-
-        keywords: [
-          "achievements",
-          "awards",
-          "results",
-        ],
+        label: "Achievements",
+        href: "/achievements",
+        keywords: ["achievements", "awards"],
       },
-
       {
-        label:
-          "Downloads",
-
-        href:
-          "/downloads",
-
-        keywords: [
-          "downloads",
-          "pdf",
-          "documents",
-          "circular",
-        ],
+        label: "Downloads",
+        href: "/downloads",
+        keywords: ["downloads", "documents", "pdf"],
       },
     ],
   },
-
   {
     label: "Contact Us",
-
-    href:
-      "/contact-us",
-
-    keywords: [
-      "contact",
-      "contact us",
-      "phone",
-      "email",
-      "address",
-    ],
+    href: "/contact-us",
+    keywords: ["contact", "phone", "email", "address"],
   },
 ];
-
-/* =========================================================
-   UTILITY LINKS
-========================================================= */
 
 const utilityLinks = [
   {
-    label:
-      "Fees Payment",
-
-    href:
-      "https://feebook.southindianbank.bank.in/FeeBookUser/userhome",
-
-    keywords: [
-      "fees",
-      "fee",
-      "payment",
-      "fees payment",
-      "pay fees",
-    ],
+    label: "Portal",
+    href: PORTAL_URL,
+    keywords: ["portal", "login", "student portal", "parent portal"],
   },
-
   {
-    label:
-      "Admission",
-
-    href:
-      "/admissions",
-
-    keywords: [
-      "admission",
-      "admissions",
-      "application",
-      "apply",
-    ],
+    label: "Fees Payment",
+    href: FEES_URL,
+    keywords: ["fees", "fee", "payment", "pay fees"],
+  },
+  {
+    label: "Admission",
+    href: "/admissions",
+    keywords: ["admission", "admissions", "application"],
   },
 ];
 
-/* =========================================================
-   SEARCH PAGES
-========================================================= */
+/* =====================================================
+   SEARCH INDEX
+===================================================== */
 
 const searchablePages: SearchablePage[] = [
-  ...navigation.flatMap(
-    (item) => [
-      {
-        label:
-          item.label,
-
-        href:
-          item.href,
-
-        parent: "",
-
-        keywords:
-          item.keywords ??
-          [],
-      },
-
-      ...(item.children?.map(
-        (child) => ({
-          label:
-            child.label,
-
-          href:
-            child.href,
-
-          parent:
-            item.label,
-
-          keywords:
-            child.keywords ??
-            [],
-        })
-      ) ?? []),
-    ]
-  ),
-
-  ...utilityLinks.map(
-    (item) => ({
-      label:
-        item.label,
-
-      href:
-        item.href,
-
+  ...navigation.flatMap((item) => [
+    {
+      label: item.label,
+      href: item.href,
       parent: "",
-
-      keywords:
-        item.keywords,
-    })
-  ),
+      keywords: item.keywords ?? [],
+    },
+    ...(item.children?.map((child) => ({
+      label: child.label,
+      href: child.href,
+      parent: item.label,
+      keywords: child.keywords ?? [],
+    })) ?? []),
+  ]),
+  ...utilityLinks.map((item) => ({
+    label: item.label,
+    href: item.href,
+    parent: "",
+    keywords: item.keywords,
+  })),
 ];
 
-/* =========================================================
-   SEARCH HELPERS
-========================================================= */
-
-function normalizeText(
-  value: string
-) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(
-      /\s+/g,
-      " "
-    );
+function normalizeText(value: string) {
+  return value.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
-function getSearchScore(
-  page: SearchablePage,
-  query: string
-) {
-  const label =
-    normalizeText(
-      page.label
-    );
+function getSearchScore(page: SearchablePage, query: string) {
+  const label = normalizeText(page.label);
+  const parent = normalizeText(page.parent);
+  const keywords = page.keywords.map(normalizeText);
 
-  const parent =
-    normalizeText(
-      page.parent
-    );
-
-  const keywords =
-    page.keywords.map(
-      normalizeText
-    );
-
-  if (
-    label === query
-  ) {
-    return 100;
-  }
-
-  if (
-    label.startsWith(
-      query
-    )
-  ) {
-    return 90;
-  }
-
-  if (
-    label.includes(
-      query
-    )
-  ) {
-    return 80;
-  }
-
-  if (
-    keywords.some(
-      (keyword) =>
-        keyword === query
-    )
-  ) {
-    return 70;
-  }
-
-  if (
-    keywords.some(
-      (keyword) =>
-        keyword.startsWith(
-          query
-        )
-    )
-  ) {
-    return 60;
-  }
-
-  if (
-    keywords.some(
-      (keyword) =>
-        keyword.includes(
-          query
-        )
-    )
-  ) {
-    return 50;
-  }
-
-  if (
-    parent.includes(
-      query
-    )
-  ) {
-    return 40;
-  }
+  if (label === query) return 100;
+  if (label.startsWith(query)) return 90;
+  if (label.includes(query)) return 80;
+  if (keywords.some((word) => word === query)) return 70;
+  if (keywords.some((word) => word.startsWith(query))) return 60;
+  if (keywords.some((word) => word.includes(query))) return 50;
+  if (parent.includes(query)) return 40;
 
   return 0;
 }
 
-/* =========================================================
-   HEADER
-========================================================= */
+/* =====================================================
+   ICONS
+===================================================== */
 
-export default function Header() {
-  const pathname =
-    usePathname();
+type IconName =
+  | "search"
+  | "menu"
+  | "close"
+  | "chevron"
+  | "arrow"
+  | "portal"
+  | "fees";
 
-  const router =
-    useRouter();
-
-  const searchRef =
-    useRef<HTMLDivElement>(
-      null
-    );
-
-  const [
-    search,
-    setSearch,
-  ] = useState("");
-
-  const [
-    searchOpen,
-    setSearchOpen,
-  ] =
-    useState(false);
-
-  const [
-    mobileMenuOpen,
-    setMobileMenuOpen,
-  ] =
-    useState(false);
-
-  const [
-    openMobileDropdown,
-    setOpenMobileDropdown,
-  ] = useState<
-    string | null
-  >(null);
-
-  /* =======================================================
-     SEARCH RESULTS
-  ======================================================= */
-
-  const searchResults =
-    useMemo(() => {
-      const query =
-        normalizeText(
-          search
-        );
-
-      if (!query) {
-        return [];
-      }
-
-      return searchablePages
-        .map((page) => ({
-          ...page,
-
-          score:
-            getSearchScore(
-              page,
-              query
-            ),
-        }))
-
-        .filter(
-          (page) =>
-            page.score > 0
-        )
-
-        .sort(
-          (a, b) =>
-            b.score -
-            a.score
-        )
-
-        .slice(0, 8);
-    }, [search]);
-
-  /* =======================================================
-     SEARCH SUBMIT
-  ======================================================= */
-
-  const handleSearch = (
-    event: FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-
-    if (
-      !searchResults.length
-    ) {
-      return;
-    }
-
-    router.push(
-      searchResults[0]
-        .href
-    );
-
-    setSearch("");
-
-    setSearchOpen(false);
-
-    setMobileMenuOpen(
-      false
-    );
+function Icon({
+  name,
+  size = 20,
+  className = "",
+}: {
+  name: IconName;
+  size?: number;
+  className?: string;
+}) {
+  const paths = {
+    search: (
+      <>
+        <circle cx="11" cy="11" r="7" />
+        <path d="m16 16 5 5" />
+      </>
+    ),
+    menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+    close: <path d="M5 5l14 14M19 5 5 19" />,
+    chevron: <path d="m6 9 6 6 6-6" />,
+    arrow: <path d="M5 12h14m-6-6 6 6-6 6" />,
+    portal: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="3" />
+        <path d="M8 12h9m-4-4 4 4-4 4" />
+      </>
+    ),
+    fees: (
+      <>
+        <rect x="2" y="5" width="20" height="14" rx="3" />
+        <path d="M2 10h20M6 15h5" />
+      </>
+    ),
   };
 
-  /* =======================================================
-     SELECT RESULT
-  ======================================================= */
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      {paths[name]}
+    </svg>
+  );
+}
 
-  const selectSearchResult = (
-    href: string
-  ) => {
-    /*
-     * External URL
-     */
-    if (
-      href.startsWith(
-        "http"
-      )
-    ) {
-      window.open(
-        href,
-        "_blank",
-        "noopener,noreferrer"
-      );
+/* =====================================================
+   SEARCH RESULTS COMPONENT
+===================================================== */
+
+function SearchResults({
+  results,
+  onSelect,
+  mobile = false,
+}: {
+  results: (SearchablePage & { score: number })[];
+  onSelect: (href: string) => void;
+  mobile?: boolean;
+}) {
+  return (
+    <div
+      className={
+        mobile
+          ? "mt-3 overflow-hidden rounded-lg border border-[#E6E4DD] bg-white"
+          : "absolute left-0 right-0 top-[calc(100%+10px)] z-[300] overflow-hidden rounded-lg border border-[#E6E4DD] bg-white shadow-[0_14px_35px_rgba(35,48,59,0.13)]"
+      }
+    >
+      <div className="max-h-[300px] overflow-y-auto">
+        {results.length > 0 ? (
+          results.map((result) => (
+            <button
+              key={`${result.href}-${result.label}`}
+              type="button"
+              onClick={() => onSelect(result.href)}
+              className="flex w-full items-center justify-between gap-3 border-b border-[#F0EEE9] px-4 py-3 text-left transition-colors last:border-0 hover:bg-[#F7F6F2]"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-secondary text-[14px] font-semibold !text-[#233B50]">
+                  {result.label}
+                </p>
+
+                <p className="mt-1 truncate font-secondary text-[11px] !text-[#8A9196]">
+                  {result.parent || "Rosary School"}
+                </p>
+              </div>
+
+              <Icon
+                name="arrow"
+                size={16}
+                className="shrink-0 text-[#0075FF]"
+              />
+            </button>
+          ))
+        ) : (
+          <div className="px-5 py-6 text-center">
+            <p className="text-[13px] font-semibold !text-[#233B50]">
+              No matching page found
+            </p>
+            <p className="mt-1 text-[12px] !text-[#8A9196]">
+              Try another keyword.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+export default function Header() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openMobileDropdown, setOpenMobileDropdown] =
+    useState<string | null>(null);
+
+  const searchResults = useMemo(() => {
+    const query = normalizeText(search);
+    if (!query) return [];
+
+    return searchablePages
+      .map((page) => ({
+        ...page,
+        score: getSearchScore(page, query),
+      }))
+      .filter((page) => page.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 8);
+  }, [search]);
+
+  const selectSearchResult = (href: string) => {
+    if (/^https?:\/\//.test(href)) {
+      window.open(href, "_blank", "noopener,noreferrer");
     } else {
       router.push(href);
     }
 
     setSearch("");
-
     setSearchOpen(false);
-
-    setMobileMenuOpen(
-      false
-    );
+    setMobileMenuOpen(false);
   };
 
-  /* =======================================================
-     ACTIVE NAV
-  ======================================================= */
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const isItemActive = (
-    item: NavigationItem
-  ) => {
-    if (
-      item.href === "/"
-    ) {
-      return (
-        pathname === "/"
-      );
+    if (searchResults.length) {
+      selectSearchResult(searchResults[0].href);
     }
+  };
+
+  const isItemActive = (item: NavigationItem) => {
+    if (item.href === "/") return pathname === "/";
 
     if (
-      pathname ===
-        item.href ||
-      pathname.startsWith(
-        `${item.href}/`
-      )
+      pathname === item.href ||
+      pathname.startsWith(`${item.href}/`)
     ) {
       return true;
     }
@@ -684,1801 +436,462 @@ export default function Header() {
     return (
       item.children?.some(
         (child) =>
-          pathname ===
-            child.href ||
-          pathname.startsWith(
-            `${child.href}/`
-          )
+          pathname === child.href ||
+          pathname.startsWith(`${child.href}/`)
       ) ?? false
     );
   };
 
-  const isChildActive = (
-    href: string
-  ) => {
-    return (
-      pathname === href ||
-      pathname.startsWith(
-        `${href}/`
-      )
-    );
-  };
-
-  /* =======================================================
-     MOBILE DROPDOWN
-  ======================================================= */
-
-  const toggleMobileDropdown = (
-    label: string
-  ) => {
-    setOpenMobileDropdown(
-      (current) =>
-        current === label
-          ? null
-          : label
-    );
-  };
-
-  /* =======================================================
-     OUTSIDE CLICK + ESC
-  ======================================================= */
+  const isChildActive = (href: string) =>
+    pathname === href || pathname.startsWith(`${href}/`);
 
   useEffect(() => {
-    const handleOutsideClick =
-      (
-        event: MouseEvent
-      ) => {
-        if (
-          searchRef.current &&
-          !searchRef.current.contains(
-            event.target as Node
-          )
-        ) {
-          setSearchOpen(
-            false
-          );
-        }
-      };
-
-    const handleEscape = (
-      event: KeyboardEvent
-    ) => {
+    const handleOutsideClick = (event: MouseEvent) => {
       if (
-        event.key ===
-        "Escape"
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
       ) {
-        setSearchOpen(
-          false
-        );
-
-        setMobileMenuOpen(
-          false
-        );
+        setSearchOpen(false);
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handleOutsideClick
-    );
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setSearchOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
 
-    document.addEventListener(
-      "keydown",
-      handleEscape
-    );
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", handleEscape);
 
     return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleOutsideClick
-      );
-
-      document.removeEventListener(
-        "keydown",
-        handleEscape
-      );
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
-  /* =======================================================
-     ROUTE CHANGE
-  ======================================================= */
-
   useEffect(() => {
-    setMobileMenuOpen(
-      false
-    );
-
-    setOpenMobileDropdown(
-      null
-    );
-
-    setSearchOpen(
-      false
-    );
+    setMobileMenuOpen(false);
+    setOpenMobileDropdown(null);
+    setSearchOpen(false);
   }, [pathname]);
 
-  /* =======================================================
-     MOBILE BODY LOCK
-  ======================================================= */
-
   useEffect(() => {
-    if (
-      mobileMenuOpen
-    ) {
-      document.body.style.overflow =
-        "hidden";
-    } else {
-      document.body.style.overflow =
-        "";
-    }
+    document.body.style.overflow = mobileMenuOpen ? "hidden" : "";
 
     return () => {
-      document.body.style.overflow =
-        "";
+      document.body.style.overflow = "";
     };
   }, [mobileMenuOpen]);
 
   return (
-    <header
-      className="
-        fixed
-        left-0
-        top-0
+    <header className="fixed left-0 top-0 z-[1000] w-full">
 
-        z-[1000]
+      {/* ==================================================
+          MAIN HEADER - WARM IVORY + NAVY
+      ================================================== */}
 
-        w-full
+      <div className="relative z-[70] h-[76px] border-t-[3px] border-[#263F53] bg-[#FAF9F6] shadow-[0_2px_10px_rgba(35,48,59,0.06)] xl:h-[86px]">
 
-        overflow-visible
-      "
-    >
-      {/* =====================================================
-          TOP ROW
+        <div className="mx-auto h-full max-w-[1600px] px-4 sm:px-6 lg:px-8 xl:px-12">
 
-          IMPORTANT FIX:
-          Higher stacking layer than navigation.
-      ====================================================== */}
+          <div className="flex h-full items-center justify-between gap-5">
 
-      <div
-        className="
-          relative
+            {/* BRANDING */}
 
-          z-[70]
-
-          h-[68px]
-          w-full
-
-          overflow-visible
-
-          bg-black/25
-
-          backdrop-blur-[10px]
-
-          lg:h-[72px]
-        "
-      >
-        <div
-          className="
-            mx-auto
-
-            h-full
-            w-full
-            max-w-[1360px]
-
-            overflow-visible
-
-            px-[18px]
-
-            sm:px-[28px]
-
-            lg:px-[40px]
-
-            xl:px-[48px]
-          "
-        >
-          <div
-            className="
-              grid
-
-              h-full
-
-              grid-cols-[1fr_auto]
-
-              items-center
-
-              overflow-visible
-
-              lg:grid-cols-[1fr_280px_1fr]
-
-              lg:gap-[36px]
-
-              xl:grid-cols-[1fr_300px_1fr]
-            "
-          >
-            {/* =================================================
-                LOGO
-            ================================================= */}
-
-            <div
-              className="
-                flex
-
-                min-w-0
-
-                items-center
-
-                justify-start
-              "
+            <Link
+              href="/"
+              aria-label="Rosary Matriculation Hr Sec School"
+              className="group flex min-w-0 shrink-0 items-center gap-[12px] sm:gap-[15px]"
             >
-              <Link
-                href="/"
-                aria-label="Rosary Matriculation Hr Sec School"
-                className="
-                  relative
 
-                  block
+              {/* ORIGINAL LOGO WITHOUT WHITE CIRCLE */}
 
-                  h-[51px]
-                  w-[250px]
-
-                  max-w-[calc(100vw-90px)]
-
-                  shrink-0
-
-                  sm:h-[54px]
-                  sm:w-[280px]
-
-                  lg:h-[55px]
-                  lg:w-[285px] 
-                  xl:w-[300px]
-                "
-              >
+              <div className="relative h-[58px] w-[58px] shrink-0 sm:h-[65px] sm:w-[65px] xl:h-[72px] xl:w-[72px]">
                 <Image
-                  src="/icons/rosary-logo.svg"
-                  alt="Rosary Matriculation Hr Sec School"
+                  src="/icons/r-logo.svg"
+                  alt="Rosary School Logo"
                   fill
                   priority
-                  sizes="
-                    (max-width:639px) 250px,
-                    (max-width:1023px) 280px,
-                    300px
-                  "
-                  className="
-                    object-contain
-                    object-left
-                  "
+                  sizes="(max-width:640px) 58px, 72px"
+                  className="object-contain transition-transform duration-300 group-hover:scale-[1.03]"
                 />
-              </Link>
-            </div>
+              </div>
 
-            {/* =================================================
-                DESKTOP SEARCH
+              {/* SCHOOL IDENTITY */}
 
-                IMPORTANT FIX:
-                Search itself gets its own high stacking layer.
-            ================================================= */}
+              <div className="min-w-0">
+                <span className="block font-primary text-[23px] font-bold leading-[1.05] tracking-[-0.6px] !text-[#223B50] sm:text-[26px] xl:text-[29px]">
+                  Rosary
+                </span>
+
+                <span className="mt-[5px] block font-secondary text-[10px] font-medium leading-[1.3] tracking-[0.1px] !text-[#647787] sm:text-[12px]">
+                  <span className="block sm:hidden">
+                    Matriculation
+                  </span>
+                  <span className="block sm:hidden">
+                    Hr. Sec. School
+                  </span>
+                  <span className="hidden whitespace-nowrap sm:block">
+                    Matriculation Hr. Sec. School
+                  </span>
+                </span>
+              </div>
+
+            </Link>
+
+            {/* DESKTOP SEARCH */}
 
             <div
               ref={searchRef}
-              className="
-                relative
-
-                z-[100]
-
-                hidden
-
-                h-full
-
-                items-center
-                justify-center
-
-                overflow-visible
-
-                lg:flex
-              "
+              className="relative hidden w-full max-w-[330px] min-w-0 flex-1 xl:block"
             >
-              {/* ===============================================
-                  SEARCH FORM
-              ================================================ */}
-
               <form
-                onSubmit={
-                  handleSearch
-                }
                 role="search"
-                className="
-                  relative
-
-                  z-[2]
-
-                  flex
-
-                  h-[42px]
-                  w-[260px]
-
-                  items-center
-
-                  rounded-full
-
-                  border-[1.5px]
-                  border-[#0075FF]
-
-                  bg-white/90
-
-                  px-[15px]
-
-                  shadow-[0_2px_8px_rgba(0,0,0,0.08)]
-
-                  backdrop-blur-[8px]
-
-                  transition-all
-                  duration-200
-
-                  hover:bg-white
-
-                  focus-within:bg-white
-
-                  focus-within:shadow-[0_0_0_3px_rgba(0,117,255,0.12)]
-
-                  xl:w-[280px]
-                "
+                onSubmit={handleSearch}
+                className="flex h-[43px] w-full items-center gap-3 rounded-md border border-[#E4E5E2] bg-white px-[15px] transition-all duration-200 focus-within:border-[#8BAAC4] focus-within:shadow-[0_0_0_3px_rgba(0,117,255,0.07)]"
               >
-                {/* SEARCH ICON */}
-
                 <button
                   type="submit"
                   aria-label="Search Rosary School"
-                  className="
-                    mr-[10px]
-
-                    flex
-
-                    shrink-0
-
-                    items-center
-                    justify-center
-
-                    text-[#0075FF]
-                  "
+                  className="shrink-0 !text-[#0075FF]"
                 >
-                  <SearchIcon />
+                  <Icon name="search" size={19} />
                 </button>
-
-                {/* INPUT */}
 
                 <input
                   type="search"
                   value={search}
                   autoComplete="off"
-                  aria-label="Search Rosary School"
                   placeholder="Search Rosary school..."
-                  onFocus={() =>
-                    setSearchOpen(
-                      true
-                    )
-                  }
-                  onChange={(
-                    event
-                  ) => {
-                    setSearch(
-                      event.target
-                        .value
-                    );
-
-                    setSearchOpen(
-                      true
-                    );
+                  aria-label="Search Rosary School"
+                  onFocus={() => setSearchOpen(true)}
+                  onChange={(event) => {
+                    setSearch(event.target.value);
+                    setSearchOpen(true);
                   }}
-                  className="
-                    w-full
-                    min-w-0
-
-                    bg-transparent
-
-                    font-secondary
-
-                    text-[14px]
-                    font-medium
-
-                    text-[#171717]
-
-                    outline-none
-
-                    placeholder:text-[#555555]
-                  "
+                  className="min-w-0 flex-1 bg-transparent font-secondary text-[13px] !text-[#223B50] outline-none placeholder:!text-[#9AA2A8]"
                 />
               </form>
 
-              {/* ===============================================
-                  DESKTOP SEARCH RESULTS
-
-                  IMPORTANT FIX:
-                  z-[9999]
-                  top below search
-                  max-height
-                  scroll
-              ================================================ */}
-
-              {searchOpen &&
-                search.trim() && (
-                  <div
-                    className="
-                      absolute
-
-                      left-1/2
-
-                      top-[61px]
-
-                      z-[9999]
-
-                      w-[350px]
-
-                      -translate-x-1/2
-
-                      overflow-hidden
-
-                      rounded-[10px]
-
-                      border
-                      border-[#E4E9EF]
-
-                      bg-white
-
-                      shadow-[0_18px_50px_rgba(18,39,63,0.20)]
-
-                      xl:w-[370px]
-                    "
-                  >
-                    {/* TOP ACCENT */}
-
-                    <div
-                      className="
-                        h-[2px]
-                        w-full
-
-                        bg-[#0075FF]
-                      "
-                    />
-
-                    {/* RESULTS SCROLL */}
-
-                    <div
-                      className="
-                        max-h-[350px]
-
-                        overflow-y-auto
-
-                        overscroll-contain
-
-                        [scrollbar-width:thin]
-
-                        [scrollbar-color:#BDD9F7_transparent]
-                      "
-                    >
-                      {searchResults.length >
-                      0 ? (
-                        searchResults.map(
-                          (
-                            result,
-                            index
-                          ) => (
-                            <button
-                              key={`${result.href}-${result.label}`}
-                              type="button"
-                              onClick={() =>
-                                selectSearchResult(
-                                  result.href
-                                )
-                              }
-                              className="
-                                group/search
-
-                                flex
-
-                                w-full
-
-                                items-center
-                                justify-between
-
-                                gap-[18px]
-
-                                border-b
-                                border-[#EEF1F4]
-
-                                bg-white
-
-                                px-[17px]
-                                py-[13px]
-
-                                text-left
-
-                                transition-all
-                                duration-200
-
-                                last:border-b-0
-
-                                hover:bg-[#F3F8FF]
-                              "
-                            >
-                              {/* LEFT */}
-
-                              <div
-                                className="
-                                  flex
-                                  min-w-0
-
-                                  items-center
-
-                                  gap-[11px]
-                                "
-                              >
-                                {/* SMALL NUMBER */}
-
-                                <span
-                                  className="
-                                    flex
-
-                                    h-[27px]
-                                    w-[27px]
-
-                                    shrink-0
-
-                                    items-center
-                                    justify-center
-
-                                    rounded-[6px]
-
-                                    bg-[#EEF6FF]
-
-                                    font-secondary
-
-                                    text-[9px]
-                                    font-semibold
-
-                                    text-[#0075FF]
-
-                                    transition-colors
-                                    duration-200
-
-                                    group-hover/search:bg-[#0075FF]
-
-                                    group-hover/search:text-white
-                                  "
-                                >
-                                  {String(
-                                    index +
-                                      1
-                                  ).padStart(
-                                    2,
-                                    "0"
-                                  )}
-                                </span>
-
-                                {/* TEXT */}
-
-                                <div
-                                  className="
-                                    min-w-0
-                                  "
-                                >
-                                  <p
-                                    className="
-                                      truncate
-
-                                      font-primary
-
-                                      text-[14px]
-                                      font-medium
-
-                                      leading-[1.3]
-
-                                      text-[#171717]
-
-                                      transition-colors
-                                      duration-200
-
-                                      group-hover/search:text-[#0075FF]
-                                    "
-                                  >
-                                    {
-                                      result.label
-                                    }
-                                  </p>
-
-                                  <p
-                                    className="
-                                      mt-[3px]
-
-                                      truncate
-
-                                      font-secondary
-
-                                      text-[11px]
-
-                                      text-[#8B929A]
-                                    "
-                                  >
-                                    {result.parent
-                                      ? result.parent
-                                      : "Rosary School"}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* ARROW */}
-
-                              <span
-                                className="
-                                  flex
-
-                                  h-[27px]
-                                  w-[27px]
-
-                                  shrink-0
-
-                                  items-center
-                                  justify-center
-
-                                  rounded-full
-
-                                  text-[#0075FF]
-
-                                  transition-all
-                                  duration-200
-
-                                  group-hover/search:translate-x-[2px]
-
-                                  group-hover/search:bg-[#EAF4FF]
-                                "
-                              >
-                                <ArrowIcon />
-                              </span>
-                            </button>
-                          )
-                        )
-                      ) : (
-                        /* ===================================
-                           NO RESULTS
-                        ==================================== */
-
-                        <div
-                          className="
-                            flex
-
-                            flex-col
-                            items-center
-                            justify-center
-
-                            px-[20px]
-                            py-[24px]
-
-                            text-center
-                          "
-                        >
-                          <div
-                            className="
-                              flex
-
-                              h-[40px]
-                              w-[40px]
-
-                              items-center
-                              justify-center
-
-                              rounded-full
-
-                              bg-[#EEF6FF]
-
-                              text-[#0075FF]
-                            "
-                          >
-                            <SearchIcon />
-                          </div>
-
-                          <p
-                            className="
-                              mt-[10px]
-
-                              font-primary
-
-                              text-[13px]
-                              font-medium
-
-                              text-[#333333]
-                            "
-                          >
-                            No matching page
-                            found
-                          </p>
-
-                          <p
-                            className="
-                              mt-[3px]
-
-                              font-secondary
-
-                              text-[11px]
-
-                              text-[#999999]
-                            "
-                          >
-                            Try another keyword.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+              {searchOpen && search.trim() && (
+                <SearchResults
+                  results={searchResults}
+                  onSelect={selectSearchResult}
+                />
+              )}
             </div>
 
-            {/* =================================================
-                DESKTOP RIGHT LINKS
-            ================================================= */}
+            {/* DESKTOP ACTIONS */}
 
-            <div
-              className="
-                hidden
+            <div className="hidden shrink-0 items-center gap-[26px] xl:flex">
 
-                h-full
-
-                items-center
-                justify-end
-
-                lg:flex
-              "
-            >
               <Link
-                href="https://feebook.southindianbank.bank.in/FeeBookUser/userhome"
+                href={PORTAL_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="
-                  flex
-
-                  h-[30px]
-
-                  items-center
-
-                  border-r
-                  border-white/60
-
-                  pr-[21px]
-
-                  font-secondary
-
-                  text-[14px]
-                  font-medium
-
-                  !text-white
-
-                  transition-colors
-                  duration-200
-
-                  hover:!text-[#72B7FF]
-
-                  xl:text-[15px]
-                "
+                className="inline-flex items-center gap-2 whitespace-nowrap font-secondary text-[13px] font-medium !text-[#334C60] transition-colors duration-200 hover:!text-[#0075FF]"
               >
+                <Icon name="portal" size={16} />
+                Portal
+              </Link>
+
+              <Link
+                href={FEES_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 whitespace-nowrap font-secondary text-[13px] font-medium !text-[#334C60] transition-colors duration-200 hover:!text-[#0075FF]"
+              >
+                <Icon name="fees" size={16} />
                 Fees Payment
               </Link>
 
               <Link
                 href="/admissions"
-                className="
-                  pl-[21px]
-
-                  font-secondary
-
-                  text-[14px]
-                  font-medium
-
-                  !text-white
-
-                  transition-colors
-                  duration-200
-
-                  hover:!text-[#72B7FF]
-
-                  xl:text-[15px]
-                "
+                className="inline-flex h-[43px] items-center justify-center gap-[10px] rounded-md bg-[#263F53] px-[23px] font-secondary text-[13px] font-semibold !text-white transition-colors duration-200 hover:bg-[#0075FF]"
               >
                 Admission
+                <Icon name="arrow" size={16} />
               </Link>
+
             </div>
 
-            {/* =================================================
-                MOBILE HAMBURGER
-            ================================================= */}
+            {/* TABLET / MOBILE MENU BUTTON */}
 
-            <div
-              className="
-                flex
-
-                items-center
-                justify-end
-
-                lg:hidden
-              "
+            <button
+              type="button"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="rosary-mobile-menu"
+              onClick={() => setMobileMenuOpen((current) => !current)}
+              className="flex h-[43px] w-[43px] shrink-0 items-center justify-center rounded-md border border-[#E0E4E6] bg-white !text-[#263F53] transition-colors hover:bg-[#F1F4F6] xl:hidden"
             >
-              <button
-                type="button"
-                aria-expanded={
-                  mobileMenuOpen
-                }
-                aria-label={
-                  mobileMenuOpen
-                    ? "Close navigation"
-                    : "Open navigation"
-                }
-                onClick={() =>
-                  setMobileMenuOpen(
-                    (current) =>
-                      !current
-                  )
-                }
-                className="
-                  flex
+              <Icon
+                name={mobileMenuOpen ? "close" : "menu"}
+                size={23}
+              />
+            </button>
 
-                  h-[42px]
-                  w-[42px]
-
-                  items-center
-                  justify-center
-
-                  rounded-full
-
-                  border
-                  border-white/60
-
-                  bg-white/95
-
-                  text-[#151515]
-
-                  shadow-sm
-
-                  backdrop-blur
-                "
-              >
-                {mobileMenuOpen ? (
-                  <CloseIcon />
-                ) : (
-                  <MenuIcon />
-                )}
-              </button>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* =====================================================
+      {/* ==================================================
           DESKTOP NAVIGATION
-
-          IMPORTANT FIX:
-          z-[40], lower than top search row.
-      ====================================================== */}
+      ================================================== */}
 
       <nav
         aria-label="Main navigation"
-        className="
-          relative
-
-          z-[40]
-
-          hidden
-
-          h-[46px]
-          w-full
-
-          bg-white/[0.72]
-
-          backdrop-blur-[10px]
-
-          lg:block
-        "
+        className="relative z-[40] hidden h-[52px] border-b border-[#E1E4E4] bg-[#F0F2F0] xl:block"
       >
-        <div
-          className="
-            mx-auto
+        <div className="mx-auto h-full max-w-[1050px] px-6">
 
-            h-full
-            w-full
-            max-w-[900px]
+          <ul className="flex h-full items-center justify-between gap-5">
 
-            px-[20px]
-          "
-        >
-          <ul
-            className="
-              flex
+            {navigation.map((item) => {
+              const active = isItemActive(item);
+              const hasChildren = !!item.children?.length;
 
-              h-full
-              w-full
+              return (
+                <li
+                  key={item.label}
+                  className="group relative flex h-full items-center"
+                >
 
-              items-center
-              justify-between
-            "
-          >
-            {navigation.map(
-              (item) => {
-                const active =
-                  isItemActive(
-                    item
-                  );
-
-                const hasChildren =
-                  !!item.children
-                    ?.length;
-
-                return (
-                  <li
-                    key={
-                      item.label
-                    }
-                    className="
-                      group
-
-                      relative
-
-                      flex
-                      h-full
-
-                      items-center
-                    "
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`relative flex h-full items-center gap-[7px] whitespace-nowrap font-primary text-[15px] font-medium transition-colors duration-200 ${
+                      active
+                        ? "!text-[#0075FF]"
+                        : "!text-[#273D4E] hover:!text-[#0075FF]"
+                    }`}
                   >
-                    <Link
-                      href={
-                        item.href
-                      }
-                      aria-current={
-                        active
-                          ? "page"
-                          : undefined
-                      }
-                      className={`
-                        relative
-
-                        flex
-                        h-full
-
-                        items-center
-
-                        gap-[8px]
-
-                        whitespace-nowrap
-
-                        font-primary
-
-                        text-[15px]
-                        font-medium
-
-                        tracking-[-0.2px]
-
-                        transition-colors
-                        duration-150
-
-                        xl:text-[16px]
-
-                        ${
-                          active
-                            ? "text-[#101010]"
-                            : "text-[#151515] hover:text-[#0075FF]"
-                        }
-                      `}
-                    >
-                      {item.label}
-
-                      {hasChildren && (
-                        <ChevronDownIcon />
-                      )}
-
-                      {/* ACTIVE LINE */}
-
-                      <span
-                        className={`
-                          absolute
-
-                          bottom-[7px]
-                          left-0
-
-                          h-[1.5px]
-
-                          bg-[#111111]
-
-                          transition-all
-                          duration-200
-
-                          ${
-                            active
-                              ? "w-full"
-                              : "w-0 group-hover:w-full"
-                          }
-                        `}
-                      />
-                    </Link>
-
-                    {/* =========================================
-                        DESKTOP NAV DROPDOWN
-                    ========================================== */}
+                    {item.label}
 
                     {hasChildren && (
-                      <div
-                        className="
-                          invisible
-
-                          absolute
-
-                          left-0
-                          top-full
-
-                          z-[100]
-
-                          mt-1
-
-                          w-max
-                          min-w-[170px]
-
-                          translate-y-[3px]
-
-                          overflow-hidden
-
-                          rounded-b-[7px]
-
-                          border
-                          border-[#EEEEEE]
-
-                          bg-white
-
-                          opacity-0
-
-                          shadow-[0_10px_30px_rgba(0,0,0,0.12)]
-
-                          transition-all
-                          duration-150
-
-                          group-hover:visible
-
-                          group-hover:translate-y-0
-
-                          group-hover:opacity-100
-                        "
-                      >
-                        <div
-                          className="
-                            py-[8px]
-                          "
-                        >
-                          {item.children?.map(
-                            (
-                              child
-                            ) => {
-                              const childActive =
-                                isChildActive(
-                                  child.href
-                                );
-
-                              return (
-                                <Link
-                                  key={
-                                    child.label
-                                  }
-                                  href={
-                                    child.href
-                                  }
-                                  className={`
-                                    group/child
-
-                                    block
-
-                                    whitespace-nowrap
-
-                                    px-[18px]
-                                    py-[9px]
-
-                                    font-secondary
-
-                                    text-[14px]
-                                    font-medium
-
-                                    transition-colors
-
-                                    xl:text-[15px]
-
-                                    ${
-                                      childActive
-                                        ? "text-[#0075FF]"
-                                        : "text-[#202020] hover:text-[#0075FF]"
-                                    }
-                                  `}
-                                >
-                                  <span
-                                    className="
-                                      relative
-
-                                      inline-block
-                                    "
-                                  >
-                                    {
-                                      child.label
-                                    }
-
-                                    <span
-                                      className={`
-                                        absolute
-
-                                        -bottom-[2px]
-                                        left-0
-
-                                        h-[1px]
-
-                                        bg-[#0075FF]
-
-                                        transition-all
-                                        duration-150
-
-                                        ${
-                                          childActive
-                                            ? "w-full"
-                                            : "w-0 group-hover/child:w-full"
-                                        }
-                                      `}
-                                    />
-                                  </span>
-                                </Link>
-                              );
-                            }
-                          )}
-                        </div>
-                      </div>
+                      <span className="transition-transform duration-200 group-hover:rotate-180">
+                        <Icon name="chevron" size={15} />
+                      </span>
                     )}
-                  </li>
-                );
-              }
-            )}
+
+                    <span
+                      className={`absolute bottom-0 left-0 h-[2px] bg-[#0075FF] transition-all duration-200 ${
+                        active
+                          ? "w-full"
+                          : "w-0 group-hover:w-full"
+                      }`}
+                    />
+                  </Link>
+
+                  {/* DESKTOP SUBMENU */}
+
+                  {hasChildren && (
+                    <div className="invisible absolute left-0 top-full z-[200] min-w-[200px] translate-y-1 overflow-hidden rounded-b-lg border border-[#E7E8E5] bg-white py-2 opacity-0 shadow-[0_14px_30px_rgba(35,48,59,0.12)] transition-all duration-200 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:visible group-focus-within:translate-y-0 group-focus-within:opacity-100">
+
+                      {item.children?.map((child) => (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          className={`block whitespace-nowrap px-5 py-[11px] font-secondary text-[14px] font-medium transition-colors ${
+                            isChildActive(child.href)
+                              ? "bg-[#EFF5FA] !text-[#0075FF]"
+                              : "!text-[#354C5D] hover:bg-[#F6F7F5] hover:!text-[#0075FF]"
+                          }`}
+                        >
+                          {child.label}
+                        </Link>
+                      ))}
+
+                    </div>
+                  )}
+
+                </li>
+              );
+            })}
+
           </ul>
         </div>
       </nav>
 
-      {/* =====================================================
-          MOBILE MENU
-      ====================================================== */}
+      {/* ==================================================
+          MOBILE / TABLET MENU
+      ================================================== */}
 
       <div
-        className={`
-          absolute
-
-          left-0
-          top-[68px]
-
-          z-[5000]
-
-          w-full
-
-          overflow-hidden
-
-          bg-white
-
-          shadow-[0_18px_40px_rgba(0,0,0,0.18)]
-
-          transition-all
-          duration-300
-
-          lg:hidden
-
-          ${
-            mobileMenuOpen
-              ? "max-h-[calc(100vh-68px)] opacity-100"
-              : "pointer-events-none max-h-0 opacity-0"
-          }
-        `}
+        id="rosary-mobile-menu"
+        className={`absolute left-0 top-[76px] z-[500] w-full overflow-hidden border-t border-[#E5E7E7] bg-[#FAF9F6] shadow-[0_15px_35px_rgba(35,48,59,0.14)] transition-all duration-300 xl:hidden ${
+          mobileMenuOpen
+            ? "visible max-h-[calc(100dvh-76px)] opacity-100"
+            : "pointer-events-none invisible max-h-0 opacity-0"
+        }`}
       >
-        <div
-          className="
-            max-h-[calc(100vh-68px)]
+        <div className="max-h-[calc(100dvh-76px)] overflow-y-auto">
 
-            overflow-y-auto
-          "
-        >
-          {/* ===============================================
-              MOBILE SEARCH
-          ================================================ */}
+          {/* MOBILE SEARCH */}
 
-          <div
-            className="
-              border-b
-              border-[#E7E7E7]
+          <div className="border-b border-[#E8E8E3] p-4">
 
-              px-[18px]
-              py-[16px]
-            "
-          >
             <form
-              onSubmit={
-                handleSearch
-              }
               role="search"
-              className="
-                flex
-
-                h-[48px]
-                w-full
-
-                items-center
-
-                rounded-full
-
-                border-[1.5px]
-                border-[#0075FF]
-
-                bg-white
-
-                px-[15px]
-
-                shadow-[0_2px_7px_rgba(0,0,0,0.05)]
-              "
+              onSubmit={handleSearch}
+              className="flex h-[46px] items-center gap-3 rounded-md border border-[#E3E5E3] bg-white px-4"
             >
               <button
                 type="submit"
-                aria-label="Search Rosary School"
-                className="
-                  mr-[10px]
-
-                  flex
-
-                  shrink-0
-
-                  items-center
-                  justify-center
-
-                  text-[#0075FF]
-                "
+                aria-label="Search school"
+                className="!text-[#0075FF]"
               >
-                <SearchIcon />
+                <Icon name="search" />
               </button>
 
               <input
                 type="search"
                 value={search}
-                autoComplete="off"
                 placeholder="Search Rosary school..."
-                onChange={(
-                  event
-                ) => {
-                  setSearch(
-                    event.target
-                      .value
-                  );
-                }}
-                className="
-                  min-w-0
-                  flex-1
-
-                  bg-transparent
-
-                  font-secondary
-
-                  text-[14px]
-                  font-medium
-
-                  text-[#171717]
-
-                  outline-none
-
-                  placeholder:text-[#555555]
-                "
+                autoComplete="off"
+                onChange={(event) => setSearch(event.target.value)}
+                className="min-w-0 flex-1 bg-transparent font-secondary text-[14px] !text-[#223B50] outline-none placeholder:!text-[#9AA2A8]"
               />
             </form>
 
-            {/* ===============================================
-                MOBILE RESULTS
-            ================================================ */}
-
             {search.trim() && (
-              <div
-                className="
-                  mt-[10px]
-
-                  overflow-hidden
-
-                  rounded-[8px]
-
-                  border
-                  border-[#E4E4E4]
-
-                  bg-white
-                "
-              >
-                {searchResults.length >
-                0 ? (
-                  searchResults.map(
-                    (
-                      result
-                    ) => (
-                      <button
-                        key={`mobile-${result.href}-${result.label}`}
-                        type="button"
-                        onClick={() =>
-                          selectSearchResult(
-                            result.href
-                          )
-                        }
-                        className="
-                          flex
-
-                          w-full
-
-                          items-center
-                          justify-between
-
-                          border-b
-                          border-[#EEEEEE]
-
-                          px-[15px]
-                          py-[12px]
-
-                          text-left
-
-                          last:border-b-0
-
-                          hover:bg-[#F0F7FF]
-                        "
-                      >
-                        <div
-                          className="
-                            min-w-0
-                          "
-                        >
-                          <p
-                            className="
-                              truncate
-
-                              font-primary
-
-                              text-[14px]
-                              font-medium
-
-                              text-[#171717]
-                            "
-                          >
-                            {
-                              result.label
-                            }
-                          </p>
-
-                          {result.parent && (
-                            <p
-                              className="
-                                mt-[2px]
-
-                                font-secondary
-
-                                text-[11px]
-
-                                text-[#888888]
-                              "
-                            >
-                              {
-                                result.parent
-                              }
-                            </p>
-                          )}
-                        </div>
-
-                        <ArrowIcon />
-                      </button>
-                    )
-                  )
-                ) : (
-                  <p
-                    className="
-                      px-[14px]
-                      py-[15px]
-
-                      text-center
-
-                      font-secondary
-
-                      text-[13px]
-
-                      text-[#777777]
-                    "
-                  >
-                    No matching page
-                    found
-                  </p>
-                )}
-              </div>
+              <SearchResults
+                mobile
+                results={searchResults}
+                onSelect={selectSearchResult}
+              />
             )}
+
           </div>
 
-          {/* ===============================================
-              MOBILE NAVIGATION
-          ================================================ */}
+          {/* MOBILE NAV LINKS */}
 
-          <div
-            className="
-              px-[18px]
-              py-[6px]
-            "
-          >
-            {navigation.map(
-              (item) => {
-                const active =
-                  isItemActive(
-                    item
-                  );
+          <div className="px-4 py-2">
 
-                const hasChildren =
-                  !!item.children
-                    ?.length;
+            {navigation.map((item) => {
+              const active = isItemActive(item);
+              const hasChildren = !!item.children?.length;
+              const open = openMobileDropdown === item.label;
 
-                const open =
-                  openMobileDropdown ===
-                  item.label;
+              return (
+                <div
+                  key={item.label}
+                  className="border-b border-[#E8E8E4] last:border-0"
+                >
 
-                return (
-                  <div
-                    key={
-                      item.label
-                    }
-                    className="
-                      border-b
-                      border-[#EEEEEE]
+                  <div className="flex min-h-[52px] items-center justify-between">
 
-                      last:border-b-0
-                    "
-                  >
-                    <div
-                      className="
-                        flex
-
-                        min-h-[54px]
-
-                        items-center
-                        justify-between
-                      "
+                    <Link
+                      href={item.href}
+                      className={`flex min-h-[52px] flex-1 items-center font-primary text-[15px] font-medium ${
+                        active
+                          ? "!text-[#0075FF]"
+                          : "!text-[#263F53]"
+                      }`}
                     >
-                      <Link
-                        href={
-                          item.href
-                        }
-                        className={`
-                          flex
-
-                          min-h-[54px]
-
-                          flex-1
-
-                          items-center
-
-                          font-primary
-
-                          text-[16px]
-                          font-medium
-
-                          ${
-                            active
-                              ? "text-[#0075FF]"
-                              : "text-[#171717]"
-                          }
-                        `}
-                      >
-                        {
-                          item.label
-                        }
-                      </Link>
-
-                      {hasChildren && (
-                        <button
-                          type="button"
-                          aria-label={`Toggle ${item.label}`}
-                          aria-expanded={
-                            open
-                          }
-                          onClick={() =>
-                            toggleMobileDropdown(
-                              item.label
-                            )
-                          }
-                          className="
-                            flex
-
-                            h-[48px]
-                            w-[48px]
-
-                            shrink-0
-
-                            items-center
-                            justify-center
-
-                            text-[#171717]
-                          "
-                        >
-                          <span
-                            className={`
-                              transition-transform
-                              duration-200
-
-                              ${
-                                open
-                                  ? "rotate-180"
-                                  : ""
-                              }
-                            `}
-                          >
-                            <ChevronDownIcon />
-                          </span>
-                        </button>
-                      )}
-                    </div>
-
-                    {/* =========================================
-                        MOBILE SUBMENU
-                    ========================================== */}
+                      {item.label}
+                    </Link>
 
                     {hasChildren && (
-                      <div
-                        className={`
-                          overflow-hidden
-
-                          transition-all
-                          duration-300
-
-                          ${
-                            open
-                              ? "max-h-[350px] pb-[12px]"
-                              : "max-h-0"
-                          }
-                        `}
+                      <button
+                        type="button"
+                        aria-label={`Toggle ${item.label}`}
+                        aria-expanded={open}
+                        onClick={() =>
+                          setOpenMobileDropdown((current) =>
+                            current === item.label ? null : item.label
+                          )
+                        }
+                        className="flex h-[44px] w-[44px] items-center justify-center !text-[#263F53]"
                       >
-                        <div
-                          className="
-                            overflow-hidden
-
-                            border-l-[3px]
-                            border-[#0075FF]
-
-                            bg-[#F5F9FF]
-                          "
+                        <span
+                          className={`transition-transform duration-200 ${
+                            open ? "rotate-180" : ""
+                          }`}
                         >
-                          {item.children?.map(
-                            (
-                              child
-                            ) => {
-                              const childActive =
-                                isChildActive(
-                                  child.href
-                                );
-
-                              return (
-                                <Link
-                                  key={
-                                    child.label
-                                  }
-                                  href={
-                                    child.href
-                                  }
-                                  className={`
-                                    block
-
-                                    px-[17px]
-                                    py-[11px]
-
-                                    font-secondary
-
-                                    text-[14px]
-                                    font-medium
-
-                                    ${
-                                      childActive
-                                        ? "bg-[#EAF4FF] text-[#0075FF]"
-                                        : "text-[#333333]"
-                                    }
-                                  `}
-                                >
-                                  {
-                                    child.label
-                                  }
-                                </Link>
-                              );
-                            }
-                          )}
-                        </div>
-                      </div>
+                          <Icon name="chevron" size={17} />
+                        </span>
+                      </button>
                     )}
+
                   </div>
-                );
-              }
-            )}
+
+                  {/* MOBILE SUBMENU */}
+
+                  {hasChildren && (
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        open ? "max-h-[350px] pb-3" : "max-h-0"
+                      }`}
+                    >
+                      <div className="overflow-hidden rounded-md border-l-[2px] border-[#0075FF] bg-[#F0F3F5]">
+
+                        {item.children?.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={`block px-4 py-3 font-secondary text-[14px] font-medium ${
+                              isChildActive(child.href)
+                                ? "bg-[#E4EDF5] !text-[#0075FF]"
+                                : "!text-[#354C5D]"
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              );
+            })}
+
           </div>
 
-          {/* ===============================================
-              MOBILE FEES + ADMISSION
-          ================================================ */}
+          {/* MOBILE ACTIONS */}
 
-          <div
-            className="
-              grid
+          <div className="border-t border-[#E8E8E4] bg-[#F1F2EF] p-4">
 
-              grid-cols-2
+            <div className="grid grid-cols-2 gap-3">
 
-              gap-[10px]
+              <Link
+                href={PORTAL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-[46px] items-center justify-center gap-2 rounded-md border border-[#DFE3E4] bg-white font-secondary text-[13px] font-semibold !text-[#263F53]"
+              >
+                <Icon name="portal" size={17} />
+                Portal
+              </Link>
 
-              border-t
-              border-[#E7E7E7]
+              <Link
+                href={FEES_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex h-[46px] items-center justify-center gap-2 rounded-md border border-[#DFE3E4] bg-white font-secondary text-[13px] font-semibold !text-[#263F53]"
+              >
+                <Icon name="fees" size={17} />
+                Fees Payment
+              </Link>
 
-              p-[18px]
-            "
-          >
-            <Link
-              href="https://feebook.southindianbank.bank.in/FeeBookUser/userhome"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="
-                flex
-
-                h-[46px]
-
-                items-center
-                justify-center
-
-                rounded-[5px]
-
-                border
-                border-[#0075FF]
-
-                font-primary
-
-                text-[14px]
-                font-medium
-
-                text-[#0075FF]
-              "
-            >
-              Fees Payment
-            </Link>
+            </div>
 
             <Link
               href="/admissions"
-              className="
-                flex
-
-                h-[46px]
-
-                items-center
-                justify-center
-
-                rounded-[5px]
-
-                bg-[#0075FF]
-
-                font-primary
-
-                text-[14px]
-                font-medium
-
-                !text-white
-              "
+              className="mt-3 flex h-[46px] w-full items-center justify-center gap-2 rounded-md bg-[#263F53] font-secondary text-[14px] font-semibold !text-white transition-colors hover:bg-[#0075FF]"
             >
               Admission
+              <Icon name="arrow" size={17} />
             </Link>
+
           </div>
         </div>
       </div>
+
     </header>
-  );
-}
-
-/* =========================================================
-   ICONS
-========================================================= */
-
-function SearchIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <circle
-        cx="11"
-        cy="11"
-        r="7"
-        stroke="currentColor"
-        strokeWidth="2"
-      />
-
-      <path
-        d="M16.5 16.5L21 21"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <path
-        d="M6 9L12 15L18 9"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-function MenuIcon() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M4 7H20M4 12H20M4 17H20"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg
-      width="22"
-      height="22"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-    >
-      <path
-        d="M6 6L18 18M18 6L6 18"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function ArrowIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-      className="
-        shrink-0
-
-        text-[#0075FF]
-      "
-    >
-      <path
-        d="M5 12H19M14 7L19 12L14 17"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
   );
 }

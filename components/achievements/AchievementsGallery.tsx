@@ -97,8 +97,9 @@ const photoAchievements: PhotoAchievement[] = [
     category: "Sports Achievement",
 
     images: [
-      "/images/achievements/2026/ag-1.png",
-      "/images/achievements/2026/ag-2.png",
+      "/images/achievements/2026/ag-4.png",
+      "/images/achievements/2026/ag-5.png",
+     
     ],
   },
 
@@ -111,8 +112,8 @@ const photoAchievements: PhotoAchievement[] = [
     category: "Academic Achievement",
 
     images: [
+      "/images/achievements/2026/ag-1.png",
       "/images/achievements/2026/ag-2.png",
-      "/images/achievements/2026/ag-3.png",
     ],
   },
 
@@ -121,12 +122,14 @@ const photoAchievements: PhotoAchievement[] = [
     year: 2026,
     date: "2026-06-10",
 
-    title: "Inter School Competition Winners",
-    category: "Competition",
+    title: "Sports Day ",
+    category: "school-Competition",
 
     images: [
-      "/images/achievements/2026/ag-3.png",
-      "/images/achievements/2026/ag-1.png",
+      "/images/achievements/2026/sc-1.png",
+      "/images/achievements/2026/sc-2.png",
+      "/images/achievements/2026/sc-3.png",
+      "/images/achievements/2026/sc-4.png",
     ],
   },
 
