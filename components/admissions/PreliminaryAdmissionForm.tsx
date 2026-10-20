@@ -1,1703 +1,800 @@
+
 "use client";
 
 import {
-  ChangeEvent,
-  FormEvent,
-  useRef,
   useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
 } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  AnimatePresence,
-  motion,
-} from "framer-motion";
-import {
+  ArrowRight,
   CheckCircle2,
-  FileText,
-  ImagePlus,
-  Upload,
+  ChevronDown,
+  Loader2,
+  AlertCircle,
   X,
 } from "lucide-react";
 
-/* =========================================================
-   TYPES
-========================================================= */
-
 type FormState = {
+  registrationNo: string;
   pupilName: string;
   dob: string;
-  placeOfBirth: string;
   religion: string;
-  parishName: string;
-  parishPriestName: string;
-
+  placeOfBirth: string;
   fatherName: string;
   fatherQualification: string;
   fatherOccupation: string;
   fatherIncome: string;
-
   motherName: string;
+  isExStudent: string;
   motherQualification: string;
   motherOccupation: string;
   motherIncome: string;
-
-  isExStudent: string;
   motherTongue: string;
-  sisterInSchool: string;
-
+  siblingInSchool: string;
+  siblingName: string;
+  siblingClassSection: string;
   address: string;
   email: string;
   phone: string;
   alternativePhone: string;
 };
 
-/* =========================================================
-   INITIAL DATA
-========================================================= */
+type Notice = {
+  type: "success" | "error";
+  title: string;
+  message: string;
+};
 
 const initialForm: FormState = {
+  registrationNo: "",
   pupilName: "",
   dob: "",
-  placeOfBirth: "",
   religion: "",
-  parishName: "",
-  parishPriestName: "",
-
+  placeOfBirth: "",
   fatherName: "",
   fatherQualification: "",
   fatherOccupation: "",
   fatherIncome: "",
-
   motherName: "",
+  isExStudent: "",
   motherQualification: "",
   motherOccupation: "",
   motherIncome: "",
-
-  isExStudent: "",
   motherTongue: "",
-  sisterInSchool: "",
-
+  siblingInSchool: "",
+  siblingName: "",
+  siblingClassSection: "",
   address: "",
   email: "",
   phone: "",
   alternativePhone: "",
 };
 
-/* =========================================================
-   ANIMATION
-========================================================= */
+const inputClass =
+  "block h-[46px] w-full min-w-0 rounded-[8px] border border-[#C5D7ED] bg-white px-[14px] font-secondary text-[13px] text-[#10284D] outline-none transition-all duration-200 placeholder:text-[#94A3B8] hover:border-[#83B6F5] focus:border-[#0075FF] focus:ring-[3px] focus:ring-[#0075FF]/10 sm:h-[48px] sm:text-[14px]";
 
-const ease = [0.22, 1, 0.36, 1] as const;
+const labelClass =
+  "mb-[8px] block font-secondary text-[12px] font-semibold leading-[1.5] text-[#10284D] sm:text-[13px]";
 
-const container = {
-  hidden: {},
-
-  visible: {
-    transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.05,
-    },
-  },
-};
+const gridClass =
+  "grid grid-cols-1 gap-x-[18px] gap-y-[20px] sm:grid-cols-2 lg:gap-x-[24px]";
 
 const fadeUp = {
-  hidden: {
-    opacity: 0,
-    y: 22,
-  },
-
+  hidden: { opacity: 0, y: 14 },
   visible: {
     opacity: 1,
     y: 0,
-
-    transition: {
-      duration: 0.7,
-      ease,
-    },
+    transition: { duration: 0.4 },
   },
 };
 
-/* =========================================================
-   COMMON STYLES
-========================================================= */
-
-const inputClass = `
-  h-[48px]
-  w-full
-
-  rounded-[6px]
-
-  border
-  border-[#8CC1FF]
-
-  bg-white
-
-  px-[14px]
-
-  font-secondary
-
-  text-[13px]
-  text-[#1C1F24]
-
-  outline-none
-
-  transition-all
-  duration-300
-
-  placeholder:text-[#9BA2AC]
-
-  hover:border-[#4D9FFF]
-
-  focus:border-[#0075FF]
-  focus:ring-4
-  focus:ring-[#0075FF]/10
-
-  sm:h-[50px]
-  sm:text-[14px]
-`;
-
-const labelClass = `
-  mb-[7px]
-
-  block
-
-  font-secondary
-
-  text-[12px]
-  font-medium
-
-  text-[#171717]
-
-  sm:text-[13px]
-`;
-
-const sectionTitleClass = `
-  font-primary
-
-  text-[15px]
-  font-semibold
-
-  uppercase
-
-  text-[#1A1A1A]
-
-  sm:text-[16px]
-`;
-
 function Required() {
   return (
-    <span className="ml-[3px] text-[#FF4D4F]">
+    <span aria-hidden="true" className="ml-1 text-red-500">
       *
     </span>
   );
 }
 
-/* =========================================================
-   SECTION TITLE
-========================================================= */
-
-function FormSectionTitle({
+function SectionTitle({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <motion.div
-      variants={fadeUp}
-      className="
-        mb-[24px]
-
-        sm:mb-[28px]
-      "
-    >
-      <h2 className={sectionTitleClass}>
+    <div className="mb-[22px] border-b border-[#C5DFFF] pb-[12px]">
+      <h2 className="flex items-center gap-3 font-primary text-[14px] font-bold uppercase tracking-[0.2px] text-[#0056C9] sm:text-[16px]">
+        <span className="h-[22px] w-[4px] shrink-0 rounded-full bg-[#0075FF]" />
         {children}
       </h2>
-
-      <motion.div
-        initial={{
-          scaleX: 0,
-        }}
-        whileInView={{
-          scaleX: 1,
-        }}
-        viewport={{
-          once: true,
-        }}
-        transition={{
-          duration: 0.8,
-          ease,
-        }}
-        className="
-          mt-[10px]
-
-          h-px
-          w-full
-
-          origin-left
-
-          bg-[#6FB2FF]
-        "
-      />
-    </motion.div>
+    </div>
   );
 }
 
-/* =========================================================
-   FILE UPLOAD
-========================================================= */
-
-function FileUpload({
-  label,
-  required = false,
-  file,
-  accept,
-  helper,
-  onChange,
-}: {
+type InputProps = {
+  name: keyof FormState;
   label: string;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+  type?: string;
   required?: boolean;
-  file: File | null;
-  accept?: string;
-  helper: string;
-  onChange: (
-    event: ChangeEvent<HTMLInputElement>
-  ) => void;
-}) {
-  const inputRef =
-    useRef<HTMLInputElement | null>(null);
+  min?: string;
+  max?: string;
+  pattern?: string;
+  maxLength?: number;
+  inputMode?: "text" | "numeric" | "tel" | "email" | "decimal";
+};
 
+function InputField({
+  name,
+  label,
+  value,
+  onChange,
+  placeholder = "",
+  type = "text",
+  required = true,
+  min,
+  max,
+  pattern,
+  maxLength,
+  inputMode,
+}: InputProps) {
   return (
-    <motion.div variants={fadeUp}>
-      <label className={labelClass}>
+    <motion.div variants={fadeUp} className="min-w-0">
+      <label htmlFor={name} className={labelClass}>
         {label}
-
         {required && <Required />}
       </label>
-
       <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
+        id={name}
+        name={name}
+        type={type}
+        value={value}
         onChange={onChange}
-        className="hidden"
+        placeholder={placeholder}
+        required={required}
+        min={min}
+        max={max}
+        pattern={pattern}
+        maxLength={maxLength}
+        inputMode={inputMode}
+        className={inputClass}
       />
-
-      <motion.button
-        type="button"
-        whileHover={{
-          y: -1,
-        }}
-        whileTap={{
-          scale: 0.995,
-        }}
-        onClick={() =>
-          inputRef.current?.click()
-        }
-        className="
-          group
-
-          flex
-
-          min-h-[74px]
-          w-full
-
-          items-center
-
-          gap-[14px]
-
-          rounded-[7px]
-
-          border
-          border-dashed
-          border-[#72B5FF]
-
-          bg-[#F7FBFF]
-
-          px-[14px]
-          py-[12px]
-
-          text-left
-
-          transition-all
-          duration-300
-
-          hover:border-[#0075FF]
-          hover:bg-[#F2F8FF]
-
-          sm:px-[18px]
-        "
-      >
-        <span
-          className="
-            flex
-
-            h-[40px]
-            w-[44px]
-
-            shrink-0
-
-            items-center
-            justify-center
-
-            rounded-[6px]
-
-            border
-            border-[#9DCBFF]
-
-            bg-white
-
-            text-[#0075FF]
-
-            shadow-[0_5px_14px_rgba(0,117,255,0.08)]
-          "
-        >
-          {file ? (
-            <CheckCircle2 size={18} />
-          ) : (
-            <Upload size={18} />
-          )}
-        </span>
-
-        <span className="min-w-0">
-          <span
-            className="
-              block
-
-              truncate
-
-              font-secondary
-
-              text-[12px]
-              font-medium
-
-              text-[#292D32]
-
-              sm:text-[13px]
-            "
-          >
-            {file
-              ? file.name
-              : "Choose file"}
-          </span>
-
-          <span
-            className="
-              mt-[3px]
-
-              block
-
-              font-secondary
-
-              text-[10px]
-
-              leading-[1.45]
-
-              text-[#8C96A3]
-
-              sm:text-[11px]
-            "
-          >
-            {helper}
-          </span>
-        </span>
-      </motion.button>
     </motion.div>
   );
 }
 
-/* =========================================================
-   COMPONENT
-========================================================= */
+type SelectProps = {
+  name: "religion" | "motherTongue";
+  label: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
+};
+
+function SelectField({
+  name,
+  label,
+  value,
+  options,
+  placeholder,
+  onChange,
+}: SelectProps) {
+  return (
+    <motion.div variants={fadeUp} className="min-w-0">
+      <label htmlFor={name} className={labelClass}>
+        {label}
+        <Required />
+      </label>
+      <div className="relative">
+        <select
+          id={name}
+          name={name}
+          value={value}
+          onChange={onChange}
+          required
+          className={`${inputClass} cursor-pointer appearance-none pr-[48px]`}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
+          size={18}
+          aria-hidden="true"
+          className="pointer-events-none absolute right-[16px] top-1/2 -translate-y-1/2 text-[#344563]"
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+type YesNoProps = {
+  name: "isExStudent" | "siblingInSchool";
+  label: string;
+  value: string;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+};
+
+function YesNoField({
+  name,
+  label,
+  value,
+  onChange,
+}: YesNoProps) {
+  return (
+    <motion.fieldset variants={fadeUp} className="min-w-0">
+      <legend className={labelClass}>
+        {label}
+        <Required />
+      </legend>
+      <div className="flex flex-wrap gap-3">
+        {(["Yes", "No"] as const).map((option) => (
+          <label
+            key={option}
+            className={`flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-[8px] border px-[18px] font-secondary text-[13px] transition-all ${
+              value === option
+                ? "border-[#0075FF] bg-[#EFF7FF] text-[#0056C9]"
+                : "border-[#D8E5F5] bg-white text-[#344563] hover:border-[#83B6F5]"
+            }`}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option}
+              checked={value === option}
+              onChange={onChange}
+              required
+              className="h-4 w-4 accent-[#0075FF]"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </motion.fieldset>
+  );
+}
 
 export default function PreliminaryAdmissionForm() {
-  const [form, setForm] =
-    useState<FormState>(initialForm);
-
-  const [pupilPhoto, setPupilPhoto] =
-    useState<File | null>(null);
-
-  const [signature, setSignature] =
-    useState<File | null>(null);
-
-  const [submitted, setSubmitted] =
-    useState(false);
-
-  /* =========================================================
-     CHANGE
-  ========================================================= */
+  const [form, setForm] = useState<FormState>({
+    ...initialForm,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notice, setNotice] = useState<Notice | null>(null);
 
   const handleChange = (
     event: ChangeEvent<
-      HTMLInputElement |
-        HTMLTextAreaElement |
-        HTMLSelectElement
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => {
-    const {
-      name,
-      value,
-    } = event.target;
+    const { name, value } = event.target;
+    setNotice(null);
 
-    setForm((previous) => ({
-      ...previous,
-      [name]: value,
-    }));
+    setForm((previous) => {
+      if (name === "siblingInSchool") {
+        return {
+          ...previous,
+          siblingInSchool: value,
+          siblingName: value === "Yes" ? previous.siblingName : "",
+          siblingClassSection:
+            value === "Yes" ? previous.siblingClassSection : "",
+        };
+      }
+
+      return { ...previous, [name]: value };
+    });
   };
 
-  /* =========================================================
-     SUBMIT
-  ========================================================= */
-
-  const handleSubmit = (
+  const handleSubmit = async (
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
-    setSubmitted(true);
+    if (isSubmitting) return;
 
-    console.log({
-      ...form,
-      pupilPhoto,
-      signature,
-    });
+    setNotice(null);
 
-    window.setTimeout(() => {
-      setSubmitted(false);
-    }, 3500);
+    if (
+      form.siblingInSchool === "Yes" &&
+      (!form.siblingName.trim() ||
+        !form.siblingClassSection.trim())
+    ) {
+      setNotice({
+        type: "error",
+        title: "Missing Sibling Details",
+        message: "Please enter sibling name and class/section.",
+      });
+      return;
+    }
+
+    // These keys exactly match the Ayatiworks module schema.
+    const payload = {
+      data: {
+        registration_no: form.registrationNo.trim(),
+        name_of_the_pupil: form.pupilName.trim(),
+        date_of_birth: form.dob,
+        religion: form.religion,
+        place_of_birth: form.placeOfBirth.trim(),
+
+        father_s_name: form.fatherName.trim(),
+        father_s_qualification: form.fatherQualification.trim(),
+        father_s_occupation: form.fatherOccupation.trim(),
+        father_s_income_per_month: form.fatherIncome.trim(),
+
+        mother_s_name: form.motherName.trim(),
+        is_she_a_passed_student_of_rosary: form.isExStudent,
+        mother_s_qualification: form.motherQualification.trim(),
+        mother_s_occupation: form.motherOccupation.trim(),
+        mother_s_income_per_month: form.motherIncome.trim(),
+        mother_tongue: form.motherTongue,
+
+        does_the_applicant_have_any_siblings_studying_in_this_school:
+          form.siblingInSchool,
+
+        name_of_the_sibling:
+          form.siblingInSchool === "Yes"
+            ? form.siblingName.trim()
+            : "",
+
+        class_and_section:
+          form.siblingInSchool === "Yes"
+            ? form.siblingClassSection.trim()
+            : "",
+
+        permanent_address: form.address.trim(),
+        email: form.email.trim(),
+        phone_number: form.phone.trim(),
+        alternative_phone_number: form.alternativePhone.trim(),
+      },
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch(
+        "/api/rosary-lkg-admission",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+          cache: "no-store",
+        }
+      );
+
+      const result: {
+        success?: boolean;
+        message?: string;
+      } = await response.json();
+
+      if (!response.ok || result.success !== true) {
+        throw new Error(
+          result.message || "Unable to submit the application."
+        );
+      }
+
+      setNotice({
+        type: "success",
+        title: "Application Submitted Successfully!",
+        message:
+          result.message ||
+          "Your LKG admission application has been received.",
+      });
+
+      setForm({ ...initialForm });
+    } catch (error) {
+      setNotice({
+        type: "error",
+        title: "Submission Not Confirmed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <section
-      className="
-        relative
-        isolate
+    <>
+      <section className="relative min-h-screen overflow-hidden bg-[#F7FAFF] py-6 sm:py-10 lg:py-14">
+        <div className="pointer-events-none absolute -left-[120px] top-[100px] h-[300px] w-[300px] rounded-full bg-[#0075FF]/5 blur-[90px]" />
+        <div className="pointer-events-none absolute -right-[100px] top-[350px] h-[350px] w-[350px] rounded-full bg-[#0075FF]/5 blur-[100px]" />
 
-        w-full
-
-        overflow-hidden
-
-        bg-white
-
-        py-[40px]
-
-        sm:py-[54px]
-
-        lg:py-[70px]
-      "
-    >
-      {/* =====================================================
-          SUBTLE BACKGROUND
-      ====================================================== */}
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          -z-20
-        "
-        style={{
-          backgroundImage: `
-            linear-gradient(
-              rgba(0,117,255,0.025) 1px,
-              transparent 1px
-            ),
-            linear-gradient(
-              90deg,
-              rgba(0,117,255,0.025) 1px,
-              transparent 1px
-            )
-          `,
-          backgroundSize: "44px 44px",
-        }}
-      />
-
-      <div
-        className="
-          pointer-events-none
-
-          absolute
-          inset-0
-
-          -z-10
-
-          bg-white/70
-        "
-      />
-
-      {/* =====================================================
-          CONTAINER
-      ====================================================== */}
-
-      <motion.div
-        variants={container}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{
-          once: true,
-          amount: 0.05,
-        }}
-        className="
-          mx-auto
-
-          w-full
-          max-w-[1180px]
-
-          px-[16px]
-
-          sm:px-[28px]
-
-          lg:px-[36px]
-        "
-      >
-        {/* ===================================================
-            HEADING
-        ==================================================== */}
-
-        <motion.div
-          variants={fadeUp}
-          className="
-            mb-[38px]
-
-            sm:mb-[46px]
-          "
-        >
-          <span
-            className="
-              inline-flex
-
-              rounded-[4px]
-
-              bg-[#EEF6FF]
-
-              px-[9px]
-              py-[5px]
-
-              font-secondary
-
-              text-[10px]
-              font-medium
-
-              uppercase
-
-              tracking-[0.5px]
-
-              text-[#0075FF] 
-            "
+        <div className="relative mx-auto max-w-[1440px] px-3 sm:px-6 lg:px-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55 }}
+            className="overflow-hidden rounded-[14px] border border-[#DCE9F8] bg-white shadow-[0_16px_50px_rgba(20,66,120,0.06)] sm:rounded-[18px]"
           >
-            Admissions
-          </span>
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#E7F4FF] via-[#F4FAFF] to-[#DCEEFF] px-[18px] py-7 text-center sm:px-8 sm:py-[34px] lg:py-[42px]">
+              <div className="pointer-events-none absolute -left-[60px] -top-[100px] h-[250px] w-[250px] rotate-45 bg-[#0075FF]/5" />
+              <div className="pointer-events-none absolute -right-[90px] -bottom-[120px] h-[280px] w-[280px] rounded-full border-[45px] border-[#0075FF]/5" />
 
-          <h1
-            className="
-              mt-[12px]
-
-              font-primary
-
-              text-[27px] pt-3
-              font-bold
-
-              uppercase
-
-              leading-[1.1]
-
-              tracking-[-0.5px]
-
-              text-[#171717]
-
-              sm:text-[34px]
-
-              lg:text-[38px]
-            "
-          >
-            Preliminary Admission Form
-          </h1>
-
-          <p
-            className="
-              mt-[10px]
-
-              max-w-[740px]
-
-              font-secondary
-
-              text-[12px]
-
-              leading-[1.6]
-
-              text-[#7E8793] pt-3
-
-              sm:text-[13px]
-            "
-          >
-            Please fill out all the fields below carefully.
-            Fields marked with a red asterisk{" "}
-            <span className="text-[#FF4D4F]">
-              (*)
-            </span>{" "}
-            are mandatory for submission.
-          </p>
-        </motion.div>
-
-        {/* ===================================================
-            FORM
-        ==================================================== */}
-
-        <form onSubmit={handleSubmit}>
-          {/* =================================================
-              I. PUPIL INFORMATION
-          ================================================= */}
-
-          <section>
-            <FormSectionTitle>
-              I. Pupil&apos;s Information
-            </FormSectionTitle>
-
-            <motion.div
-              variants={container}
-              className="
-                grid
-
-                grid-cols-1
-
-                gap-x-[24px]
-                gap-y-[22px]
-
-                md:grid-cols-2
-              "
-            >
-              {/* PUPIL NAME */}
-
-              <motion.div
-                variants={fadeUp}
-                className="md:col-span-2"
-              >
-                <label
-                  htmlFor="pupilName"
-                  className={labelClass}
-                >
-                  Name of the Pupil
-                  <Required />
-                </label>
-
-                <input
-                  id="pupilName"
-                  name="pupilName"
-                  required
-                  value={form.pupilName}
-                  onChange={handleChange}
-                  placeholder="Enter full name of the candidate"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* PHOTO */}
-
-              <div className="md:col-span-2">
-                <FileUpload
-                  label="Photo of the Pupil"
-                  required
-                  file={pupilPhoto}
-                  accept="image/jpeg,image/png,image/webp"
-                  helper="Upload photo of the candidate. Max file upload size: 2MB"
-                  onChange={(event) =>
-                    setPupilPhoto(
-                      event.target.files?.[0] ??
-                        null
-                    )
-                  }
-                />
+              <div className="relative z-10 mx-auto max-w-[850px]">
+                <span className="mb-3 inline-flex rounded-full border border-[#BBD9FF] bg-white/70 px-[13px] py-[6px] font-secondary text-[10px] font-semibold uppercase tracking-[1px] text-[#0065D8] sm:text-[11px]">
+                  Admissions Open
+                </span>
+                <h1 className="font-primary text-[21px] font-bold leading-[1.3] tracking-[-0.4px] text-[#07347A] sm:text-[27px] lg:text-[32px]">
+                  Rosary Matriculation Higher Secondary School
+                </h1>
+                <p className="mt-[10px] font-secondary text-[13px] font-medium text-[#62758F] sm:text-[16px]">
+                  LKG Application Form 2026 - 2027
+                </p>
+                <p className="mt-[9px] font-secondary text-[11px] leading-[1.6] text-[#74869D] sm:text-[12px]">
+                  Please complete all required details carefully before submitting.
+                </p>
               </div>
-
-              {/* DOB */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="dob"
-                  className={labelClass}
-                >
-                  Date of Birth
-                  <Required />
-                </label>
-
-                <input
-                  id="dob"
-                  name="dob"
-                  required
-                  type="date"
-                  value={form.dob}
-                  onChange={handleChange}
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* BIRTH PLACE */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="placeOfBirth"
-                  className={labelClass}
-                >
-                  Place of Birth
-                  <Required />
-                </label>
-
-                <input
-                  id="placeOfBirth"
-                  name="placeOfBirth"
-                  required
-                  value={form.placeOfBirth}
-                  onChange={handleChange}
-                  placeholder="City / State"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* RELIGION */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="religion"
-                  className={labelClass}
-                >
-                  Religion
-                  <Required />
-                </label>
-
-                <input
-                  id="religion"
-                  name="religion"
-                  required
-                  value={form.religion}
-                  onChange={handleChange}
-                  placeholder="e.g. Roman Catholic"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* EMPTY DESKTOP CELL */}
-
-              <div className="hidden md:block" />
-
-              {/* PARISH */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="parishName"
-                  className={labelClass}
-                >
-                  Name of Parish
-                  <Required />
-                </label>
-
-                <input
-                  id="parishName"
-                  name="parishName"
-                  required
-                  value={form.parishName}
-                  onChange={handleChange}
-                  placeholder="Enter Parish name"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* PRIEST */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="parishPriestName"
-                  className={labelClass}
-                >
-                  Parish Priest Name
-                  <Required />
-                </label>
-
-                <input
-                  id="parishPriestName"
-                  name="parishPriestName"
-                  required
-                  value={form.parishPriestName}
-                  onChange={handleChange}
-                  placeholder="Enter priest's full name"
-                  className={inputClass}
-                />
-              </motion.div>
-            </motion.div>
-          </section>
-
-          {/* =================================================
-              II. PARENT INFORMATION
-          ================================================= */}
-
-          <section
-            className="
-              mt-[54px]
-
-              sm:mt-[68px]
-            "
-          >
-            <FormSectionTitle>
-              II. Parent &amp; Family Information
-            </FormSectionTitle>
-
-            <motion.div
-              variants={container}
-              className="
-                grid
-
-                grid-cols-1
-
-                gap-x-[24px]
-                gap-y-[22px]
-
-                md:grid-cols-2
-              "
-            >
-              {/* FATHER NAME */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="fatherName"
-                  className={labelClass}
-                >
-                  Father&apos;s Name
-                  <Required />
-                </label>
-
-                <input
-                  id="fatherName"
-                  name="fatherName"
-                  required
-                  value={form.fatherName}
-                  onChange={handleChange}
-                  placeholder="Father's full name"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* FATHER QUALIFICATION */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="fatherQualification"
-                  className={labelClass}
-                >
-                  Qualification
-                  <Required />
-                </label>
-
-                <input
-                  id="fatherQualification"
-                  name="fatherQualification"
-                  required
-                  value={
-                    form.fatherQualification
-                  }
-                  onChange={handleChange}
-                  placeholder="Highest degree earned"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* FATHER OCCUPATION */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="fatherOccupation"
-                  className={labelClass}
-                >
-                  Occupation
-                  <Required />
-                </label>
-
-                <input
-                  id="fatherOccupation"
-                  name="fatherOccupation"
-                  required
-                  value={form.fatherOccupation}
-                  onChange={handleChange}
-                  placeholder="Profession / Business"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* FATHER INCOME */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="fatherIncome"
-                  className={labelClass}
-                >
-                  Income (per Month)
-                  <Required />
-                </label>
-
-                <input
-                  id="fatherIncome"
-                  name="fatherIncome"
-                  required
-                  value={form.fatherIncome}
-                  onChange={handleChange}
-                  placeholder="e.g. ₹50,000 / $5,000"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* MOTHER NAME */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="motherName"
-                  className={labelClass}
-                >
-                  Mother&apos;s Name
-                  <Required />
-                </label>
-
-                <input
-                  id="motherName"
-                  name="motherName"
-                  required
-                  value={form.motherName}
-                  onChange={handleChange}
-                  placeholder="Mother's full name"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* EX STUDENT */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="isExStudent"
-                  className={labelClass}
-                >
-                  Is Ex-Student?
-                  <Required />
-                </label>
-
-                <select
-                  id="isExStudent"
-                  name="isExStudent"
-                  required
-                  value={form.isExStudent}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
-                  <option value="">
-                    Select
-                  </option>
-                  <option value="Yes">
-                    Yes
-                  </option>
-                  <option value="No">
-                    No
-                  </option>
-                </select>
-              </motion.div>
-
-              {/* MOTHER QUALIFICATION */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="motherQualification"
-                  className={labelClass}
-                >
-                  Qualification
-                  <Required />
-                </label>
-
-                <input
-                  id="motherQualification"
-                  name="motherQualification"
-                  required
-                  value={
-                    form.motherQualification
-                  }
-                  onChange={handleChange}
-                  placeholder="Highest degree earned"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* MOTHER OCCUPATION */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="motherOccupation"
-                  className={labelClass}
-                >
-                  Occupation
-                  <Required />
-                </label>
-
-                <input
-                  id="motherOccupation"
-                  name="motherOccupation"
-                  required
-                  value={form.motherOccupation}
-                  onChange={handleChange}
-                  placeholder="Profession / Business"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* MOTHER INCOME */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="motherIncome"
-                  className={labelClass}
-                >
-                  Income (per Month)
-                  <Required />
-                </label>
-
-                <input
-                  id="motherIncome"
-                  name="motherIncome"
-                  required
-                  value={form.motherIncome}
-                  onChange={handleChange}
-                  placeholder="e.g. ₹40,000 / $4,000"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* MOTHER TONGUE */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="motherTongue"
-                  className={labelClass}
-                >
-                  Mother Tongue
-                  <Required />
-                </label>
-
-                <input
-                  id="motherTongue"
-                  name="motherTongue"
-                  required
-                  value={form.motherTongue}
-                  onChange={handleChange}
-                  placeholder="e.g. English, Tamil"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* SISTER */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="sisterInSchool"
-                  className={labelClass}
-                >
-                  Does the applicant have any of her own
-                  sister (not cousins) in this school?
-                  <Required />
-                </label>
-
-                <select
-                  id="sisterInSchool"
-                  name="sisterInSchool"
-                  required
-                  value={form.sisterInSchool}
-                  onChange={handleChange}
-                  className={inputClass}
-                >
-                  <option value="">
-                    Select
-                  </option>
-
-                  <option value="Yes">
-                    Yes
-                  </option>
-
-                  <option value="No">
-                    No
-                  </option>
-                </select>
-              </motion.div>
-            </motion.div>
-          </section>
-
-          {/* =================================================
-              III. CONTACT
-          ================================================= */}
-
-          <section
-            className="
-              mt-[54px]
-
-              sm:mt-[68px]
-            "
-          >
-            <FormSectionTitle>
-              III. Contact &amp; Correspondence
-            </FormSectionTitle>
-
-            <motion.div
-              variants={container}
-              className="
-                grid
-
-                grid-cols-1
-
-                gap-x-[18px]
-                gap-y-[22px]
-
-                md:grid-cols-3
-              "
-            >
-              {/* ADDRESS */}
-
-              <motion.div
-                variants={fadeUp}
-                className="md:col-span-3"
-              >
-                <label
-                  htmlFor="address"
-                  className={labelClass}
-                >
-                  Residential Address
-                  <Required />
-                </label>
-
-                <textarea
-                  id="address"
-                  name="address"
-                  required
-                  rows={4}
-                  value={form.address}
-                  onChange={handleChange}
-                  placeholder="Enter complete residential address with PIN/ZIP code"
-                  className="
-                    min-h-[115px]
-
-                    w-full
-
-                    resize-none
-
-                    rounded-[6px]
-
-                    border
-                    border-[#8CC1FF]
-
-                    bg-white
-
-                    px-[14px]
-                    py-[14px]
-
-                    font-secondary
-
-                    text-[13px]
-
-                    leading-[1.6]
-
-                    text-[#1C1F24]
-
-                    outline-none
-
-                    transition-all
-                    duration-300
-
-                    placeholder:text-[#9BA2AC]
-
-                    hover:border-[#4D9FFF]
-
-                    focus:border-[#0075FF]
-                    focus:ring-4
-                    focus:ring-[#0075FF]/10
-
-                    sm:text-[14px]
-                  "
-                />
-              </motion.div>
-
-              {/* EMAIL */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="email"
-                  className={labelClass}
-                >
-                  Email
-                  <Required />
-                </label>
-
-                <input
-                  id="email"
-                  name="email"
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={handleChange}
-                  placeholder="parent@example.com"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* PHONE */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="phone"
-                  className={labelClass}
-                >
-                  Phone
-                  <Required />
-                </label>
-
-                <input
-                  id="phone"
-                  name="phone"
-                  required
-                  type="tel"
-                  value={form.phone}
-                  onChange={handleChange}
-                  placeholder="Primary contact number"
-                  className={inputClass}
-                />
-              </motion.div>
-
-              {/* ALT PHONE */}
-
-              <motion.div variants={fadeUp}>
-                <label
-                  htmlFor="alternativePhone"
-                  className={labelClass}
-                >
-                  Alternative Phone
-                  <Required />
-                </label>
-
-                <input
-                  id="alternativePhone"
-                  name="alternativePhone"
-                  required
-                  type="tel"
-                  value={
-                    form.alternativePhone
-                  }
-                  onChange={handleChange}
-                  placeholder="Secondary contact number"
-                  className={inputClass}
-                />
-              </motion.div>
-            </motion.div>
-          </section>
-
-          {/* =================================================
-              IV. ATTACHMENTS
-          ================================================= */}
-
-          <section
-            className="
-              mt-[54px]
-
-              sm:mt-[68px]
-            "
-          >
-            <FormSectionTitle>
-              IV. Attachment Guidelines &amp; Submission
-            </FormSectionTitle>
-
-            <motion.div
-              variants={container}
-              className="
-                space-y-[20px]
-              "
-            >
-              {/* GUIDELINES */}
-
-              <motion.div
-                variants={fadeUp}
-                className="
-                  rounded-[8px]
-
-                  bg-[#F1F6FB]
-
-                  px-[18px]
-                  py-[17px]
-
-                  sm:px-[22px]
-                  sm:py-[20px]
-                "
-              >
-                <div
-                  className="
-                    flex
-
-                    items-start
-
-                    gap-[10px]
-                  "
-                >
-                  <FileText
-                    size={18}
-                    className="
-                      mt-[1px]
-
-                      shrink-0
-
-                      text-[#0075FF]
-                    "
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-[34px] px-[18px] py-[26px] sm:space-y-[42px] sm:px-[30px] sm:py-[34px] lg:px-[42px] lg:py-[42px]">
+                {/* PERSONAL DETAILS */}
+                <section>
+                  <SectionTitle>Personal Details</SectionTitle>
+                  <motion.div
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className={`${gridClass} lg:grid-cols-3`}
+                  >
+                    <InputField
+                      name="registrationNo"
+                      label="Registration No."
+                      value={form.registrationNo}
+                      onChange={handleChange}
+                      placeholder="Enter registration number"
+                      maxLength={30}
+                    />
+                    <InputField
+                      name="pupilName"
+                      label="Name of the Pupil"
+                      value={form.pupilName}
+                      onChange={handleChange}
+                      placeholder="Enter name of the pupil"
+                    />
+                    <InputField
+                      name="dob"
+                      label="Date of Birth"
+                      type="date"
+                      value={form.dob}
+                      onChange={handleChange}
+                      max={new Date().toISOString().split("T")[0]}
+                    />
+                    <SelectField
+                      name="religion"
+                      label="Religion"
+                      value={form.religion}
+                      onChange={handleChange}
+                      placeholder="Select religion"
+                      options={["Hindu", "Christian", "Muslim", "Other"]}
+                    />
+                    <InputField
+                      name="placeOfBirth"
+                      label="Place of Birth"
+                      value={form.placeOfBirth}
+                      onChange={handleChange}
+                      placeholder="Enter place of birth"
+                    />
+                  </motion.div>
+                </section>
+
+                {/* FATHER'S DETAILS */}
+                <section>
+                  <SectionTitle>Father&apos;s Details</SectionTitle>
+                  <motion.div
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className={`${gridClass} lg:grid-cols-4`}
+                  >
+                    <InputField
+                      name="fatherName"
+                      label="Father's Name"
+                      value={form.fatherName}
+                      onChange={handleChange}
+                      placeholder="Enter father's name"
+                    />
+                    <InputField
+                      name="fatherQualification"
+                      label="Qualification"
+                      value={form.fatherQualification}
+                      onChange={handleChange}
+                      placeholder="Enter father's qualification"
+                    />
+                    <InputField
+                      name="fatherOccupation"
+                      label="Occupation"
+                      value={form.fatherOccupation}
+                      onChange={handleChange}
+                      placeholder="Enter father's occupation"
+                    />
+                    <InputField
+                      name="fatherIncome"
+                      label="Income (per Month)"
+                      type="number"
+                      min="0"
+                      value={form.fatherIncome}
+                      onChange={handleChange}
+                      placeholder="Enter monthly income"
+                    />
+                  </motion.div>
+                </section>
+
+                {/* MOTHER'S DETAILS */}
+                <section>
+                  <SectionTitle>Mother&apos;s Details</SectionTitle>
+                  <motion.div
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className={`${gridClass} lg:grid-cols-4`}
+                  >
+                    <InputField
+                      name="motherName"
+                      label="Mother's Name"
+                      value={form.motherName}
+                      onChange={handleChange}
+                      placeholder="Enter mother's name"
+                    />
+                    <YesNoField
+                      name="isExStudent"
+                      label="Is she a Passed student of Rosary?"
+                      value={form.isExStudent}
+                      onChange={handleChange}
+                    />
+                    <InputField
+                      name="motherQualification"
+                      label="Qualification"
+                      value={form.motherQualification}
+                      onChange={handleChange}
+                      placeholder="Enter mother's qualification"
+                    />
+                    <InputField
+                      name="motherOccupation"
+                      label="Occupation"
+                      value={form.motherOccupation}
+                      onChange={handleChange}
+                      placeholder="Enter mother's occupation"
+                    />
+                    <InputField
+                      name="motherIncome"
+                      label="Income (per Month)"
+                      type="number"
+                      min="0"
+                      value={form.motherIncome}
+                      onChange={handleChange}
+                      placeholder="Enter monthly income"
+                    />
+                    <SelectField
+                      name="motherTongue"
+                      label="Mother Tongue"
+                      value={form.motherTongue}
+                      onChange={handleChange}
+                      placeholder="Select mother tongue"
+                      options={[
+                        "Tamil",
+                        "English",
+                        "Telugu",
+                        "Malayalam",
+                        "Kannada",
+                        "Hindi",
+                        "Other",
+                      ]}
+                    />
+                  </motion.div>
+                </section>
+
+                {/* SIBLING DETAILS */}
+                <section>
+                  <SectionTitle>Sibling Details</SectionTitle>
+                  <YesNoField
+                    name="siblingInSchool"
+                    label="Does the applicant have any siblings studying in this school?"
+                    value={form.siblingInSchool}
+                    onChange={handleChange}
                   />
 
-                  <div>
-                    <h3
-                      className="
-                        font-primary
+                  <AnimatePresence initial={false}>
+                    {form.siblingInSchool === "Yes" && (
+                      <motion.div
+                        key="sibling-fields"
+                        initial={{ opacity: 0, height: 0, y: -10 }}
+                        animate={{ opacity: 1, height: "auto", y: 0 }}
+                        exit={{ opacity: 0, height: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-5 grid grid-cols-1 gap-5 rounded-[12px] border border-[#D9E8FB] bg-[#F7FBFF] p-[18px] sm:grid-cols-2 sm:p-[22px]">
+                          <InputField
+                            name="siblingName"
+                            label="Name of the Sibling"
+                            value={form.siblingName}
+                            onChange={handleChange}
+                            placeholder="Enter name of the sibling"
+                          />
+                          <InputField
+                            name="siblingClassSection"
+                            label="Class and Section"
+                            value={form.siblingClassSection}
+                            onChange={handleChange}
+                            placeholder="Enter class and section"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </section>
 
-                        text-[13px]
-                        font-semibold
-
-                        text-[#1D232A]
-
-                        sm:text-[14px]
-                      "
-                    >
-                      The Following must be attached to this form
-                      at the time of Submission:
-                    </h3>
-
-                    <ol
-                      className="
-                        mt-[10px]
-
-                        space-y-[6px]
-
-                        font-secondary
-
-                        text-[11px]
-
-                        leading-[1.5]
-
-                        text-[#565F69]
-
-                        sm:text-[12px]
-                      "
-                    >
-                      <li>
-                        1. Scanned Passport size photograph of
-                        the child in JPEG format.
-                      </li>
-
-                      <li>
-                        2. Scanned Signature of both Parents.
-                      </li>
-                    </ol>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* NOTE */}
-
-              <motion.div
-                variants={fadeUp}
-                className="
-                  rounded-[8px]
-
-                  border
-                  border-[#FFE0E0]
-
-                  bg-[#FFF3F3]
-
-                  px-[18px]
-                  py-[17px]
-
-                  sm:px-[22px]
-                  sm:py-[20px]
-                "
-              >
-                <h3
-                  className="
-                    font-primary
-
-                    text-[12px]
-                    font-semibold
-
-                    text-[#FF4D4F]
-
-                    sm:text-[13px]
-                  "
-                >
-                  Please Note:
-                </h3>
-
-                <ul
-                  className="
-                    mt-[10px]
-
-                    space-y-[7px]
-
-                    font-secondary
-
-                    text-[11px]
-
-                    leading-[1.5]
-
-                    text-[#62676E]
-
-                    sm:text-[12px]
-                  "
-                >
-                  <li
-                    className="
-                      flex
-                      gap-[8px]
-                    "
+                {/* CONTACT DETAILS */}
+                <section>
+                  <SectionTitle>Contact Details</SectionTitle>
+                  <motion.div
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6"
                   >
-                    <span className="text-[#FF4D4F]">
-                      •
-                    </span>
+                    <motion.div variants={fadeUp} className="min-w-0">
+                      <label htmlFor="address" className={labelClass}>
+                        Permanent Address
+                        <Required />
+                      </label>
+                      <textarea
+                        id="address"
+                        name="address"
+                        required
+                        rows={5}
+                        value={form.address}
+                        onChange={handleChange}
+                        placeholder="Enter permanent address"
+                        className={`${inputClass} !h-auto min-h-[150px] resize-y py-[13px]`}
+                      />
+                    </motion.div>
 
-                    The preliminary application is not a
-                    guarantee for admission.
-                  </li>
+                    <div className="grid min-w-0 grid-cols-1 gap-5">
+                      <InputField
+                        name="email"
+                        label="Email ID"
+                        type="email"
+                        value={form.email}
+                        onChange={handleChange}
+                        placeholder="Enter email ID"
+                      />
+                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                        <InputField
+                          name="phone"
+                          label="Phone Number"
+                          type="tel"
+                          inputMode="tel"
+                          pattern="[0-9]{10}"
+                          maxLength={10}
+                          value={form.phone}
+                          onChange={handleChange}
+                          placeholder="Enter phone number"
+                        />
+                        <InputField
+                          name="alternativePhone"
+                          label="Alternative Phone Number"
+                          type="tel"
+                          inputMode="tel"
+                          pattern="[0-9]{10}"
+                          maxLength={10}
+                          required={false}
+                          value={form.alternativePhone}
+                          onChange={handleChange}
+                          placeholder="Enter alternative phone number"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                </section>
+              </div>
 
-                  <li
-                    className="
-                      flex
-                      gap-[8px]
-                    "
-                  >
-                    <span className="text-[#FF4D4F]">
-                      •
-                    </span>
-
-                    If your daughter is selected, you will
-                    receive a mail from the Principal desk.
-                  </li>
-                </ul>
-              </motion.div>
-
-              {/* SIGNATURE */}
-
-              <FileUpload
-                label="Upload Signature"
-                required
-                file={signature}
-                accept="image/jpeg,image/png,application/pdf"
-                helper="Upload scanned signature of parents / guardian"
-                onChange={(event) =>
-                  setSignature(
-                    event.target.files?.[0] ??
-                      null
-                  )
-                }
-              />
-
-              {/* SUBMIT */}
-
-              <motion.div
-                variants={fadeUp}
-                className="
-                  pt-[10px]
-
-                  sm:pt-[16px]
-                "
-              >
+              <div className="flex flex-col gap-[14px] border-t border-[#E0ECFA] bg-[#F4F9FF] px-[18px] py-5 sm:flex-row sm:items-center sm:justify-between sm:px-[30px] lg:px-[42px]">
+                <p className="font-secondary text-[11px] leading-[1.6] text-[#71829A] sm:max-w-[440px]">
+                  Please review all information before submitting your application.
+                </p>
                 <motion.button
                   type="submit"
-                  whileHover={{
-                    y: -3,
-                    scale: 1.01,
-                  }}
-                  whileTap={{
-                    scale: 0.98,
-                  }}
-                  className="
-                    inline-flex
-
-                    h-[50px]
-
-                    w-full
-
-                    items-center
-                    justify-center
-
-                    gap-[8px]
-
-                    rounded-[6px]
-
-                    bg-[#0075FF]
-
-                    px-[26px]
-
-                    font-secondary
-
-                    text-[12px]
-                    font-medium
-
-                    uppercase
-
-                    tracking-[0.3px]
-
-                    text-white
-
-                    shadow-[0_12px_28px_rgba(0,117,255,0.20)]
-
-                    transition-all
-                    duration-300
-
-                    hover:bg-[#0068DD]
-
-                    hover:shadow-[0_16px_34px_rgba(0,117,255,0.28)]
-
-                    sm:w-auto
-                    sm:min-w-[235px]
-                    sm:text-[13px]
-                  "
+                  disabled={isSubmitting}
+                  whileHover={isSubmitting ? undefined : { y: -2 }}
+                  whileTap={isSubmitting ? undefined : { scale: 0.98 }}
+                  className="inline-flex h-[48px] w-full items-center justify-center gap-[10px] rounded-[8px] bg-[#0075FF] px-7 font-secondary text-[13px] font-semibold text-white shadow-[0_10px_24px_rgba(0,117,255,0.18)] transition-colors hover:bg-[#0065DF] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:min-w-[220px]"
                 >
-                  Submit Application Form
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={17} className="animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Application
+                      <ArrowRight size={17} />
+                    </>
+                  )}
                 </motion.button>
-              </motion.div>
-            </motion.div>
-          </section>
-        </form>
-      </motion.div>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      </section>
 
-      {/* =====================================================
-          SUCCESS MESSAGE
-      ====================================================== */}
-
+      {/* GREEN SUCCESS / RED ERROR TOAST */}
       <AnimatePresence>
-        {submitted && (
+        {notice && (
           <motion.div
-            initial={{
-              opacity: 0,
-              y: 20,
-              scale: 0.96,
-            }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              scale: 1,
-            }}
-            exit={{
-              opacity: 0,
-              y: 15,
-              scale: 0.97,
-            }}
-            className="
-              fixed
-
-              bottom-[22px]
-              left-1/2
-
-              z-[9999]
-
-              flex
-
-              w-[calc(100%-28px)]
-              max-w-[430px]
-
-              -translate-x-1/2
-
-              items-center
-
-              gap-[12px]
-
-              rounded-[10px]
-
-              border
-              border-[#CFE5FF]
-
-              bg-white
-
-              px-[17px]
-              py-[14px]
-
-              shadow-[0_18px_55px_rgba(18,55,90,0.20)]
-
-              sm:bottom-[30px]
-            "
+            key={`${notice.type}-${notice.title}`}
+            initial={{ opacity: 0, y: 25, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ duration: 0.25 }}
+            role={notice.type === "error" ? "alert" : "status"}
+            className={`fixed bottom-5 left-1/2 z-[9999] flex w-[calc(100%-28px)] max-w-[450px] -translate-x-1/2 items-start gap-3 rounded-[12px] border p-[16px] shadow-[0_18px_50px_rgba(18,55,90,0.15)] ${
+              notice.type === "success"
+                ? "border-green-200 bg-green-50"
+                : "border-red-200 bg-red-50"
+            }`}
           >
             <div
-              className="
-                flex
-
-                h-[36px]
-                w-[36px]
-
-                shrink-0
-
-                items-center
-                justify-center
-
-                rounded-full
-
-                bg-[#EAF5FF]
-
-                text-[#0075FF]
-              "
+              className={`flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full ${
+                notice.type === "success"
+                  ? "bg-green-100 text-green-600"
+                  : "bg-red-100 text-red-600"
+              }`}
             >
-              <CheckCircle2 size={18} />
+              {notice.type === "success" ? (
+                <CheckCircle2 size={21} />
+              ) : (
+                <AlertCircle size={21} />
+              )}
             </div>
-
             <div className="min-w-0 flex-1">
               <p
-                className="
-                  font-primary
-
-                  text-[13px]
-                  font-semibold
-
-                  text-[#1B2027]
-                "
+                className={`font-secondary text-[14px] font-bold ${
+                  notice.type === "success"
+                    ? "text-green-800"
+                    : "text-red-800"
+                }`}
               >
-                Application submitted
+                {notice.title}
               </p>
-
               <p
-                className="
-                  mt-[2px]
-
-                  font-secondary
-
-                  text-[10px]
-
-                  text-[#818A95]
-                "
+                className={`mt-[4px] font-secondary text-[12px] leading-[1.6] ${
+                  notice.type === "success"
+                    ? "text-green-700"
+                    : "text-red-700"
+                }`}
               >
-                The preliminary admission form has been
-                submitted successfully.
+                {notice.message}
               </p>
             </div>
-
             <button
               type="button"
-              onClick={() =>
-                setSubmitted(false)
-              }
-              className="
-                flex
-
-                h-[30px]
-                w-[30px]
-
-                items-center
-                justify-center
-
-                rounded-full
-
-                text-[#8D96A1]
-
-                transition-colors
-
-                hover:bg-[#F4F7FA]
-                hover:text-[#111827]
-              "
+              onClick={() => setNotice(null)}
+              aria-label="Close notification"
+              className={`flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full ${
+                notice.type === "success"
+                  ? "text-green-700 hover:bg-green-100"
+                  : "text-red-700 hover:bg-red-100"
+              }`}
             >
-              <X size={16} />
+              <X size={17} />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
-    </section>
+    </>
   );
 }
