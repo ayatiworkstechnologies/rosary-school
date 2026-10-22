@@ -6,14 +6,10 @@ export const runtime = "nodejs";
 const API_URL =
   "https://api.ayatiworks.com/api/v1/public/rosary-school/rosary_lkg_admission/records";
 
-// API key remains unchanged.
-// Keep this file server-side only.
+// Existing API key value kept unchanged.
+// This file must remain server-side only.
 const API_KEY =
   "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
-
-// ======================================================
-// ALL MODULE FIELDS
-// ======================================================
 
 const ALL_FIELDS = [
   "registration_no",
@@ -21,32 +17,24 @@ const ALL_FIELDS = [
   "date_of_birth",
   "religion",
   "place_of_birth",
-
   "father_s_name",
   "father_s_qualification",
   "father_s_occupation",
   "father_s_income_per_month",
-
   "mother_s_name",
   "is_she_a_passed_student_of_rosary",
   "mother_s_qualification",
   "mother_s_occupation",
   "mother_s_income_per_month",
   "mother_tongue",
-
   "does_the_applicant_have_any_siblings_studying_in_this_school",
   "name_of_the_sibling",
   "class_and_section",
-
   "permanent_address",
   "email",
   "phone_number",
   "alternative_phone_number",
 ] as const;
-
-// ======================================================
-// REQUIRED FIELDS
-// ======================================================
 
 const REQUIRED_FIELDS = [
   "registration_no",
@@ -54,21 +42,17 @@ const REQUIRED_FIELDS = [
   "date_of_birth",
   "religion",
   "place_of_birth",
-
   "father_s_name",
   "father_s_qualification",
   "father_s_occupation",
   "father_s_income_per_month",
-
   "mother_s_name",
   "is_she_a_passed_student_of_rosary",
   "mother_s_qualification",
   "mother_s_occupation",
   "mother_s_income_per_month",
   "mother_tongue",
-
   "does_the_applicant_have_any_siblings_studying_in_this_school",
-
   "permanent_address",
   "email",
   "phone_number",
@@ -80,10 +64,6 @@ type ApiResponse = {
   success: boolean;
   message: string;
 };
-
-// ======================================================
-// HELPERS
-// ======================================================
 
 function getValue(
   data: AdmissionData,
@@ -109,28 +89,16 @@ function errorResponse(
   );
 }
 
-// ======================================================
-// POST - ROSARY LKG ADMISSION
-// ======================================================
-
 export async function POST(
   request: NextRequest
 ) {
   try {
-    // --------------------------------------------------
-    // 1. API CONFIGURATION
-    // --------------------------------------------------
-
     if (!API_KEY) {
       return errorResponse(
         "Admission API is not configured. Please contact the school administrator.",
         503
       );
     }
-
-    // --------------------------------------------------
-    // 2. READ REQUEST BODY
-    // --------------------------------------------------
 
     let body: unknown;
 
@@ -142,10 +110,6 @@ export async function POST(
         400
       );
     }
-
-    // --------------------------------------------------
-    // 3. VALIDATE REQUEST STRUCTURE
-    // --------------------------------------------------
 
     if (
       !body ||
@@ -161,13 +125,9 @@ export async function POST(
       );
     }
 
-    const incomingData =
-      body.data as AdmissionData;
+    const incomingData = body.data as AdmissionData;
 
-    // --------------------------------------------------
-    // 4. CLEAN AND MAP ALL FIELDS
-    // --------------------------------------------------
-
+    // Keep all 22 Ayatiworks module fields.
     const cleanedData: Record<string, string> = {};
 
     for (const field of ALL_FIELDS) {
@@ -177,10 +137,7 @@ export async function POST(
       );
     }
 
-    // --------------------------------------------------
-    // 5. REQUIRED FIELD VALIDATION
-    // --------------------------------------------------
-
+    // Required field validation.
     for (const field of REQUIRED_FIELDS) {
       if (!cleanedData[field]) {
         const readableField = field
@@ -196,29 +153,20 @@ export async function POST(
       }
     }
 
-    // --------------------------------------------------
-    // 6. EMAIL VALIDATION
-    // --------------------------------------------------
-
+    // Email validation.
     const email = cleanedData.email;
 
-    const emailRegex =
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(email)) {
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
       return errorResponse(
         "Please enter a valid email address.",
         400
       );
     }
 
-    // --------------------------------------------------
-    // 7. PHONE NUMBER VALIDATION
-    // --------------------------------------------------
-
-    const phone =
-      cleanedData.phone_number;
-
+    // Phone validation.
+    const phone = cleanedData.phone_number;
     const alternativePhone =
       cleanedData.alternative_phone_number;
 
@@ -239,17 +187,10 @@ export async function POST(
       );
     }
 
-    // --------------------------------------------------
-    // 8. DATE OF BIRTH VALIDATION
-    // --------------------------------------------------
+    // Date of birth validation.
+    const dob = cleanedData.date_of_birth;
 
-    const dob =
-      cleanedData.date_of_birth;
-
-    const dateRegex =
-      /^\d{4}-\d{2}-\d{2}$/;
-
-    if (!dateRegex.test(dob)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
       return errorResponse(
         "Please select a valid date of birth.",
         400
@@ -270,51 +211,40 @@ export async function POST(
       );
     }
 
-    // --------------------------------------------------
-    // 9. YES / NO VALIDATION
-    // --------------------------------------------------
-
-    const passedStudent =
+    // Mother's past-pupil response.
+    // Backend key is intentionally unchanged.
+    const pastPupil =
       cleanedData.is_she_a_passed_student_of_rosary;
 
+    // Sibling(s) response.
+    // Backend key is intentionally unchanged.
     const siblingChoice =
       cleanedData.does_the_applicant_have_any_siblings_studying_in_this_school;
 
-    if (
-      !["Yes", "No"].includes(passedStudent)
-    ) {
+    if (!["Yes", "No"].includes(pastPupil)) {
       return errorResponse(
-        "Please select Yes or No for the mother's Rosary student history.",
+        "Please select Yes or No for 'Is she a past pupil of Rosary?'.",
         400
       );
     }
 
-    if (
-      !["Yes", "No"].includes(siblingChoice)
-    ) {
+    if (!["Yes", "No"].includes(siblingChoice)) {
       return errorResponse(
-        "Please select Yes or No for sibling details.",
+        "Please select Yes or No for sibling(s) details.",
         400
       );
     }
 
-    // --------------------------------------------------
-    // 10. CONDITIONAL SIBLING VALIDATION
-    // --------------------------------------------------
-
+    // Sibling details are required only when Yes.
     if (siblingChoice === "Yes") {
-      if (
-        !cleanedData.name_of_the_sibling
-      ) {
+      if (!cleanedData.name_of_the_sibling) {
         return errorResponse(
           "Please enter the sibling's name.",
           400
         );
       }
 
-      if (
-        !cleanedData.class_and_section
-      ) {
+      if (!cleanedData.class_and_section) {
         return errorResponse(
           "Please enter the sibling's class and section.",
           400
@@ -325,10 +255,7 @@ export async function POST(
       cleanedData.class_and_section = "";
     }
 
-    // --------------------------------------------------
-    // 11. INCOME VALIDATION
-    // --------------------------------------------------
-
+    // Monthly income validation.
     const fatherIncome = Number(
       cleanedData.father_s_income_per_month
     );
@@ -357,32 +284,19 @@ export async function POST(
       );
     }
 
-    // --------------------------------------------------
-    // 12. SEND APPLICATION TO AYATIWORKS
-    // --------------------------------------------------
-
+    // Submit all module fields to Ayatiworks.
     const response = await fetch(API_URL, {
       method: "POST",
-
       headers: {
         "Content-Type": "application/json",
-
-        // Existing API authentication unchanged
         "X-API-Key": API_KEY,
       },
-
       body: JSON.stringify({
         data: cleanedData,
       }),
-
       cache: "no-store",
-
       signal: AbortSignal.timeout(20000),
     });
-
-    // --------------------------------------------------
-    // 13. HANDLE API ERRORS
-    // --------------------------------------------------
 
     if (!response.ok) {
       if (response.status === 409) {
@@ -425,31 +339,19 @@ export async function POST(
       );
     }
 
-    // --------------------------------------------------
-    // 14. SUCCESS RESPONSE
-    // --------------------------------------------------
-
     return NextResponse.json<ApiResponse>(
       {
         success: true,
         message:
           "Your LKG admission application has been submitted successfully!",
       },
-      {
-        status: 201,
-      }
+      { status: 201 }
     );
   } catch (error) {
-    // --------------------------------------------------
-    // 15. NETWORK / TIMEOUT ERRORS
-    // --------------------------------------------------
-
     const timedOut =
       error instanceof Error &&
-      (
-        error.name === "TimeoutError" ||
-        error.name === "AbortError"
-      );
+      (error.name === "TimeoutError" ||
+        error.name === "AbortError");
 
     if (timedOut) {
       return errorResponse(

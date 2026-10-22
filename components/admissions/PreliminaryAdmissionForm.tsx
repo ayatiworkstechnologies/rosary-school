@@ -9,11 +9,11 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertCircle,
   ArrowRight,
   CheckCircle2,
   ChevronDown,
   Loader2,
-  AlertCircle,
   X,
 } from "lucide-react";
 
@@ -99,11 +99,7 @@ function Required() {
   );
 }
 
-function SectionTitle({
-  children,
-}: {
-  children: ReactNode;
-}) {
+function SectionTitle({ children }: { children: ReactNode }) {
   return (
     <div className="mb-[22px] border-b border-[#C5DFFF] pb-[12px]">
       <h2 className="flex items-center gap-3 font-primary text-[14px] font-bold uppercase tracking-[0.2px] text-[#0056C9] sm:text-[16px]">
@@ -149,6 +145,7 @@ function InputField({
         {label}
         {required && <Required />}
       </label>
+
       <input
         id={name}
         name={name}
@@ -191,6 +188,7 @@ function SelectField({
         {label}
         <Required />
       </label>
+
       <div className="relative">
         <select
           id={name}
@@ -207,6 +205,7 @@ function SelectField({
             </option>
           ))}
         </select>
+
         <ChevronDown
           size={18}
           aria-hidden="true"
@@ -236,6 +235,7 @@ function YesNoField({
         {label}
         <Required />
       </legend>
+
       <div className="flex flex-wrap gap-3">
         {(["Yes", "No"] as const).map((option) => (
           <label
@@ -267,6 +267,7 @@ export default function PreliminaryAdmissionForm() {
   const [form, setForm] = useState<FormState>({
     ...initialForm,
   });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [notice, setNotice] = useState<Notice | null>(null);
 
@@ -293,9 +294,7 @@ export default function PreliminaryAdmissionForm() {
     });
   };
 
-  const handleSubmit = async (
-    event: FormEvent<HTMLFormElement>
-  ) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (isSubmitting) return;
@@ -310,12 +309,14 @@ export default function PreliminaryAdmissionForm() {
       setNotice({
         type: "error",
         title: "Missing Sibling Details",
-        message: "Please enter sibling name and class/section.",
+        message: "Please enter the sibling's name and class/section.",
       });
       return;
     }
 
-    // These keys exactly match the Ayatiworks module schema.
+    // IMPORTANT:
+    // Backend field names remain exactly as configured
+    // in the Ayatiworks Rosary admission module.
     const payload = {
       data: {
         registration_no: form.registrationNo.trim(),
@@ -359,17 +360,14 @@ export default function PreliminaryAdmissionForm() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
-        "/api/rosary-lkg-admission",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-          cache: "no-store",
-        }
-      );
+      const response = await fetch("/api/rosary-lkg-admission", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      });
 
       const result: {
         success?: boolean;
@@ -418,31 +416,37 @@ export default function PreliminaryAdmissionForm() {
             transition={{ duration: 0.55 }}
             className="overflow-hidden rounded-[14px] border border-[#DCE9F8] bg-white shadow-[0_16px_50px_rgba(20,66,120,0.06)] sm:rounded-[18px]"
           >
+            {/* FORM HEADER */}
             <div className="relative overflow-hidden bg-gradient-to-br from-[#E7F4FF] via-[#F4FAFF] to-[#DCEEFF] px-[18px] py-7 text-center sm:px-8 sm:py-[34px] lg:py-[42px]">
               <div className="pointer-events-none absolute -left-[60px] -top-[100px] h-[250px] w-[250px] rotate-45 bg-[#0075FF]/5" />
-              <div className="pointer-events-none absolute -right-[90px] -bottom-[120px] h-[280px] w-[280px] rounded-full border-[45px] border-[#0075FF]/5" />
+              <div className="pointer-events-none absolute -right-[90px] -bottom-[120px] h-[280px] rounded-full border-[45px] border-[#0075FF]/5" />
 
               <div className="relative z-10 mx-auto max-w-[850px]">
                 <span className="mb-3 inline-flex rounded-full border border-[#BBD9FF] bg-white/70 px-[13px] py-[6px] font-secondary text-[10px] font-semibold uppercase tracking-[1px] text-[#0065D8] sm:text-[11px]">
                   Admissions Open
                 </span>
+
                 <h1 className="font-primary text-[21px] font-bold leading-[1.3] tracking-[-0.4px] text-[#07347A] sm:text-[27px] lg:text-[32px]">
                   Rosary Matriculation Higher Secondary School
                 </h1>
+
                 <p className="mt-[10px] font-secondary text-[13px] font-medium text-[#62758F] sm:text-[16px]">
                   LKG Application Form 2026 - 2027
                 </p>
+
                 <p className="mt-[9px] font-secondary text-[11px] leading-[1.6] text-[#74869D] sm:text-[12px]">
-                  Please complete all required details carefully before submitting.
+                  Please complete all required details carefully before
+                  submitting.
                 </p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit}>
               <div className="space-y-[34px] px-[18px] py-[26px] sm:space-y-[42px] sm:px-[30px] sm:py-[34px] lg:px-[42px] lg:py-[42px]">
-                {/* PERSONAL DETAILS */}
+                {/* 01. PERSONAL DETAILS */}
                 <section>
                   <SectionTitle>Personal Details</SectionTitle>
+
                   <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -457,6 +461,7 @@ export default function PreliminaryAdmissionForm() {
                       placeholder="Enter registration number"
                       maxLength={30}
                     />
+
                     <InputField
                       name="pupilName"
                       label="Name of the Pupil"
@@ -464,6 +469,7 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter name of the pupil"
                     />
+
                     <InputField
                       name="dob"
                       label="Date of Birth"
@@ -472,14 +478,21 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       max={new Date().toISOString().split("T")[0]}
                     />
+
                     <SelectField
                       name="religion"
                       label="Religion"
                       value={form.religion}
                       onChange={handleChange}
                       placeholder="Select religion"
-                      options={["Hindu", "Christian", "Muslim", "Other"]}
+                      options={[
+                        "Hindu",
+                        "Christian",
+                        "Muslim",
+                        "Other",
+                      ]}
                     />
+
                     <InputField
                       name="placeOfBirth"
                       label="Place of Birth"
@@ -490,9 +503,10 @@ export default function PreliminaryAdmissionForm() {
                   </motion.div>
                 </section>
 
-                {/* FATHER'S DETAILS */}
+                {/* 02. FATHER'S DETAILS */}
                 <section>
                   <SectionTitle>Father&apos;s Details</SectionTitle>
+
                   <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -506,6 +520,7 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter father's name"
                     />
+
                     <InputField
                       name="fatherQualification"
                       label="Qualification"
@@ -513,6 +528,7 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter father's qualification"
                     />
+
                     <InputField
                       name="fatherOccupation"
                       label="Occupation"
@@ -520,9 +536,10 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter father's occupation"
                     />
+
                     <InputField
                       name="fatherIncome"
-                      label="Income (per Month)"
+                      label="Income (per month)"
                       type="number"
                       min="0"
                       value={form.fatherIncome}
@@ -532,9 +549,10 @@ export default function PreliminaryAdmissionForm() {
                   </motion.div>
                 </section>
 
-                {/* MOTHER'S DETAILS */}
+                {/* 03. MOTHER'S DETAILS */}
                 <section>
                   <SectionTitle>Mother&apos;s Details</SectionTitle>
+
                   <motion.div
                     initial="hidden"
                     whileInView="visible"
@@ -548,12 +566,14 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter mother's name"
                     />
+
                     <YesNoField
                       name="isExStudent"
-                      label="Is she a Passed student of Rosary?"
+                      label="Is she a past pupil of Rosary?"
                       value={form.isExStudent}
                       onChange={handleChange}
                     />
+
                     <InputField
                       name="motherQualification"
                       label="Qualification"
@@ -561,6 +581,7 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter mother's qualification"
                     />
+
                     <InputField
                       name="motherOccupation"
                       label="Occupation"
@@ -568,15 +589,17 @@ export default function PreliminaryAdmissionForm() {
                       onChange={handleChange}
                       placeholder="Enter mother's occupation"
                     />
+
                     <InputField
                       name="motherIncome"
-                      label="Income (per Month)"
+                      label="Income (per month)"
                       type="number"
                       min="0"
                       value={form.motherIncome}
                       onChange={handleChange}
                       placeholder="Enter monthly income"
                     />
+
                     <SelectField
                       name="motherTongue"
                       label="Mother Tongue"
@@ -596,12 +619,13 @@ export default function PreliminaryAdmissionForm() {
                   </motion.div>
                 </section>
 
-                {/* SIBLING DETAILS */}
+                {/* 04. SIBLING DETAILS */}
                 <section>
                   <SectionTitle>Sibling Details</SectionTitle>
+
                   <YesNoField
                     name="siblingInSchool"
-                    label="Does the applicant have any siblings studying in this school?"
+                    label="Does the applicant have any sibling(s) studying in this school?"
                     value={form.siblingInSchool}
                     onChange={handleChange}
                   />
@@ -624,6 +648,7 @@ export default function PreliminaryAdmissionForm() {
                             onChange={handleChange}
                             placeholder="Enter name of the sibling"
                           />
+
                           <InputField
                             name="siblingClassSection"
                             label="Class and Section"
@@ -637,20 +662,28 @@ export default function PreliminaryAdmissionForm() {
                   </AnimatePresence>
                 </section>
 
-                {/* CONTACT DETAILS */}
+                {/* 05. CONTACT DETAILS */}
                 <section>
                   <SectionTitle>Contact Details</SectionTitle>
+
                   <motion.div
                     initial="hidden"
                     whileInView="visible"
                     viewport={{ once: true }}
                     className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6"
                   >
-                    <motion.div variants={fadeUp} className="min-w-0">
-                      <label htmlFor="address" className={labelClass}>
-                        Permanent Address
+                    <motion.div
+                      variants={fadeUp}
+                      className="min-w-0"
+                    >
+                      <label
+                        htmlFor="address"
+                        className={labelClass}
+                      >
+                        Address
                         <Required />
                       </label>
+
                       <textarea
                         id="address"
                         name="address"
@@ -658,7 +691,7 @@ export default function PreliminaryAdmissionForm() {
                         rows={5}
                         value={form.address}
                         onChange={handleChange}
-                        placeholder="Enter permanent address"
+                        placeholder="Enter address"
                         className={`${inputClass} !h-auto min-h-[150px] resize-y py-[13px]`}
                       />
                     </motion.div>
@@ -672,6 +705,7 @@ export default function PreliminaryAdmissionForm() {
                         onChange={handleChange}
                         placeholder="Enter email ID"
                       />
+
                       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                         <InputField
                           name="phone"
@@ -684,6 +718,7 @@ export default function PreliminaryAdmissionForm() {
                           onChange={handleChange}
                           placeholder="Enter phone number"
                         />
+
                         <InputField
                           name="alternativePhone"
                           label="Alternative Phone Number"
@@ -702,20 +737,30 @@ export default function PreliminaryAdmissionForm() {
                 </section>
               </div>
 
+              {/* SUBMIT BUTTON */}
               <div className="flex flex-col gap-[14px] border-t border-[#E0ECFA] bg-[#F4F9FF] px-[18px] py-5 sm:flex-row sm:items-center sm:justify-between sm:px-[30px] lg:px-[42px]">
                 <p className="font-secondary text-[11px] leading-[1.6] text-[#71829A] sm:max-w-[440px]">
-                  Please review all information before submitting your application.
+                  Please review all information before submitting
+                  your application.
                 </p>
+
                 <motion.button
                   type="submit"
                   disabled={isSubmitting}
-                  whileHover={isSubmitting ? undefined : { y: -2 }}
-                  whileTap={isSubmitting ? undefined : { scale: 0.98 }}
+                  whileHover={
+                    isSubmitting ? undefined : { y: -2 }
+                  }
+                  whileTap={
+                    isSubmitting ? undefined : { scale: 0.98 }
+                  }
                   className="inline-flex h-[48px] w-full items-center justify-center gap-[10px] rounded-[8px] bg-[#0075FF] px-7 font-secondary text-[13px] font-semibold text-white shadow-[0_10px_24px_rgba(0,117,255,0.18)] transition-colors hover:bg-[#0065DF] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:min-w-[220px]"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 size={17} className="animate-spin" />
+                      <Loader2
+                        size={17}
+                        className="animate-spin"
+                      />
                       Submitting...
                     </>
                   ) : (
@@ -731,7 +776,7 @@ export default function PreliminaryAdmissionForm() {
         </div>
       </section>
 
-      {/* GREEN SUCCESS / RED ERROR TOAST */}
+      {/* SUCCESS / ERROR TOAST */}
       <AnimatePresence>
         {notice && (
           <motion.div
@@ -760,6 +805,7 @@ export default function PreliminaryAdmissionForm() {
                 <AlertCircle size={21} />
               )}
             </div>
+
             <div className="min-w-0 flex-1">
               <p
                 className={`font-secondary text-[14px] font-bold ${
@@ -770,6 +816,7 @@ export default function PreliminaryAdmissionForm() {
               >
                 {notice.title}
               </p>
+
               <p
                 className={`mt-[4px] font-secondary text-[12px] leading-[1.6] ${
                   notice.type === "success"
@@ -780,6 +827,7 @@ export default function PreliminaryAdmissionForm() {
                 {notice.message}
               </p>
             </div>
+
             <button
               type="button"
               onClick={() => setNotice(null)}
