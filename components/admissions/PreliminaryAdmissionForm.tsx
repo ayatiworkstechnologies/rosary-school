@@ -3,22 +3,25 @@
 
 import {
   useState,
+  useRef,
   type ChangeEvent,
   type FormEvent,
   type ReactNode,
 } from "react";
+
 import { AnimatePresence, motion } from "framer-motion";
+
 import {
-  AlertCircle,
   ArrowRight,
   CheckCircle2,
   ChevronDown,
+  FileImage,
   Loader2,
+  UploadCloud,
   X,
 } from "lucide-react";
 
 type FormState = {
-  registrationNo: string;
   pupilName: string;
   dob: string;
   religion: string;
@@ -42,14 +45,18 @@ type FormState = {
   alternativePhone: string;
 };
 
-type Notice = {
-  type: "success" | "error";
-  title: string;
-  message: string;
+type FileKey =
+  | "student_passport_size_photo"
+  | "father_s_signature"
+  | "mother_s_signature";
+
+type ApiResponse = {
+  success?: boolean;
+  message?: string;
+  registration_no?: string;
 };
 
 const initialForm: FormState = {
-  registrationNo: "",
   pupilName: "",
   dob: "",
   religion: "",
@@ -73,37 +80,39 @@ const initialForm: FormState = {
   alternativePhone: "",
 };
 
-const inputClass =
-  "block h-[46px] w-full min-w-0 rounded-[8px] border border-[#C5D7ED] bg-white px-[14px] font-secondary text-[13px] text-[#10284D] outline-none transition-all duration-200 placeholder:text-[#94A3B8] hover:border-[#83B6F5] focus:border-[#0075FF] focus:ring-[3px] focus:ring-[#0075FF]/10 sm:h-[48px] sm:text-[14px]";
-
-const labelClass =
-  "mb-[8px] block font-secondary text-[12px] font-semibold leading-[1.5] text-[#10284D] sm:text-[13px]";
-
-const gridClass =
-  "grid grid-cols-1 gap-x-[18px] gap-y-[20px] sm:grid-cols-2 lg:gap-x-[24px]";
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 14 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.4 },
-  },
+const initialFiles: Record<FileKey, File | null> = {
+  student_passport_size_photo: null,
+  father_s_signature: null,
+  mother_s_signature: null,
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+];
+
+const inputClass =
+  "block h-12 w-full min-w-0 rounded-lg border border-[#C5D7ED] bg-white px-4 text-sm text-[#10284D] outline-none transition placeholder:text-[#94A3B8] hover:border-[#83B6F5] focus:border-[#0075FF] focus:ring-[3px] focus:ring-[#0075FF]/10";
+
+const labelClass =
+  "mb-2 block text-[13px] font-semibold leading-5 text-[#10284D]";
+
 function Required() {
-  return (
-    <span aria-hidden="true" className="ml-1 text-red-500">
-      *
-    </span>
-  );
+  return <span className="ml-1 text-red-500">*</span>;
 }
 
-function SectionTitle({ children }: { children: ReactNode }) {
+function SectionTitle({
+  children,
+}: {
+  children: ReactNode;
+}) {
   return (
-    <div className="mb-[22px] border-b border-[#C5DFFF] pb-[12px]">
-      <h2 className="flex items-center gap-3 font-primary text-[14px] font-bold uppercase tracking-[0.2px] text-[#0056C9] sm:text-[16px]">
-        <span className="h-[22px] w-[4px] shrink-0 rounded-full bg-[#0075FF]" />
+    <div className="mb-6 border-b border-[#C5DFFF] pb-3">
+      <h2 className="flex items-center gap-3 text-[15px] font-bold uppercase text-[#0056C9] sm:text-base">
+        <span className="h-6 w-1 shrink-0 rounded-full bg-[#0075FF]" />
         {children}
       </h2>
     </div>
@@ -114,7 +123,9 @@ type InputProps = {
   name: keyof FormState;
   label: string;
   value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (
+    event: ChangeEvent<HTMLInputElement>
+  ) => void;
   placeholder?: string;
   type?: string;
   required?: boolean;
@@ -122,7 +133,6 @@ type InputProps = {
   max?: string;
   pattern?: string;
   maxLength?: number;
-  inputMode?: "text" | "numeric" | "tel" | "email" | "decimal";
 };
 
 function InputField({
@@ -130,17 +140,16 @@ function InputField({
   label,
   value,
   onChange,
-  placeholder = "",
+  placeholder,
   type = "text",
   required = true,
   min,
   max,
   pattern,
   maxLength,
-  inputMode,
 }: InputProps) {
   return (
-    <motion.div variants={fadeUp} className="min-w-0">
+    <div className="min-w-0">
       <label htmlFor={name} className={labelClass}>
         {label}
         {required && <Required />}
@@ -158,21 +167,11 @@ function InputField({
         max={max}
         pattern={pattern}
         maxLength={maxLength}
-        inputMode={inputMode}
         className={inputClass}
       />
-    </motion.div>
+    </div>
   );
 }
-
-type SelectProps = {
-  name: "religion" | "motherTongue";
-  label: string;
-  value: string;
-  options: string[];
-  placeholder: string;
-  onChange: (event: ChangeEvent<HTMLSelectElement>) => void;
-};
 
 function SelectField({
   name,
@@ -181,9 +180,18 @@ function SelectField({
   options,
   placeholder,
   onChange,
-}: SelectProps) {
+}: {
+  name: "religion" | "motherTongue";
+  label: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  onChange: (
+    event: ChangeEvent<HTMLSelectElement>
+  ) => void;
+}) {
   return (
-    <motion.div variants={fadeUp} className="min-w-0">
+    <div className="min-w-0">
       <label htmlFor={name} className={labelClass}>
         {label}
         <Required />
@@ -196,9 +204,10 @@ function SelectField({
           value={value}
           onChange={onChange}
           required
-          className={`${inputClass} cursor-pointer appearance-none pr-[48px]`}
+          className={`${inputClass} cursor-pointer appearance-none pr-12`}
         >
           <option value="">{placeholder}</option>
+
           {options.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -208,29 +217,28 @@ function SelectField({
 
         <ChevronDown
           size={18}
-          aria-hidden="true"
-          className="pointer-events-none absolute right-[16px] top-1/2 -translate-y-1/2 text-[#344563]"
+          className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#344563]"
         />
       </div>
-    </motion.div>
+    </div>
   );
 }
-
-type YesNoProps = {
-  name: "isExStudent" | "siblingInSchool";
-  label: string;
-  value: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-};
 
 function YesNoField({
   name,
   label,
   value,
   onChange,
-}: YesNoProps) {
+}: {
+  name: "isExStudent" | "siblingInSchool";
+  label: string;
+  value: string;
+  onChange: (
+    event: ChangeEvent<HTMLInputElement>
+  ) => void;
+}) {
   return (
-    <motion.fieldset variants={fadeUp} className="min-w-0">
+    <fieldset className="min-w-0">
       <legend className={labelClass}>
         {label}
         <Required />
@@ -240,10 +248,10 @@ function YesNoField({
         {(["Yes", "No"] as const).map((option) => (
           <label
             key={option}
-            className={`flex min-h-[42px] cursor-pointer items-center gap-[10px] rounded-[8px] border px-[18px] font-secondary text-[13px] transition-all ${
+            className={`inline-flex min-h-[46px] cursor-pointer items-center gap-2 rounded-lg border px-5 py-2 text-sm transition ${
               value === option
                 ? "border-[#0075FF] bg-[#EFF7FF] text-[#0056C9]"
-                : "border-[#D8E5F5] bg-white text-[#344563] hover:border-[#83B6F5]"
+                : "border-[#D8E5F5] bg-white text-[#344563]"
             }`}
           >
             <input
@@ -253,13 +261,115 @@ function YesNoField({
               checked={value === option}
               onChange={onChange}
               required
-              className="h-4 w-4 accent-[#0075FF]"
+              className="accent-[#0075FF]"
             />
             {option}
           </label>
         ))}
       </div>
-    </motion.fieldset>
+    </fieldset>
+  );
+}
+
+function UploadField({
+  id,
+  label,
+  file,
+  onChange,
+  onError,
+}: {
+  id: FileKey;
+  label: string;
+  file: File | null;
+  onChange: (key: FileKey, file: File) => void;
+  onError: (message: string) => void;
+}) {
+  const handleFile = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    const selected = event.target.files?.[0];
+
+    if (!selected) return;
+
+    if (selected.size >= MAX_FILE_SIZE) {
+      event.target.value = "";
+      onError(`${label} must be smaller than 5 MB.`);
+      return;
+    }
+
+    if (!ALLOWED_TYPES.includes(selected.type)) {
+      event.target.value = "";
+      onError(
+        `${label} must be a JPG, PNG or WebP image.`
+      );
+      return;
+    }
+
+    onChange(id, selected);
+  };
+
+  return (
+    <div className="min-w-0">
+      <label htmlFor={id} className={labelClass}>
+        {label}
+        <Required />
+      </label>
+
+      <label
+        htmlFor={id}
+        className="flex min-h-[165px] w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B9D6F8] bg-[#F8FBFF] p-4 text-center transition hover:border-[#0075FF] hover:bg-[#F0F7FF] sm:p-5"
+      >
+        {file ? (
+          <>
+            <FileImage
+              size={29}
+              className="mb-3 text-[#0075FF]"
+            />
+
+            <span className="max-w-full break-all text-[13px] font-semibold text-[#173B68]">
+              {file.name}
+            </span>
+
+            <span className="mt-2 text-xs text-[#71829A]">
+              {(file.size / 1024).toFixed(1)} KB
+            </span>
+
+            <span className="mt-3 text-xs font-medium text-[#0075FF]">
+              Click to replace
+            </span>
+          </>
+        ) : (
+          <>
+            <UploadCloud
+              size={31}
+              className="mb-3 text-[#0075FF]"
+            />
+
+            <span className="text-[13px] font-semibold text-[#173B68]">
+              Click to upload image
+            </span>
+
+            <span className="mt-2 text-xs text-[#71829A]">
+              JPG, PNG or WebP
+            </span>
+
+            <span className="mt-1 text-xs text-[#0075FF]">
+              Less than 5 MB
+            </span>
+          </>
+        )}
+      </label>
+
+      <input
+        id={id}
+        name={id}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp"
+        onChange={handleFile}
+        required={!file}
+        className="sr-only"
+      />
+    </div>
   );
 }
 
@@ -268,136 +378,224 @@ export default function PreliminaryAdmissionForm() {
     ...initialForm,
   });
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notice, setNotice] = useState<Notice | null>(null);
+  const [files, setFiles] = useState<
+    Record<FileKey, File | null>
+  >({
+    ...initialFiles,
+  });
+
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const [registrationNo, setRegistrationNo] =
+    useState("");
+
+  const [successOpen, setSuccessOpen] =
+    useState(false);
+
+  const [errorMessage, setErrorMessage] =
+    useState("");
 
   const handleChange = (
     event: ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
     >
   ) => {
     const { name, value } = event.target;
-    setNotice(null);
+
+    setErrorMessage("");
 
     setForm((previous) => {
       if (name === "siblingInSchool") {
         return {
           ...previous,
           siblingInSchool: value,
-          siblingName: value === "Yes" ? previous.siblingName : "",
+          siblingName:
+            value === "Yes"
+              ? previous.siblingName
+              : "",
           siblingClassSection:
-            value === "Yes" ? previous.siblingClassSection : "",
+            value === "Yes"
+              ? previous.siblingClassSection
+              : "",
         };
       }
 
-      return { ...previous, [name]: value };
+      return {
+        ...previous,
+        [name]: value,
+      };
     });
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleFileChange = (
+    key: FileKey,
+    file: File
+  ) => {
+    setErrorMessage("");
+
+    setFiles((previous) => ({
+      ...previous,
+      [key]: file,
+    }));
+  };
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>
+  ) => {
     event.preventDefault();
 
     if (isSubmitting) return;
 
-    setNotice(null);
+    setErrorMessage("");
 
     if (
       form.siblingInSchool === "Yes" &&
       (!form.siblingName.trim() ||
         !form.siblingClassSection.trim())
     ) {
-      setNotice({
-        type: "error",
-        title: "Missing Sibling Details",
-        message: "Please enter the sibling's name and class/section.",
-      });
+      setErrorMessage(
+        "Please enter the sibling's name, class and section."
+      );
       return;
     }
 
-    // IMPORTANT:
-    // Backend field names remain exactly as configured
-    // in the Ayatiworks Rosary admission module.
-    const payload = {
-      data: {
-        registration_no: form.registrationNo.trim(),
-        name_of_the_pupil: form.pupilName.trim(),
-        date_of_birth: form.dob,
-        religion: form.religion,
-        place_of_birth: form.placeOfBirth.trim(),
+    const requiredUploads: FileKey[] = [
+      "student_passport_size_photo",
+      "father_s_signature",
+      "mother_s_signature",
+    ];
 
-        father_s_name: form.fatherName.trim(),
-        father_s_qualification: form.fatherQualification.trim(),
-        father_s_occupation: form.fatherOccupation.trim(),
-        father_s_income_per_month: form.fatherIncome.trim(),
+    for (const key of requiredUploads) {
+      const file = files[key];
 
-        mother_s_name: form.motherName.trim(),
-        is_she_a_passed_student_of_rosary: form.isExStudent,
-        mother_s_qualification: form.motherQualification.trim(),
-        mother_s_occupation: form.motherOccupation.trim(),
-        mother_s_income_per_month: form.motherIncome.trim(),
-        mother_tongue: form.motherTongue,
+      if (!file) {
+        setErrorMessage(
+          "Please upload the student's photo and both parents' signatures."
+        );
+        return;
+      }
 
-        does_the_applicant_have_any_siblings_studying_in_this_school:
-          form.siblingInSchool,
+      if (file.size >= MAX_FILE_SIZE) {
+        setErrorMessage(
+          "Each uploaded image must be smaller than 5 MB."
+        );
+        return;
+      }
 
-        name_of_the_sibling:
-          form.siblingInSchool === "Yes"
-            ? form.siblingName.trim()
-            : "",
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        setErrorMessage(
+          "Only JPG, PNG and WebP images are supported."
+        );
+        return;
+      }
+    }
 
-        class_and_section:
-          form.siblingInSchool === "Yes"
-            ? form.siblingClassSection.trim()
-            : "",
+    const payload = new FormData();
 
-        permanent_address: form.address.trim(),
-        email: form.email.trim(),
-        phone_number: form.phone.trim(),
-        alternative_phone_number: form.alternativePhone.trim(),
-      },
+    // Existing backend field names are unchanged.
+    const fields: Record<string, string> = {
+      name_of_the_pupil: form.pupilName.trim(),
+      date_of_birth: form.dob,
+      religion: form.religion,
+      place_of_birth: form.placeOfBirth.trim(),
+
+      father_s_name: form.fatherName.trim(),
+      father_s_qualification:
+        form.fatherQualification.trim(),
+      father_s_occupation:
+        form.fatherOccupation.trim(),
+      father_s_income_per_month:
+        form.fatherIncome.trim(),
+
+      mother_s_name: form.motherName.trim(),
+      is_she_a_past_pupil_of_rosary:
+        form.isExStudent,
+      mother_s_qualification:
+        form.motherQualification.trim(),
+      mother_s_occupation:
+        form.motherOccupation.trim(),
+      mother_s_income_per_month:
+        form.motherIncome.trim(),
+      mother_tongue: form.motherTongue,
+
+      does_the_applicant_have_any_sibling_s_studying_in_this_school:
+        form.siblingInSchool,
+
+      name_of_the_sibling:
+        form.siblingInSchool === "Yes"
+          ? form.siblingName.trim()
+          : "",
+
+      class_and_section:
+        form.siblingInSchool === "Yes"
+          ? form.siblingClassSection.trim()
+          : "",
+
+      address: form.address.trim(),
+      email: form.email.trim(),
+      phone_number: form.phone.trim(),
+      alternative_phone_number:
+        form.alternativePhone.trim(),
     };
+
+    for (const [key, value] of Object.entries(fields)) {
+      payload.append(key, value);
+    }
+
+    for (const key of requiredUploads) {
+      payload.append(key, files[key]!);
+    }
 
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/rosary-lkg-admission", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-        cache: "no-store",
-      });
+      const response = await fetch(
+        "/api/rosary-lkg-admission",
+        {
+          method: "POST",
+          body: payload,
+          cache: "no-store",
+        }
+      );
 
-      const result: {
-        success?: boolean;
-        message?: string;
-      } = await response.json();
+      const result: ApiResponse =
+        await response.json();
 
-      if (!response.ok || result.success !== true) {
+      if (
+        !response.ok ||
+        result.success !== true
+      ) {
         throw new Error(
-          result.message || "Unable to submit the application."
+          result.message ||
+            "Unable to submit application."
         );
       }
 
-      setNotice({
-        type: "success",
-        title: "Application Submitted Successfully!",
-        message:
-          result.message ||
-          "Your LKG admission application has been received.",
-      });
+      if (!result.registration_no) {
+        throw new Error(
+          "Submission response did not include a registration number. Please contact the school."
+        );
+      }
+
+      setRegistrationNo(result.registration_no);
+      setSuccessOpen(true);
+
+      // Reset both React state and native file inputs.
+      formRef.current?.reset();
 
       setForm({ ...initialForm });
+      setFiles({ ...initialFiles });
     } catch (error) {
-      setNotice({
-        type: "error",
-        title: "Submission Not Confirmed",
-        message:
-          error instanceof Error
-            ? error.message
-            : "Please try again later.",
-      });
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to confirm application submission."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -405,441 +603,478 @@ export default function PreliminaryAdmissionForm() {
 
   return (
     <>
-      <section className="relative min-h-screen overflow-hidden bg-[#F7FAFF] py-6 sm:py-10 lg:py-14">
-        <div className="pointer-events-none absolute -left-[120px] top-[100px] h-[300px] w-[300px] rounded-full bg-[#0075FF]/5 blur-[90px]" />
-        <div className="pointer-events-none absolute -right-[100px] top-[350px] h-[350px] w-[350px] rounded-full bg-[#0075FF]/5 blur-[100px]" />
+      <section className="min-h-screen bg-[#F7FAFF] px-3 py-5 sm:px-5 sm:py-8 lg:px-8 lg:py-12">
+        <div className="mx-auto w-full max-w-[1440px] overflow-hidden rounded-2xl border border-[#DCE9F8] bg-white shadow-[0_16px_50px_rgba(20,66,120,0.06)]">
+          {/* HEADER */}
+          <div className="flex flex-col items-center justify-center bg-gradient-to-br from-[#E7F4FF] via-[#F4FAFF] to-[#DCEEFF] px-4 py-8 text-center sm:px-8 sm:py-10 lg:py-12">
+            <span className="inline-flex items-center justify-center rounded-full border border-[#BBD9FF] bg-white/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-[#0065D8] sm:text-xs">
+              Admissions Open
+            </span>
 
-        <div className="relative mx-auto max-w-[1440px] px-3 sm:px-6 lg:px-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
-            className="overflow-hidden rounded-[14px] border border-[#DCE9F8] bg-white shadow-[0_16px_50px_rgba(20,66,120,0.06)] sm:rounded-[18px]"
-          >
-            {/* FORM HEADER */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#E7F4FF] via-[#F4FAFF] to-[#DCEEFF] px-[18px] py-7 text-center sm:px-8 sm:py-[34px] lg:py-[42px]">
-              <div className="pointer-events-none absolute -left-[60px] -top-[100px] h-[250px] w-[250px] rotate-45 bg-[#0075FF]/5" />
-              <div className="pointer-events-none absolute -right-[90px] -bottom-[120px] h-[280px] rounded-full border-[45px] border-[#0075FF]/5" />
+            <h1 className="mx-auto mt-4 max-w-[1000px] text-[22px] font-bold leading-[1.35] text-[#07347A] sm:text-[28px] lg:text-[36px]">
+              Rosary Matriculation Higher Secondary School
+            </h1>
 
-              <div className="relative z-10 mx-auto max-w-[850px]">
-                <span className="mb-3 inline-flex rounded-full border border-[#BBD9FF] bg-white/70 px-[13px] py-[6px] font-secondary text-[10px] font-semibold uppercase tracking-[1px] text-[#0065D8] sm:text-[11px]">
-                  Admissions Open
-                </span>
+            <p className="mt-3 text-sm font-medium text-[#62758F] sm:text-base">
+              LKG Application Form 2027 - 2028
+            </p>
 
-                <h1 className="font-primary text-[21px] font-bold leading-[1.3] tracking-[-0.4px] text-[#07347A] sm:text-[27px] lg:text-[32px]">
-                  Rosary Matriculation Higher Secondary School
-                </h1>
+            <p className="mt-1 text-xs leading-5 text-[#74869D] sm:text-sm">
+              Please complete all required details carefully.
+            </p>
+          </div>
 
-                <p className="mt-[10px] font-secondary text-[13px] font-medium text-[#62758F] sm:text-[16px]">
-                  LKG Application Form 2026 - 2027
-                </p>
+          <form ref={formRef} onSubmit={handleSubmit}>
+            <div className="space-y-10 px-4 py-7 sm:px-7 sm:py-9 lg:px-11 lg:py-11">
+              {/* PERSONAL DETAILS */}
+              <section>
+                <SectionTitle>
+                  Personal Details
+                </SectionTitle>
 
-                <p className="mt-[9px] font-secondary text-[11px] leading-[1.6] text-[#74869D] sm:text-[12px]">
-                  Please complete all required details carefully before
-                  submitting.
-                </p>
-              </div>
-            </div>
+                {/* Registration number generated after submission. */}
 
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-[34px] px-[18px] py-[26px] sm:space-y-[42px] sm:px-[30px] sm:py-[34px] lg:px-[42px] lg:py-[42px]">
-                {/* 01. PERSONAL DETAILS */}
-                <section>
-                  <SectionTitle>Personal Details</SectionTitle>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <InputField
+                    name="pupilName"
+                    label="Name of the Pupil"
+                    value={form.pupilName}
+                    onChange={handleChange}
+                    placeholder="Enter pupil name"
+                  />
 
-                  <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    className={`${gridClass} lg:grid-cols-3`}
-                  >
-                    <InputField
-                      name="registrationNo"
-                      label="Registration No."
-                      value={form.registrationNo}
-                      onChange={handleChange}
-                      placeholder="Enter registration number"
-                      maxLength={30}
-                    />
+                  <InputField
+                    name="dob"
+                    label="Date of Birth"
+                    type="date"
+                    value={form.dob}
+                    onChange={handleChange}
+                    max={new Date()
+                      .toISOString()
+                      .slice(0, 10)}
+                  />
 
-                    <InputField
-                      name="pupilName"
-                      label="Name of the Pupil"
-                      value={form.pupilName}
-                      onChange={handleChange}
-                      placeholder="Enter name of the pupil"
-                    />
+                  <SelectField
+                    name="religion"
+                    label="Religion"
+                    value={form.religion}
+                    onChange={handleChange}
+                    placeholder="Select religion"
+                    options={[
+                      "Hindu",
+                      "Christian",
+                      "Muslim",
+                      "Other",
+                    ]}
+                  />
 
-                    <InputField
-                      name="dob"
-                      label="Date of Birth"
-                      type="date"
-                      value={form.dob}
-                      onChange={handleChange}
-                      max={new Date().toISOString().split("T")[0]}
-                    />
+                  <InputField
+                    name="placeOfBirth"
+                    label="Place of Birth"
+                    value={form.placeOfBirth}
+                    onChange={handleChange}
+                    placeholder="Enter place of birth"
+                  />
+                </div>
+              </section>
 
-                    <SelectField
-                      name="religion"
-                      label="Religion"
-                      value={form.religion}
-                      onChange={handleChange}
-                      placeholder="Select religion"
-                      options={[
-                        "Hindu",
-                        "Christian",
-                        "Muslim",
-                        "Other",
-                      ]}
-                    />
+              {/* FATHER */}
+              <section>
+                <SectionTitle>
+                  Father&apos;s Details
+                </SectionTitle>
 
-                    <InputField
-                      name="placeOfBirth"
-                      label="Place of Birth"
-                      value={form.placeOfBirth}
-                      onChange={handleChange}
-                      placeholder="Enter place of birth"
-                    />
-                  </motion.div>
-                </section>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                  <InputField
+                    name="fatherName"
+                    label="Father's Name"
+                    value={form.fatherName}
+                    onChange={handleChange}
+                    placeholder="Enter father's name"
+                  />
 
-                {/* 02. FATHER'S DETAILS */}
-                <section>
-                  <SectionTitle>Father&apos;s Details</SectionTitle>
+                  <InputField
+                    name="fatherQualification"
+                    label="Qualification"
+                    value={form.fatherQualification}
+                    onChange={handleChange}
+                    placeholder="Enter qualification"
+                  />
 
-                  <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    className={`${gridClass} lg:grid-cols-4`}
-                  >
-                    <InputField
-                      name="fatherName"
-                      label="Father's Name"
-                      value={form.fatherName}
-                      onChange={handleChange}
-                      placeholder="Enter father's name"
-                    />
+                  <InputField
+                    name="fatherOccupation"
+                    label="Occupation"
+                    value={form.fatherOccupation}
+                    onChange={handleChange}
+                    placeholder="Enter occupation"
+                  />
 
-                    <InputField
-                      name="fatherQualification"
-                      label="Qualification"
-                      value={form.fatherQualification}
-                      onChange={handleChange}
-                      placeholder="Enter father's qualification"
-                    />
+                  <InputField
+                    name="fatherIncome"
+                    label="Income (per month)"
+                    type="number"
+                    min="0"
+                    value={form.fatherIncome}
+                    onChange={handleChange}
+                    placeholder="Enter monthly income"
+                  />
+                </div>
+              </section>
 
-                    <InputField
-                      name="fatherOccupation"
-                      label="Occupation"
-                      value={form.fatherOccupation}
-                      onChange={handleChange}
-                      placeholder="Enter father's occupation"
-                    />
+              {/* MOTHER */}
+              <section>
+                <SectionTitle>
+                  Mother&apos;s Details
+                </SectionTitle>
 
-                    <InputField
-                      name="fatherIncome"
-                      label="Income (per month)"
-                      type="number"
-                      min="0"
-                      value={form.fatherIncome}
-                      onChange={handleChange}
-                      placeholder="Enter monthly income"
-                    />
-                  </motion.div>
-                </section>
-
-                {/* 03. MOTHER'S DETAILS */}
-                <section>
-                  <SectionTitle>Mother&apos;s Details</SectionTitle>
-
-                  <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    className={`${gridClass} lg:grid-cols-4`}
-                  >
-                    <InputField
-                      name="motherName"
-                      label="Mother's Name"
-                      value={form.motherName}
-                      onChange={handleChange}
-                      placeholder="Enter mother's name"
-                    />
-
-                    <YesNoField
-                      name="isExStudent"
-                      label="Is she a past pupil of Rosary?"
-                      value={form.isExStudent}
-                      onChange={handleChange}
-                    />
-
-                    <InputField
-                      name="motherQualification"
-                      label="Qualification"
-                      value={form.motherQualification}
-                      onChange={handleChange}
-                      placeholder="Enter mother's qualification"
-                    />
-
-                    <InputField
-                      name="motherOccupation"
-                      label="Occupation"
-                      value={form.motherOccupation}
-                      onChange={handleChange}
-                      placeholder="Enter mother's occupation"
-                    />
-
-                    <InputField
-                      name="motherIncome"
-                      label="Income (per month)"
-                      type="number"
-                      min="0"
-                      value={form.motherIncome}
-                      onChange={handleChange}
-                      placeholder="Enter monthly income"
-                    />
-
-                    <SelectField
-                      name="motherTongue"
-                      label="Mother Tongue"
-                      value={form.motherTongue}
-                      onChange={handleChange}
-                      placeholder="Select mother tongue"
-                      options={[
-                        "Tamil",
-                        "English",
-                        "Telugu",
-                        "Malayalam",
-                        "Kannada",
-                        "Hindi",
-                        "Other",
-                      ]}
-                    />
-                  </motion.div>
-                </section>
-
-                {/* 04. SIBLING DETAILS */}
-                <section>
-                  <SectionTitle>Sibling Details</SectionTitle>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                  <InputField
+                    name="motherName"
+                    label="Mother's Name"
+                    value={form.motherName}
+                    onChange={handleChange}
+                    placeholder="Enter mother's name"
+                  />
 
                   <YesNoField
-                    name="siblingInSchool"
-                    label="Does the applicant have any sibling(s) studying in this school?"
-                    value={form.siblingInSchool}
+                    name="isExStudent"
+                    label="Is she a past pupil of Rosary?"
+                    value={form.isExStudent}
                     onChange={handleChange}
                   />
 
-                  <AnimatePresence initial={false}>
-                    {form.siblingInSchool === "Yes" && (
-                      <motion.div
-                        key="sibling-fields"
-                        initial={{ opacity: 0, height: 0, y: -10 }}
-                        animate={{ opacity: 1, height: "auto", y: 0 }}
-                        exit={{ opacity: 0, height: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-5 grid grid-cols-1 gap-5 rounded-[12px] border border-[#D9E8FB] bg-[#F7FBFF] p-[18px] sm:grid-cols-2 sm:p-[22px]">
-                          <InputField
-                            name="siblingName"
-                            label="Name of the Sibling"
-                            value={form.siblingName}
-                            onChange={handleChange}
-                            placeholder="Enter name of the sibling"
-                          />
+                  <InputField
+                    name="motherQualification"
+                    label="Qualification"
+                    value={form.motherQualification}
+                    onChange={handleChange}
+                    placeholder="Enter qualification"
+                  />
 
-                          <InputField
-                            name="siblingClassSection"
-                            label="Class and Section"
-                            value={form.siblingClassSection}
-                            onChange={handleChange}
-                            placeholder="Enter class and section"
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </section>
+                  <InputField
+                    name="motherOccupation"
+                    label="Occupation"
+                    value={form.motherOccupation}
+                    onChange={handleChange}
+                    placeholder="Enter occupation"
+                  />
 
-                {/* 05. CONTACT DETAILS */}
-                <section>
-                  <SectionTitle>Contact Details</SectionTitle>
+                  <InputField
+                    name="motherIncome"
+                    label="Income (per month)"
+                    type="number"
+                    min="0"
+                    value={form.motherIncome}
+                    onChange={handleChange}
+                    placeholder="Enter monthly income"
+                  />
 
-                  <motion.div
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6"
-                  >
+                  <SelectField
+                    name="motherTongue"
+                    label="Mother Tongue"
+                    value={form.motherTongue}
+                    onChange={handleChange}
+                    placeholder="Select mother tongue"
+                    options={[
+                      "Tamil",
+                      "English",
+                      "Telugu",
+                      "Malayalam",
+                      "Kannada",
+                      "Hindi",
+                      "Other",
+                    ]}
+                  />
+                </div>
+              </section>
+
+              {/* SIBLING */}
+              <section>
+                <SectionTitle>
+                  Sibling Details
+                </SectionTitle>
+
+                <YesNoField
+                  name="siblingInSchool"
+                  label="Does the applicant have any sibling(s) studying in this school?"
+                  value={form.siblingInSchool}
+                  onChange={handleChange}
+                />
+
+                <AnimatePresence>
+                  {form.siblingInSchool === "Yes" && (
                     <motion.div
-                      variants={fadeUp}
-                      className="min-w-0"
+                      initial={{
+                        opacity: 0,
+                        height: 0,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        height: "auto",
+                      }}
+                      exit={{
+                        opacity: 0,
+                        height: 0,
+                      }}
+                      transition={{ duration: 0.25 }}
+                      className="overflow-hidden"
                     >
-                      <label
-                        htmlFor="address"
-                        className={labelClass}
-                      >
-                        Address
-                        <Required />
-                      </label>
-
-                      <textarea
-                        id="address"
-                        name="address"
-                        required
-                        rows={5}
-                        value={form.address}
-                        onChange={handleChange}
-                        placeholder="Enter address"
-                        className={`${inputClass} !h-auto min-h-[150px] resize-y py-[13px]`}
-                      />
-                    </motion.div>
-
-                    <div className="grid min-w-0 grid-cols-1 gap-5">
-                      <InputField
-                        name="email"
-                        label="Email ID"
-                        type="email"
-                        value={form.email}
-                        onChange={handleChange}
-                        placeholder="Enter email ID"
-                      />
-
-                      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <div className="mt-5 grid grid-cols-1 gap-5 rounded-xl border border-[#D9E8FB] bg-[#F7FBFF] p-4 sm:grid-cols-2 sm:p-5">
                         <InputField
-                          name="phone"
-                          label="Phone Number"
-                          type="tel"
-                          inputMode="tel"
-                          pattern="[0-9]{10}"
-                          maxLength={10}
-                          value={form.phone}
+                          name="siblingName"
+                          label="Name of the Sibling"
+                          value={form.siblingName}
                           onChange={handleChange}
-                          placeholder="Enter phone number"
+                          placeholder="Enter sibling name"
                         />
 
                         <InputField
-                          name="alternativePhone"
-                          label="Alternative Phone Number"
-                          type="tel"
-                          inputMode="tel"
-                          pattern="[0-9]{10}"
-                          maxLength={10}
-                          required={false}
-                          value={form.alternativePhone}
+                          name="siblingClassSection"
+                          label="Class and Section"
+                          value={
+                            form.siblingClassSection
+                          }
                           onChange={handleChange}
-                          placeholder="Enter alternative phone number"
+                          placeholder="Example: III - A"
                         />
                       </div>
-                    </div>
-                  </motion.div>
-                </section>
-              </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </section>
 
-              {/* SUBMIT BUTTON */}
-              <div className="flex flex-col gap-[14px] border-t border-[#E0ECFA] bg-[#F4F9FF] px-[18px] py-5 sm:flex-row sm:items-center sm:justify-between sm:px-[30px] lg:px-[42px]">
-                <p className="font-secondary text-[11px] leading-[1.6] text-[#71829A] sm:max-w-[440px]">
-                  Please review all information before submitting
-                  your application.
+              {/* CONTACT */}
+              <section>
+                <SectionTitle>
+                  Contact Details
+                </SectionTitle>
+
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                  <div className="min-w-0">
+                    <label
+                      htmlFor="address"
+                      className={labelClass}
+                    >
+                      Permanent Address
+                      <Required />
+                    </label>
+
+                    <textarea
+                      id="address"
+                      name="address"
+                      rows={6}
+                      required
+                      value={form.address}
+                      onChange={handleChange}
+                      placeholder="Enter permanent address"
+                      className={`${inputClass} !h-auto min-h-[155px] resize-y py-3`}
+                    />
+                  </div>
+
+                  <div className="min-w-0 space-y-5">
+                    <InputField
+                      name="email"
+                      label="Email ID"
+                      type="email"
+                      value={form.email}
+                      onChange={handleChange}
+                      placeholder="Enter email address"
+                    />
+
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      <InputField
+                        name="phone"
+                        label="Phone Number"
+                        type="tel"
+                        pattern="[0-9]{10}"
+                        maxLength={10}
+                        value={form.phone}
+                        onChange={handleChange}
+                        placeholder="10-digit phone number"
+                      />
+
+                      <InputField
+                        name="alternativePhone"
+                        label="Alternative Phone Number"
+                        type="tel"
+                        pattern="[0-9]{10}"
+                        maxLength={10}
+                        required={false}
+                        value={form.alternativePhone}
+                        onChange={handleChange}
+                        placeholder="Optional"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              {/* UPLOADS */}
+              <section>
+                <SectionTitle>
+                  Photo &amp; Signature Uploads
+                </SectionTitle>
+
+                <p className="mb-5 text-[13px] leading-6 text-[#71829A] sm:text-sm">
+                  Upload the student&apos;s passport-size
+                  photo and both parents&apos; signatures.
+                  Each image must be smaller than 5 MB.
                 </p>
 
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  whileHover={
-                    isSubmitting ? undefined : { y: -2 }
-                  }
-                  whileTap={
-                    isSubmitting ? undefined : { scale: 0.98 }
-                  }
-                  className="inline-flex h-[48px] w-full items-center justify-center gap-[10px] rounded-[8px] bg-[#0075FF] px-7 font-secondary text-[13px] font-semibold text-white shadow-[0_10px_24px_rgba(0,117,255,0.18)] transition-colors hover:bg-[#0065DF] disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto sm:min-w-[220px]"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2
-                        size={17}
-                        className="animate-spin"
-                      />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      Submit Application
-                      <ArrowRight size={17} />
-                    </>
-                  )}
-                </motion.button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      </section>
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                  <UploadField
+                    id="student_passport_size_photo"
+                    label="Student Passport Size Photo"
+                    file={
+                      files.student_passport_size_photo
+                    }
+                    onChange={handleFileChange}
+                    onError={setErrorMessage}
+                  />
 
-      {/* SUCCESS / ERROR TOAST */}
-      <AnimatePresence>
-        {notice && (
-          <motion.div
-            key={`${notice.type}-${notice.title}`}
-            initial={{ opacity: 0, y: 25, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.96 }}
-            transition={{ duration: 0.25 }}
-            role={notice.type === "error" ? "alert" : "status"}
-            className={`fixed bottom-5 left-1/2 z-[9999] flex w-[calc(100%-28px)] max-w-[450px] -translate-x-1/2 items-start gap-3 rounded-[12px] border p-[16px] shadow-[0_18px_50px_rgba(18,55,90,0.15)] ${
-              notice.type === "success"
-                ? "border-green-200 bg-green-50"
-                : "border-red-200 bg-red-50"
-            }`}
-          >
-            <div
-              className={`flex h-[40px] w-[40px] shrink-0 items-center justify-center rounded-full ${
-                notice.type === "success"
-                  ? "bg-green-100 text-green-600"
-                  : "bg-red-100 text-red-600"
-              }`}
-            >
-              {notice.type === "success" ? (
-                <CheckCircle2 size={21} />
-              ) : (
-                <AlertCircle size={21} />
+                  <UploadField
+                    id="father_s_signature"
+                    label="Father's Signature"
+                    file={files.father_s_signature}
+                    onChange={handleFileChange}
+                    onError={setErrorMessage}
+                  />
+
+                  <UploadField
+                    id="mother_s_signature"
+                    label="Mother's Signature"
+                    file={files.mother_s_signature}
+                    onChange={handleFileChange}
+                    onError={setErrorMessage}
+                  />
+                </div>
+              </section>
+
+              {errorMessage && (
+                <div
+                  role="alert"
+                  className="rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-[13px] leading-6 text-red-700 sm:px-5 sm:text-sm"
+                >
+                  {errorMessage}
+                </div>
               )}
             </div>
 
-            <div className="min-w-0 flex-1">
-              <p
-                className={`font-secondary text-[14px] font-bold ${
-                  notice.type === "success"
-                    ? "text-green-800"
-                    : "text-red-800"
-                }`}
-              >
-                {notice.title}
+            {/* SUBMIT */}
+            <div className="flex flex-col gap-4 border-t border-[#E0ECFA] bg-[#F4F9FF] px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-7 lg:px-11">
+              <p className="text-center text-xs leading-5 text-[#71829A] sm:text-left">
+                Please review all information before submitting.
               </p>
 
-              <p
-                className={`mt-[4px] font-secondary text-[12px] leading-[1.6] ${
-                  notice.type === "success"
-                    ? "text-green-700"
-                    : "text-red-700"
-                }`}
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#0075FF] px-8 text-sm font-semibold text-white transition hover:bg-[#0065DF] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
-                {notice.message}
-              </p>
+                {isSubmitting ? (
+                  <>
+                    <Loader2
+                      size={18}
+                      className="animate-spin"
+                    />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    Submit Application
+                    <ArrowRight size={18} />
+                  </>
+                )}
+              </button>
             </div>
+          </form>
+        </div>
+      </section>
 
-            <button
-              type="button"
-              onClick={() => setNotice(null)}
-              aria-label="Close notification"
-              className={`flex h-[28px] w-[28px] shrink-0 items-center justify-center rounded-full ${
-                notice.type === "success"
-                  ? "text-green-700 hover:bg-green-100"
-                  : "text-red-700 hover:bg-red-100"
-              }`}
+      {/* SUCCESS POPUP */}
+      <AnimatePresence>
+        {successOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#071C3A]/65 px-4 py-6 backdrop-blur-sm"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admission-success-title"
+          >
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: 30,
+                scale: 0.92,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+              }}
+              exit={{
+                opacity: 0,
+                y: 20,
+                scale: 0.95,
+              }}
+              transition={{ duration: 0.3 }}
+              className="relative w-full max-w-[470px] rounded-2xl bg-white px-5 py-8 text-center shadow-2xl sm:px-10 sm:py-10"
             >
-              <X size={17} />
-            </button>
+              <button
+                type="button"
+                onClick={() => setSuccessOpen(false)}
+                aria-label="Close"
+                className="absolute right-4 top-4 rounded-lg p-2 text-[#71829A] transition hover:bg-[#F1F5F9]"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#E9F8EF]">
+                <CheckCircle2
+                  size={44}
+                  className="text-[#178449]"
+                />
+              </div>
+
+              <h2
+                id="admission-success-title"
+                className="mt-6 text-[22px] font-bold leading-snug text-[#0755AD] sm:text-2xl"
+              >
+                Application Submitted Successfully!
+              </h2>
+
+              <p className="mt-3 text-[13px] leading-7 text-[#62758F] sm:text-sm">
+                Thank you for applying to Rosary
+                Matriculation Higher Secondary School.
+                Your LKG admission application has
+                been received.
+              </p>
+
+              <div className="mt-7 rounded-xl border border-[#CDE2FF] bg-[#F4F9FF] px-4 py-6 sm:px-5">
+                <p className="text-xs font-bold uppercase tracking-widest text-[#71829A]">
+                  Registration No.
+                </p>
+
+                <p className="mt-3 break-all text-[26px] font-extrabold tracking-wide text-[#0075FF] sm:text-3xl">
+                  {registrationNo}
+                </p>
+              </div>
+
+              <p className="mt-5 text-xs leading-6 text-[#71829A]">
+                Please save this registration number
+                for future reference.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setSuccessOpen(false)}
+                className="mt-7 h-12 w-full rounded-lg bg-[#0075FF] text-sm font-semibold text-white transition hover:bg-[#0065DF]"
+              >
+                Done
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

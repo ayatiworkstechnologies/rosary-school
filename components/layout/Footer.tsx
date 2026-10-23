@@ -1,72 +1,35 @@
+
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent } from "react";
+import { FormEvent, useState } from "react";
+import { CheckCircle2, AlertCircle, X, Loader2 } from "lucide-react";
 
 /* =========================================================
    FOOTER DATA
 ========================================================= */
 
 const informationLinks = [
-  {
-    label: "Home",
-    href: "/",
-  },
-  {
-    label: "About",
-    href: "/about",
-  },
-  {
-    label: "Gallery",
-    href: "/gallery",
-  },
-  {
-    label: "Events",
-    href: "/events",
-  },
-  {
-    label: "Achievements",
-    href: "/achievements",
-  },
-  {
-    label: "Contact Us",
-    href: "/contact-us",
-  },
+  { label: "Home", href: "/" },
+  { label: "About", href: "/about" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Events", href: "/events" },
+  { label: "Achievements", href: "/achievements" },
+  { label: "Contact Us", href: "/contact-us" },
 ];
 
 const academicLinks = [
-  {
-    label: "Curriculum",
-    href: "/academics/curriculum",
-  },
-  {
-    label: "Departments",
-    href: "/academics/departments",
-  },
-  {
-    label: "Faculty",
-    href: "/academics/faculty",
-  },
-  {
-    label: "Admissions",
-    href: "/admissions",
-  },
+  { label: "Curriculum", href: "/academics/curriculum" },
+  { label: "Departments", href: "/academics/departments" },
+  { label: "Faculty", href: "/academics/faculty" },
+  { label: "Admissions", href: "/admissions" },
 ];
 
 const communityLinks = [
-  {
-    label: "Student Corner",
-    href: "/community/student-corner",
-  },
-  {
-    label: "Parent Corner",
-    href: "/community/parent-corner",
-  },
-  {
-    label: "Alumni Section",
-    href: "/community/alumni",
-  },
+  { label: "Student Corner", href: "/community/student-corner" },
+  { label: "Parent Corner", href: "/community/parent-corner" },
+  { label: "Alumni Section", href: "/community/alumni" },
 ];
 
 /* =========================================================
@@ -112,16 +75,118 @@ const socialLinks = [
 ];
 
 /* =========================================================
+   TYPES
+========================================================= */
+
+type SubscribeStatus = {
+  type: "success" | "error";
+  title: string;
+  message: string;
+};
+
+type NewsletterApiResponse = {
+  success?: boolean;
+  message?: string;
+};
+
+/* =========================================================
    FOOTER
 ========================================================= */
 
 export default function Footer() {
-  const handleSubscribe = (
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] =
+    useState<SubscribeStatus | null>(null);
+
+  /* =======================================================
+     NEWSLETTER SUBSCRIPTION
+  ======================================================== */
+
+  const handleSubscribe = async (
     event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
-    // Backend/newsletter integration can be added later.
+    if (isSubscribing) return;
+
+    const email = newsletterEmail.trim().toLowerCase();
+
+    if (!email) {
+      setSubscribeStatus({
+        type: "error",
+        title: "Email Required",
+        message: "Please enter your email address.",
+      });
+      return;
+    }
+
+    if (
+      email.length > 254 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    ) {
+      setSubscribeStatus({
+        type: "error",
+        title: "Invalid Email",
+        message: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    setIsSubscribing(true);
+    setSubscribeStatus(null);
+
+    try {
+      const response = await fetch("/api/rosary-newsletter", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          data: {
+            email,
+          },
+        }),
+      });
+
+      let result: NewsletterApiResponse = {};
+
+      try {
+        result = (await response.json()) as NewsletterApiResponse;
+      } catch {
+        throw new Error(
+          "Unable to read the server response. Please try again."
+        );
+      }
+
+      if (!response.ok || result.success !== true) {
+        throw new Error(
+          result.message ||
+            "Unable to subscribe. Please try again later."
+        );
+      }
+
+      setSubscribeStatus({
+        type: "success",
+        title: "Subscription Received!",
+        message:
+          result.message ||
+          "Thank you! Your newsletter subscription has been received.",
+      });
+
+      setNewsletterEmail("");
+    } catch (error) {
+      setSubscribeStatus({
+        type: "error",
+        title: "Subscription Failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again later.",
+      });
+    } finally {
+      setIsSubscribing(false);
+    }
   };
 
   return (
@@ -152,7 +217,8 @@ export default function Footer() {
             className="
               object-cover
               object-center
-              opacity-[0.30] lg:opacity-[0.80]
+              opacity-[0.30]
+              lg:opacity-[0.80]
             "
           />
 
@@ -172,14 +238,10 @@ export default function Footer() {
             max-w-[1440px]
             px-[24px]
             py-[42px]
-
             sm:px-[32px]
-
             md:py-[48px]
-
             lg:px-[48px]
             lg:py-[36px]
-
             xl:px-[60px]
           "
         >
@@ -188,29 +250,23 @@ export default function Footer() {
               grid
               grid-cols-1
               gap-[36px]
-
               sm:grid-cols-2
-
               lg:grid-cols-[2.4fr_1fr_1fr_1.25fr_1.45fr]
               lg:gap-[28px]
-
               xl:grid-cols-[2.6fr_1fr_1fr_1.3fr_1.55fr]
               xl:gap-[34px]
             "
           >
-            {/* =================================================
+            {/* =============================================
                 SCHOOL INFORMATION
-            ================================================= */}
+            ============================================== */}
 
             <div
               className="
                 pr-0
-
                 sm:col-span-2
-
                 lg:col-span-1
                 lg:pr-[35px]
-
                 xl:pr-[48px]
               "
             >
@@ -224,9 +280,7 @@ export default function Footer() {
                   block
                   h-[58px]
                   w-[250px]
-
                   sm:w-[270px]
-
                   lg:h-[60px]
                   lg:w-[270px]
                 "
@@ -254,12 +308,9 @@ export default function Footer() {
                   font-normal
                   leading-[1.35]
                   text-[#777777]
-
                   sm:text-[13.5px]
-
                   lg:max-w-[350px]
                   lg:text-[13px]
-
                   xl:text-[13.5px]
                 "
               >
@@ -298,10 +349,8 @@ export default function Footer() {
                       rounded-full
                       transition-all
                       duration-200
-
                       hover:-translate-y-[2px]
                       hover:shadow-[0_4px_10px_rgba(0,0,0,0.15)]
-
                       sm:h-[20px]
                       sm:w-[20px]
                     "
@@ -318,41 +367,40 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* =================================================
+            {/* =============================================
                 INFORMATION
-            ================================================= */}
+            ============================================== */}
 
             <FooterColumn
               title="Information"
               links={informationLinks}
             />
 
-            {/* =================================================
+            {/* =============================================
                 ACADEMICS
-            ================================================= */}
+            ============================================== */}
 
             <FooterColumn
               title="Academics"
               links={academicLinks}
             />
 
-            {/* =================================================
+            {/* =============================================
                 COMMUNITY
-            ================================================= */}
+            ============================================== */}
 
             <FooterColumn
               title="Community"
               links={communityLinks}
             />
 
-            {/* =================================================
-                SUBSCRIBE
-            ================================================= */}
+            {/* =============================================
+                NEWSLETTER SUBSCRIBE
+            ============================================== */}
 
             <div
               className="
                 sm:col-span-2
-
                 lg:col-span-1
                 lg:pl-[10px]
               "
@@ -364,9 +412,7 @@ export default function Footer() {
                   font-semibold
                   leading-none
                   text-[#101010]
-
                   lg:text-[18px]
-
                   xl:text-[20px]
                 "
               >
@@ -379,9 +425,7 @@ export default function Footer() {
                   mt-[23px]
                   w-full
                   max-w-[280px]
-
                   sm:max-w-[320px]
-
                   lg:max-w-none
                 "
               >
@@ -389,14 +433,23 @@ export default function Footer() {
                   htmlFor="footer-email"
                   className="sr-only"
                 >
-                  Enter your email
+                  Enter your email address
                 </label>
 
                 <input
                   id="footer-email"
+                  name="email"
                   type="email"
                   required
+                  maxLength={254}
+                  autoComplete="email"
                   placeholder="Enter Your Email"
+                  value={newsletterEmail}
+                  onChange={(event) => {
+                    setNewsletterEmail(event.target.value);
+                    setSubscribeStatus(null);
+                  }}
+                  disabled={isSubscribing}
                   className="
                     h-[42px]
                     w-full
@@ -410,22 +463,21 @@ export default function Footer() {
                     text-[#202020]
                     outline-none
                     transition
-
                     placeholder:text-[#A0A0A0]
-
                     focus:border-[#0075FF]
                     focus:bg-white
                     focus:ring-2
                     focus:ring-[#0075FF]/10
-
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                     lg:h-[40px]
-
                     xl:h-[42px]
                   "
                 />
 
                 <button
                   type="submit"
+                  disabled={isSubscribing}
                   className="
                     mt-[16px]
                     flex
@@ -433,6 +485,7 @@ export default function Footer() {
                     w-full
                     items-center
                     justify-center
+                    gap-[9px]
                     bg-[#0075FF]
                     font-primary
                     text-[13px]
@@ -442,19 +495,110 @@ export default function Footer() {
                     text-white
                     transition-all
                     duration-200
-
                     hover:bg-[#0068E5]
                     hover:shadow-[0_6px_16px_rgba(0,117,255,0.22)]
-
                     active:scale-[0.99]
-
+                    disabled:cursor-not-allowed
+                    disabled:opacity-60
                     lg:h-[40px]
-
                     xl:h-[42px]
                   "
                 >
-                  Submit
+                  {isSubscribing && (
+                    <Loader2
+                      size={16}
+                      className="animate-spin"
+                    />
+                  )}
+
+                  {isSubscribing
+                    ? "Subscribing..."
+                    : "Submit"}
                 </button>
+
+                {/* =========================================
+                    SUCCESS / ERROR NOTIFICATION
+                ========================================== */}
+
+                {subscribeStatus && (
+                  <div
+                    role={
+                      subscribeStatus.type === "error"
+                        ? "alert"
+                        : "status"
+                    }
+                    aria-live={
+                      subscribeStatus.type === "error"
+                        ? "assertive"
+                        : "polite"
+                    }
+                    className={`
+                      relative
+                      mt-[16px]
+                      flex
+                      items-start
+                      gap-[10px]
+                      rounded-[10px]
+                      border
+                      px-[12px]
+                      py-[12px]
+                      shadow-sm
+                      ${
+                        subscribeStatus.type === "success"
+                          ? "border-[#BBE8CE] bg-[#EFFBF3] text-[#166534]"
+                          : "border-[#F8C4C4] bg-[#FFF1F1] text-[#B42318]"
+                      }
+                    `}
+                  >
+                    <div className="mt-[2px] shrink-0">
+                      {subscribeStatus.type === "success" ? (
+                        <CheckCircle2 size={19} />
+                      ) : (
+                        <AlertCircle size={19} />
+                      )}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className="
+                          font-secondary
+                          text-[12px]
+                          font-semibold
+                          leading-[1.5]
+                        "
+                      >
+                        {subscribeStatus.title}
+                      </p>
+
+                      <p
+                        className="
+                          mt-[3px]
+                          font-secondary
+                          text-[11.5px]
+                          leading-[1.6]
+                        "
+                      >
+                        {subscribeStatus.message}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      aria-label="Close notification"
+                      onClick={() => setSubscribeStatus(null)}
+                      className="
+                        shrink-0
+                        rounded-[5px]
+                        p-[2px]
+                        opacity-70
+                        transition-opacity
+                        hover:opacity-100
+                      "
+                    >
+                      <X size={15} />
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>
@@ -488,9 +632,7 @@ export default function Footer() {
             uppercase
             leading-[1.6]
             text-[#0075FF]
-
             sm:text-[11px]
-
             lg:text-[11.5px]
           "
         >
@@ -525,7 +667,6 @@ export default function Footer() {
 
 type FooterColumnProps = {
   title: string;
-
   links: {
     label: string;
     href: string;
@@ -542,11 +683,9 @@ function FooterColumn({
         relative
         border-l-0
         pl-0
-
         lg:border-l-2
         lg:border-[#72B7FF]
         lg:pl-[20px]
-
         xl:pl-[22px]
       "
     >
@@ -558,7 +697,6 @@ function FooterColumn({
           h-[2px]
           w-[35px]
           bg-[#72B7FF]
-
           lg:hidden
         "
       />
@@ -570,9 +708,7 @@ function FooterColumn({
           font-semibold
           leading-none
           text-[#101010]
-
           lg:text-[18px]
-
           xl:text-[20px]
         "
       >
@@ -583,7 +719,6 @@ function FooterColumn({
         className="
           mt-[18px]
           space-y-[8px]
-
           lg:mt-[17px]
           lg:space-y-[7px]
         "
@@ -602,7 +737,6 @@ function FooterColumn({
                 text-[#333333]
                 transition-colors
                 duration-150
-
                 after:absolute
                 after:-bottom-[2px]
                 after:left-0
@@ -611,12 +745,9 @@ function FooterColumn({
                 after:bg-[#0075FF]
                 after:transition-all
                 after:duration-200
-
                 hover:text-[#0075FF]
                 hover:after:w-full
-
                 lg:text-[12.5px]
-
                 xl:text-[13.5px]
               "
             >
