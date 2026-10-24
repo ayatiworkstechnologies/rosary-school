@@ -1,9 +1,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
+import { del, put } from "@vercel/blob";
 import sharp from "sharp";
 import { randomUUID } from "node:crypto";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -24,11 +23,6 @@ const MAX_DATE_OF_BIRTH = "2024-12-31";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_REQUEST_SIZE = 18 * 1024 * 1024;
-const STORAGE_DIR = path.join(
-  process.cwd(),
-  "storage",
-  "rosary-lkg-admissions"
-);
 
 const IMAGE_FIELDS = [
   "student_s_passport_size_photograph",
@@ -169,9 +163,8 @@ function isValidIncome(value: string): boolean {
 
 async function saveImage(
   formData: FormData,
-  field: string,
-  origin: string
-): Promise<{ url: string; filePath: string }> {
+  field: string
+): Promise<{ url: string; blobUrl: string }> {
   const file = formData.get(field);
   const labels: Record<string, string> = {
     student_s_passport_size_photograph: "Student’s Passport-Size Photograph",
@@ -220,30 +213,22 @@ async function saveImage(
     .jpeg({ quality: 78, mozjpeg: true })
     .toBuffer();
 
-  // Random filenames prevent exposing applicants' names in the public URL.
-  const filename = `${randomUUID()}.jpg`;
-  const filePath = path.join(STORAGE_DIR, filename);
-
-  await mkdir(STORAGE_DIR, { recursive: true, mode: 0o700 });
-  await writeFile(filePath, output, { flag: "wx", mode: 0o600 });
+  // Blob URLs are public HTTPS URLs that Ayatiworks can retrieve. The UUID
+  // keeps applicant names out of the pathname.
+  const blob = await put(
+    `rosary-lkg-admissions/${randomUUID()}.jpg`,
+    output,
+    {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: "image/jpeg",
+    }
+  );
 
   return {
-    url: `${origin}/api/rosary-lkg-admission/images/${filename}`,
-    filePath,
+    url: blob.url,
+    blobUrl: blob.url,
   };
-}
-
-function getRequestOrigin(request: NextRequest): string {
-  const protocol =
-    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
-    request.nextUrl.protocol.replace(/:$/, "");
-
-  const host =
-    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
-    request.headers.get("host") ||
-    request.nextUrl.host;
-
-  return `${protocol}://${host}`;
 }
 
 // =====================================================
@@ -463,8 +448,7 @@ export async function POST(
     }
 
     const data: Record<string, string> = {};
-    const savedFiles: string[] = [];
-    const origin = getRequestOrigin(request);
+    const uploadedBlobUrls: string[] = [];
 
     // Read every Ayatiworks module field.
     for (const field of TEXT_FIELDS) {
@@ -673,12 +657,12 @@ export async function POST(
     // Process image uploads.
     try {
       for (const field of IMAGE_FIELDS) {
-        const saved = await saveImage(formData, field, origin);
+        const saved = await saveImage(formData, field);
         data[field] = saved.url;
-        savedFiles.push(saved.filePath);
+        uploadedBlobUrls.push(saved.blobUrl);
       }
     } catch (caught) {
-      await Promise.all(savedFiles.map((file) => unlink(file).catch(() => undefined)));
+      await Promise.all(uploadedBlobUrls.map((url) => del(url).catch(() => undefined)));
       return sendError(
         caught instanceof Error
           ? caught.message
@@ -694,7 +678,7 @@ export async function POST(
       registrationNo =
         await generateRegistrationNumber();
     } catch {
-      await Promise.all(savedFiles.map((file) => unlink(file).catch(() => undefined)));
+      await Promise.all(uploadedBlobUrls.map((url) => del(url).catch(() => undefined)));
       return sendError(
         "Unable to generate a registration number. Please verify the Ayatiworks records API.",
         503
@@ -722,7 +706,7 @@ export async function POST(
       const responseBody = await response.text();
       // Definitive validation/auth rejection: record was not accepted.
       if ([400, 401, 403, 413, 422].includes(response.status)) {
-        await Promise.all(savedFiles.map((file) => unlink(file).catch(() => undefined)));
+        await Promise.all(uploadedBlobUrls.map((url) => del(url).catch(() => undefined)));
       }
 
       const safeDetail =
