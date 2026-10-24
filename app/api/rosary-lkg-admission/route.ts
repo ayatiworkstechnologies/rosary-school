@@ -18,7 +18,7 @@ const API_KEY =
   process.env.AYATIWORKS_API_KEY ??
   "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
 
-const REGISTRATION_PREFIX = "2728";
+const REGISTRATION_PREFIX = "2729";
 const MAX_DATE_OF_BIRTH = "2024-12-31";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -242,7 +242,9 @@ function getSequence(
     return null;
   }
 
-  const match = value.match(/^2728-(\d+)$/);
+  const match = value.match(
+    new RegExp(`^${REGISTRATION_PREFIX}-(\\d+)$`)
+  );
 
   if (!match) {
     return null;
@@ -300,7 +302,7 @@ function getRecords(
 
 // =====================================================
 // GENERATE REGISTRATION NUMBER
-// Format: 2728-001, 2728-002, ...
+// Format: 2729-001, 2729-002, ...
 // =====================================================
 
 async function generateRegistrationNumber(): Promise<string> {
