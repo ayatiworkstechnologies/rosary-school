@@ -191,39 +191,6 @@ const clubs: Club[] = [
 
   {
     id: 3,
-    title: "RSP CLUB",
-    icon: "/icons/rsp-club.svg",
-
-    shortDescription:
-      "Promotes road safety awareness, traffic discipline, service, and responsible citizenship.",
-
-    content: (
-      <>
-        <p>
-          The road safety patrol is a service to mankind that
-          ensures an accident-free life. The idea of school
-          students helping the police to regulate traffic was
-          introduced by the fact that it was not possible to
-          depute a police officer for each and every school.
-        </p>
-
-        <p className="mt-4">
-          This concept was an instant success and it soon spread
-          to many states of India. RSP Chennai unit was
-          initiated by the madras traffic wardens organization
-          team with government approval in the year 1982. RSP
-          cadets are the medium through which road safety
-          education is disseminated to society. Every year RSP
-          wardens give RSP training for RSP cadets to inculcate
-          traffic discipline. They conduct various competitions
-          to create road safety awareness among RSP cadets.
-        </p>
-      </>
-    ),
-  },
-
-  {
-    id: 4,
     title: "ENGLISH LITERARY CLUB",
     icon: "/icons/english-literary-club.svg",
 
@@ -257,29 +224,32 @@ const clubs: Club[] = [
   },
 
   {
-    id: 5,
+    id: 4,
     title: "TAMIL LITERARY CLUB",
     icon: "/icons/tamil-literary-club.svg",
 
     shortDescription:
-      "Celebrates Tamil language, literature, culture, creativity, and its rich literary heritage.",
+      "Promotes Tamil language, literature, culture, creativity, traditions, and literary appreciation.",
 
     content: (
       <p>
-        <strong>Tamil literature</strong> has a rich and long
-        literary tradition spanning more than two thousand
-        years. The oldest extant works show signs of maturity
-        indicating an even longer period of evolution.
-        Contributors to the Tamil literature are mainly from
-        Tamil people from South India, including the land now
-        comprising Tamil Nadu, Kerala, Eelam Tamils from Sri
-        Lanka, as well as the Tamil diaspora.
+        The Tamil Literary Club promotes students&apos; interest
+        in the Tamil language and literature through activities
+        such as elocution, essay writing, poetry recitation,
+        storytelling, debates, literary quizzes and Thirukkural
+        recitation. Students explore the works of renowned Tamil
+        poets and writers and participate in creative writing,
+        language games and wall magazine preparation. The club
+        also celebrates important literary occasions and
+        promotes awareness of Tamil culture, traditions and
+        heritage, thereby enhancing students&apos; language
+        skills, creativity and appreciation of Tamil literature.
       </p>
     ),
   },
 
   {
-    id: 6,
+    id: 5,
     title: "MATH CLUB",
     icon: "/icons/math-club.svg",
 
@@ -303,16 +273,26 @@ const clubs: Club[] = [
   },
 
   {
-    id: 7,
-    title: "ARTS & CRAFTS CLUB",
+    id: 6,
+    title: "ART AND CRAFT CLUB",
     icon: "/icons/arts-crafts-club.svg",
 
     shortDescription:
-      "Encourages creativity, imagination, reuse of materials, innovation, and artistic expression.",
+      "Nurtures creativity, imagination, artistic expression, craft skills, and aesthetic appreciation.",
 
     content: (
       <>
-        <p className="font-semibold !text-[#171717]">
+        <p>
+          The Art Club nurtures students&apos; creativity,
+          imagination and artistic skills through drawing,
+          painting, craft-making, poster design and other
+          creative activities. It encourages self-expression,
+          aesthetic appreciation, environmental awareness and
+          the development of artistic talents through
+          exhibitions and competitions.
+        </p>
+
+        <p className="mt-4 font-semibold !text-[#171717]">
           No one is born with skills but everyone is born with
           the ability to create his or her skills.
         </p>
@@ -333,7 +313,7 @@ const clubs: Club[] = [
   },
 
   {
-    id: 8,
+    id: 7,
     title: "ECO CLUB",
     icon: "/icons/eco-club.svg",
 
@@ -361,6 +341,111 @@ const clubs: Club[] = [
           Rosary school is also a proud recipient of several
           green awards. Students are made to love and nurture
           nature.
+        </p>
+      </>
+    ),
+  },
+
+  {
+    id: 8,
+    title: "YCS AND YSM",
+    icon: "/icons/ycs-ysm.svg",
+
+    shortDescription:
+      "Fosters spiritual growth, leadership, social awareness, service, compassion, and responsible citizenship.",
+
+    content: (
+      <>
+        <p>
+          YCS (Young Christian Students) and YSM (Young
+          Students&apos; Movement) promote leadership, faith
+          formation, social responsibility, and service among
+          students.
+        </p>
+
+        <h4 className="mt-5 font-semibold !text-[#171717]">
+          Major Activities
+        </h4>
+
+        <ul className="mt-3 list-disc space-y-3 pl-5">
+          <li>
+            <strong>Spiritual Formation – </strong>
+            Organising prayer meetings, reflections, Bible
+            reading and value-based activities.
+          </li>
+
+          <li>
+            <strong>Leadership Development – </strong>
+            Conducting leadership training, student meetings and
+            group discussions.
+          </li>
+
+          <li>
+            <strong>Social Awareness – </strong>
+            Creating awareness about environmental protection,
+            social justice, equality and human rights.
+          </li>
+
+          <li>
+            <strong>Community Service – </strong>
+            Visiting orphanages, old-age homes and homes for the
+            differently abled; supporting the poor and
+            marginalised.
+          </li>
+
+          <li>
+            <strong>Charity and Outreach – </strong>
+            Organising collection drives for food, clothes,
+            books and essential supplies for the needy.
+          </li>
+
+          <li>
+            <strong>Environmental Initiatives – </strong>
+            Conducting cleanliness drives, tree planting and
+            campus greening activities.
+          </li>
+
+          <li>
+            <strong>
+              National and International Observances –{" "}
+            </strong>
+            Marking important days related to peace, human
+            rights, education and environmental awareness.
+          </li>
+
+          <li>
+            <strong>Student Empowerment – </strong>
+            Encouraging students to identify social issues,
+            reflect on them and take meaningful action.
+          </li>
+
+          <li>
+            <strong>
+              Cultural and Awareness Programmes –{" "}
+            </strong>
+            Organising skits, poster-making, debates and
+            campaigns on social concerns.
+          </li>
+
+          <li>
+            <strong>Reflection and Evaluation – </strong>
+            Reviewing activities and encouraging students to
+            practise Christian values in everyday life.
+          </li>
+        </ul>
+
+        <h4 className="mt-5 font-semibold !text-[#171717]">
+          Brief
+        </h4>
+
+        <p className="mt-3">
+          The YCS and YSM units foster spiritual growth,
+          leadership, social awareness and a spirit of service
+          among students. Through prayer, reflection, community
+          outreach, charity initiatives and awareness campaigns,
+          students are encouraged to become responsible citizens
+          committed to justice, compassion and social
+          transformation.
         </p>
       </>
     ),
