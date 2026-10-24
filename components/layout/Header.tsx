@@ -522,20 +522,23 @@ export default function Header() {
               {/* SCHOOL IDENTITY */}
 
               <div className="min-w-0">
-                <span className="block font-primary text-[23px] font-bold leading-[1.05] tracking-[-0.6px] !text-[#223B50] sm:text-[26px] xl:text-[29px]">
-                  Rosary
-                </span>
+                <span
+                  className="
+      block
+      whitespace-nowrap
+      font-primary
+      text-[14px]
+      font-semibold
+      leading-none
+      tracking-[-0.2px]
+      !text-[#223B50]
 
-                <span className="mt-[5px] block font-secondary text-[10px] font-medium leading-[1.3] tracking-[0.1px] !text-[#647787] sm:text-[12px]">
-                  <span className="block sm:hidden">
-                    Matriculation
-                  </span>
-                  <span className="block sm:hidden">
-                    Hr. Sec. School
-                  </span>
-                  <span className="hidden whitespace-nowrap sm:block">
-                    Matriculation Hr. Sec. School
-                  </span>
+      sm:text-[16px]
+      lg:text-[17px]
+      xl:text-[18px]
+    "
+                >
+                  Rosary Matriculation Hr. Sec. School
                 </span>
               </div>
 
@@ -662,11 +665,10 @@ export default function Header() {
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    className={`relative flex h-full items-center gap-[7px] whitespace-nowrap font-primary text-[15px] font-medium transition-colors duration-200 ${
-                      active
+                    className={`relative flex h-full items-center gap-[7px] whitespace-nowrap font-primary text-[15px] font-medium transition-colors duration-200 ${active
                         ? "!text-[#0075FF]"
                         : "!text-[#273D4E] hover:!text-[#0075FF]"
-                    }`}
+                      }`}
                   >
                     {item.label}
 
@@ -677,11 +679,10 @@ export default function Header() {
                     )}
 
                     <span
-                      className={`absolute bottom-0 left-0 h-[2px] bg-[#0075FF] transition-all duration-200 ${
-                        active
+                      className={`absolute bottom-0 left-0 h-[2px] bg-[#0075FF] transition-all duration-200 ${active
                           ? "w-full"
                           : "w-0 group-hover:w-full"
-                      }`}
+                        }`}
                     />
                   </Link>
 
@@ -694,11 +695,10 @@ export default function Header() {
                         <Link
                           key={child.href}
                           href={child.href}
-                          className={`block whitespace-nowrap px-5 py-[11px] font-secondary text-[14px] font-medium transition-colors ${
-                            isChildActive(child.href)
+                          className={`block whitespace-nowrap px-5 py-[11px] font-secondary text-[14px] font-medium transition-colors ${isChildActive(child.href)
                               ? "bg-[#EFF5FA] !text-[#0075FF]"
                               : "!text-[#354C5D] hover:bg-[#F6F7F5] hover:!text-[#0075FF]"
-                          }`}
+                            }`}
                         >
                           {child.label}
                         </Link>
@@ -721,11 +721,10 @@ export default function Header() {
 
       <div
         id="rosary-mobile-menu"
-        className={`absolute left-0 top-[76px] z-[500] w-full overflow-hidden border-t border-[#E5E7E7] bg-[#FAF9F6] shadow-[0_15px_35px_rgba(35,48,59,0.14)] transition-all duration-300 xl:hidden ${
-          mobileMenuOpen
+        className={`absolute left-0 top-[76px] z-[500] w-full overflow-hidden border-t border-[#E5E7E7] bg-[#FAF9F6] shadow-[0_15px_35px_rgba(35,48,59,0.14)] transition-all duration-300 xl:hidden ${mobileMenuOpen
             ? "visible max-h-[calc(100dvh-76px)] opacity-100"
             : "pointer-events-none invisible max-h-0 opacity-0"
-        }`}
+          }`}
       >
         <div className="max-h-[calc(100dvh-76px)] overflow-y-auto">
 
@@ -785,11 +784,10 @@ export default function Header() {
 
                     <Link
                       href={item.href}
-                      className={`flex min-h-[52px] flex-1 items-center font-primary text-[15px] font-medium ${
-                        active
+                      className={`flex min-h-[52px] flex-1 items-center font-primary text-[15px] font-medium ${active
                           ? "!text-[#0075FF]"
                           : "!text-[#263F53]"
-                      }`}
+                        }`}
                     >
                       {item.label}
                     </Link>
@@ -807,9 +805,8 @@ export default function Header() {
                         className="flex h-[44px] w-[44px] items-center justify-center !text-[#263F53]"
                       >
                         <span
-                          className={`transition-transform duration-200 ${
-                            open ? "rotate-180" : ""
-                          }`}
+                          className={`transition-transform duration-200 ${open ? "rotate-180" : ""
+                            }`}
                         >
                           <Icon name="chevron" size={17} />
                         </span>
@@ -822,9 +819,8 @@ export default function Header() {
 
                   {hasChildren && (
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
-                        open ? "max-h-[350px] pb-3" : "max-h-0"
-                      }`}
+                      className={`overflow-hidden transition-all duration-300 ${open ? "max-h-[350px] pb-3" : "max-h-0"
+                        }`}
                     >
                       <div className="overflow-hidden rounded-md border-l-[2px] border-[#0075FF] bg-[#F0F3F5]">
 
@@ -832,11 +828,10 @@ export default function Header() {
                           <Link
                             key={child.href}
                             href={child.href}
-                            className={`block px-4 py-3 font-secondary text-[14px] font-medium ${
-                              isChildActive(child.href)
+                            className={`block px-4 py-3 font-secondary text-[14px] font-medium ${isChildActive(child.href)
                                 ? "bg-[#E4EDF5] !text-[#0075FF]"
                                 : "!text-[#354C5D]"
-                            }`}
+                              }`}
                           >
                             {child.label}
                           </Link>

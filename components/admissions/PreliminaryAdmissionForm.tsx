@@ -8,7 +8,6 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
-
 import {
   ArrowRight,
   CheckCircle2,
@@ -18,6 +17,27 @@ import {
   X,
 } from "lucide-react";
 
+// =====================================================
+// SETTINGS
+// =====================================================
+
+const MAX_DOB = "2024-12-31";
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_TOTAL_IMAGE_SIZE = 3 * 1024 * 1024;
+
+const inputClass =
+  "block h-12 w-full min-w-0 rounded-lg border " +
+  "border-[#C5D8F1] bg-white px-4 text-sm " +
+  "text-[#10284D] outline-none transition " +
+  "placeholder:text-slate-400 " +
+  "hover:border-[#90BDF5] " +
+  "focus:border-[#0075FF] focus:ring-[3px] " +
+  "focus:ring-[#0075FF]/10";
+
+// =====================================================
+// TYPES
+// =====================================================
+
 type FormValues = {
   name_of_the_pupil: string;
   date_of_birth: string;
@@ -25,20 +45,25 @@ type FormValues = {
   place_of_birth: string;
   name_of_parish: string;
   religion_others: string;
+
   father_s_name: string;
   father_s_qualification: string;
   father_s_occupation: string;
   father_s_income_per_month: string;
+
   mother_s_name: string;
   is_she_a_past_pupil_of_rosary: string;
   mother_s_qualification: string;
   mother_s_occupation: string;
   mother_s_income_per_month: string;
+
   mother_tongue: string;
   mother_tongue_others: string;
+
   does_the_applicant_have_any_sibling_s_studying_in_this_school: string;
   name_of_the_sibling: string;
   class_and_section: string;
+
   address: string;
   email: string;
   phone_number: string;
@@ -56,6 +81,8 @@ type ApiResult = {
   registration_no?: string;
 };
 
+type ImageRecord = Record<ImageKey, File | null>;
+
 const INITIAL: FormValues = {
   name_of_the_pupil: "",
   date_of_birth: "",
@@ -63,27 +90,33 @@ const INITIAL: FormValues = {
   place_of_birth: "",
   name_of_parish: "",
   religion_others: "",
+
   father_s_name: "",
   father_s_qualification: "",
   father_s_occupation: "",
   father_s_income_per_month: "",
+
   mother_s_name: "",
   is_she_a_past_pupil_of_rosary: "",
   mother_s_qualification: "",
   mother_s_occupation: "",
   mother_s_income_per_month: "",
+
   mother_tongue: "",
   mother_tongue_others: "",
-  does_the_applicant_have_any_sibling_s_studying_in_this_school: "",
+
+  does_the_applicant_have_any_sibling_s_studying_in_this_school:
+    "",
   name_of_the_sibling: "",
   class_and_section: "",
+
   address: "",
   email: "",
   phone_number: "",
   alternative_phone_number: "",
 };
 
-const EMPTY_IMAGES: Record<ImageKey, File | null> = {
+const EMPTY_IMAGES: ImageRecord = {
   student_s_passport_size_photograph: null,
   father_s_signature: null,
   mother_s_signature: null,
@@ -107,15 +140,9 @@ const IMAGE_FIELDS: {
   },
 ];
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_TOTAL_COMPRESSED_SIZE = 3 * 1024 * 1024;
-
-const inputClass =
-  "block h-12 w-full min-w-0 rounded-lg border border-[#C5D8F1] bg-white px-4 text-sm text-[#10284D] outline-none transition placeholder:text-slate-400 hover:border-[#90BDF5] focus:border-[#0075FF] focus:ring-[3px] focus:ring-[#0075FF]/10";
-
-// ======================================================
-// SECTION
-// ======================================================
+// =====================================================
+// REUSABLE SECTION
+// =====================================================
 
 function Section({
   title,
@@ -132,15 +159,14 @@ function Section({
           {title}
         </h2>
       </div>
-
       {children}
     </section>
   );
 }
 
-// ======================================================
-// FIELD
-// ======================================================
+// =====================================================
+// FIELD LABEL
+// =====================================================
 
 function Field({
   label,
@@ -153,26 +179,30 @@ function Field({
 }) {
   return (
     <div className="min-w-0">
-      <div className="mb-2 text-sm font-semibold text-[#10284D]">
+      <label className="mb-2 block text-sm font-semibold text-[#10284D]">
         {label}
-
         {required && (
           <span className="ml-1 text-red-500">*</span>
         )}
-      </div>
-
+      </label>
       {children}
     </div>
   );
 }
 
-// ======================================================
-// TEXT INPUT - IMPORTANT FIX
-// Keep this component OUTSIDE PreliminaryAdmissionForm.
-// This prevents inputs from losing focus while typing.
-// ======================================================
+// =====================================================
+// TEXT FIELD
+// Defined outside the main component to retain focus
+// =====================================================
 
-type TextInputProps = {
+function TextInput({
+  name,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  optional = false,
+}: {
   name: keyof FormValues;
   value: string;
   onChange: (
@@ -182,74 +212,64 @@ type TextInputProps = {
   placeholder: string;
   type?: "text" | "email" | "tel" | "number";
   optional?: boolean;
-};
-
-function TextInput({
-  name,
-  value,
-  onChange,
-  placeholder,
-  type = "text",
-  optional = false,
-}: TextInputProps) {
-  const handleChange = (
+}) {
+  function handleChange(
     event: ChangeEvent<HTMLInputElement>
-  ) => {
-    let newValue = event.target.value;
+  ) {
+    let next = event.target.value;
 
     if (type === "tel") {
-      newValue = newValue.replace(/\D/g, "").slice(0, 10);
+      next = next.replace(/\D/g, "").slice(0, 10);
     }
 
-    onChange(name, newValue);
-  };
+    onChange(name, next);
+  }
 
   return (
     <input
       id={name}
       name={name}
-      className={inputClass}
       type={type}
       value={value}
+      className={inputClass}
       required={!optional}
       placeholder={placeholder}
       min={type === "number" ? 0 : undefined}
       step={type === "number" ? "0.01" : undefined}
-      pattern={type === "tel" ? "[0-9]{10}" : undefined}
       maxLength={type === "tel" ? 10 : undefined}
+      pattern={type === "tel" ? "[0-9]{10}" : undefined}
       inputMode={type === "tel" ? "numeric" : undefined}
       onChange={handleChange}
     />
   );
 }
 
-// ======================================================
-// SELECT
-// ======================================================
+// =====================================================
+// DROPDOWN FIELD
+// =====================================================
 
 function SelectField({
   value,
   options,
-  onChange,
   placeholder,
+  onChange,
 }: {
   value: string;
   options: string[];
-  onChange: (value: string) => void;
   placeholder: string;
+  onChange: (value: string) => void;
 }) {
   return (
     <div className="relative">
       <select
-        required
         value={value}
+        required
         onChange={(event) =>
           onChange(event.target.value)
         }
         className={`${inputClass} cursor-pointer appearance-none pr-12`}
       >
         <option value="">{placeholder}</option>
-
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
@@ -259,16 +279,15 @@ function SelectField({
 
       <ChevronDown
         size={18}
-        aria-hidden="true"
         className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#0075FF]"
       />
     </div>
   );
 }
 
-// ======================================================
-// YES / NO
-// ======================================================
+// =====================================================
+// YES / NO FIELD
+// =====================================================
 
 function YesNoField({
   name,
@@ -293,13 +312,12 @@ function YesNoField({
           <input
             type="radio"
             name={name}
-            value={option}
-            checked={value === option}
             required
+            checked={value === option}
+            value={option}
             onChange={() => onChange(option)}
             className="h-4 w-4 accent-[#0075FF]"
           />
-
           {option}
         </label>
       ))}
@@ -307,18 +325,16 @@ function YesNoField({
   );
 }
 
-// ======================================================
-// CLIENT-SIDE IMAGE COMPRESSION
-// ======================================================
+// =====================================================
+// COMPRESS IMAGE BEFORE SUBMITTING
+// Keep original subject without cropping
+// =====================================================
 
 async function compressImage(
   file: File,
   field: ImageKey
 ): Promise<File> {
-  if (
-    file.size === 0 ||
-    file.size >= MAX_IMAGE_SIZE
-  ) {
+  if (file.size === 0 || file.size >= MAX_IMAGE_SIZE) {
     throw new Error(
       "Each image must be smaller than 5 MB."
     );
@@ -337,11 +353,11 @@ async function compressImage(
   const bitmap = await createImageBitmap(file);
 
   try {
-    const isPhoto =
+    const isStudentPhoto =
       field === "student_s_passport_size_photograph";
 
-    const maxWidth = isPhoto ? 800 : 900;
-    const maxHeight = isPhoto ? 1100 : 450;
+    const maxWidth = isStudentPhoto ? 800 : 900;
+    const maxHeight = isStudentPhoto ? 1100 : 450;
 
     const scale = Math.min(
       1,
@@ -364,13 +380,10 @@ async function compressImage(
     const context = canvas.getContext("2d");
 
     if (!context) {
-      throw new Error(
-        "Image compression is unavailable."
-      );
+      throw new Error("Image compression failed.");
     }
 
     context.fillStyle = "#FFFFFF";
-
     context.fillRect(
       0,
       0,
@@ -390,13 +403,12 @@ async function compressImage(
 
     for (const quality of [0.8, 0.65, 0.5, 0.35]) {
       compressed = await new Promise<Blob | null>(
-        (resolve) => {
+        (resolve) =>
           canvas.toBlob(
             resolve,
             "image/jpeg",
             quality
-          );
-        }
+          )
       );
 
       if (
@@ -407,15 +419,9 @@ async function compressImage(
       }
     }
 
-    if (!compressed) {
+    if (!compressed || compressed.size > 500 * 1024) {
       throw new Error(
-        "Unable to compress image."
-      );
-    }
-
-    if (compressed.size > 500 * 1024) {
-      throw new Error(
-        "The selected image is too large after compression."
+        "Unable to reduce the selected image size."
       );
     }
 
@@ -432,9 +438,9 @@ async function compressImage(
   }
 }
 
-// ======================================================
-// UPLOAD FIELD
-// ======================================================
+// =====================================================
+// IMAGE UPLOAD FIELD WITH MATCHING PREVIEW SIZES
+// =====================================================
 
 function UploadField({
   label,
@@ -447,77 +453,88 @@ function UploadField({
   onChange: (file: File | null) => void;
   onError: (message: string) => void;
 }) {
+  const [preview, setPreview] = useState<string | null>(
+    null
+  );
+
+  function handleFileChange(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const selected = event.target.files?.[0] ?? null;
+
+    if (selected && selected.size >= MAX_IMAGE_SIZE) {
+      event.target.value = "";
+      onError(`${label} must be smaller than 5 MB.`);
+      return;
+    }
+
+    if (
+      selected &&
+      !["image/jpeg", "image/png", "image/webp"].includes(
+        selected.type
+      )
+    ) {
+      event.target.value = "";
+      onError(`${label} must be JPG, PNG or WebP.`);
+      return;
+    }
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
+    setPreview(
+      selected ? URL.createObjectURL(selected) : null
+    );
+    onChange(selected);
+  }
+
+  // Allow state reset after successful submission.
+  const hasFile = Boolean(file);
+
   return (
     <Field label={label}>
-      <label className="flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B8D7FF] bg-[#F7FBFF] p-5 text-center transition hover:border-[#0075FF]">
+      <label className="flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B8D7FF] bg-[#F7FBFF] p-4 text-center transition hover:border-[#0075FF]">
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
-          required={!file}
+          required={!hasFile}
           className="sr-only"
-          onChange={(event) => {
-            const selected =
-              event.target.files?.[0] ?? null;
-
-            if (
-              selected &&
-              selected.size >= MAX_IMAGE_SIZE
-            ) {
-              event.target.value = "";
-
-              onError(
-                `${label} must be smaller than 5 MB.`
-              );
-
-              return;
-            }
-
-            if (
-              selected &&
-              ![
-                "image/jpeg",
-                "image/png",
-                "image/webp",
-              ].includes(selected.type)
-            ) {
-              event.target.value = "";
-
-              onError(
-                `${label} must be JPG, PNG or WebP.`
-              );
-
-              return;
-            }
-
-            onChange(selected);
-          }}
+          onChange={handleFileChange}
         />
 
-        <FileImage
-          size={30}
-          className="mb-3 text-[#0075FF]"
-        />
+        {hasFile && preview ? (
+          <img
+            src={preview}
+            alt={`${label} preview`}
+            width={140}
+            height={110}
+            className="h-[110px] w-[140px] max-w-full rounded-md border border-[#DCE7F5] bg-white object-contain"
+          />
+        ) : (
+          <FileImage
+            size={30}
+            className="text-[#0075FF]"
+          />
+        )}
 
-        {file ? (
+        {hasFile && file ? (
           <>
-            <span className="max-w-full break-all text-sm font-semibold text-[#10284D]">
+            <span className="mt-3 max-w-full break-all text-xs font-semibold text-[#10284D]">
               {file.name}
             </span>
-
-            <span className="mt-2 text-xs text-slate-500">
+            <span className="mt-1 text-xs text-slate-500">
               {(file.size / 1024).toFixed(1)} KB
             </span>
-
             <span className="mt-2 text-xs font-medium text-[#0075FF]">
               Click to replace
             </span>
           </>
         ) : (
           <>
-            <span className="text-sm font-semibold">
+            <span className="mt-3 text-sm font-semibold text-[#10284D]">
               Click to upload image
             </span>
-
             <span className="mt-2 text-xs text-slate-500">
               JPG, PNG or WebP · Less than 5 MB
             </span>
@@ -528,40 +545,38 @@ function UploadField({
   );
 }
 
-// ======================================================
-// MAIN COMPONENT
-// ======================================================
+// =====================================================
+// MAIN FORM COMPONENT
+// =====================================================
 
 export default function PreliminaryAdmissionForm() {
-  const [values, setValues] =
-    useState<FormValues>({ ...INITIAL });
+  const [values, setValues] = useState<FormValues>({
+    ...INITIAL,
+  });
 
-  const [images, setImages] = useState<
-    Record<ImageKey, File | null>
-  >({ ...EMPTY_IMAGES });
+  const [images, setImages] = useState<ImageRecord>({
+    ...EMPTY_IMAGES,
+  });
 
-  const [submitting, setSubmitting] =
-    useState(false);
-
+  const [uploadResetKey, setUploadResetKey] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-
   const [registrationNo, setRegistrationNo] =
     useState<string | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
 
-  // Stable input update handler.
-  const update = (
+  function update(
     field: keyof FormValues,
     value: string
-  ) => {
+  ) {
     setError("");
 
     setValues((previous) => ({
       ...previous,
       [field]: value,
     }));
-  };
+  }
 
   function handleReligion(value: string) {
     setError("");
@@ -569,12 +584,10 @@ export default function PreliminaryAdmissionForm() {
     setValues((previous) => ({
       ...previous,
       religion: value,
-
       name_of_parish:
         value === "Christian - Roman Catholic"
           ? previous.name_of_parish
           : "",
-
       religion_others:
         value === "Others"
           ? previous.religion_others
@@ -588,7 +601,6 @@ export default function PreliminaryAdmissionForm() {
     setValues((previous) => ({
       ...previous,
       mother_tongue: value,
-
       mother_tongue_others:
         value === "Others"
           ? previous.mother_tongue_others
@@ -601,15 +613,12 @@ export default function PreliminaryAdmissionForm() {
 
     setValues((previous) => ({
       ...previous,
-
       does_the_applicant_have_any_sibling_s_studying_in_this_school:
         value,
-
       name_of_the_sibling:
         value === "Yes"
           ? previous.name_of_the_sibling
           : "",
-
       class_and_section:
         value === "Yes"
           ? previous.class_and_section
@@ -617,28 +626,31 @@ export default function PreliminaryAdmissionForm() {
     }));
   }
 
-  // ====================================================
-  // SUBMIT
-  // ====================================================
-
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
   ) {
     event.preventDefault();
-
     if (submitting) return;
 
     setSubmitting(true);
     setError("");
 
     try {
+      if (
+        !values.date_of_birth ||
+        values.date_of_birth > MAX_DOB
+      ) {
+        throw new Error(
+          "Date of Birth must be on or before 31 December 2024."
+        );
+      }
+
       const payload = new FormData();
 
       for (const [key, value] of Object.entries(values)) {
         payload.append(key, value);
       }
 
-      // Clear fields that aren't applicable.
       if (
         values.religion !==
         "Christian - Roman Catholic"
@@ -662,7 +674,7 @@ export default function PreliminaryAdmissionForm() {
         payload.set("class_and_section", "");
       }
 
-      let totalCompressedSize = 0;
+      let totalImageSize = 0;
 
       for (const field of IMAGE_FIELDS) {
         const file = images[field.key];
@@ -678,7 +690,7 @@ export default function PreliminaryAdmissionForm() {
           field.key
         );
 
-        totalCompressedSize += compressed.size;
+        totalImageSize += compressed.size;
 
         payload.append(
           field.key,
@@ -687,10 +699,7 @@ export default function PreliminaryAdmissionForm() {
         );
       }
 
-      if (
-        totalCompressedSize >
-        MAX_TOTAL_COMPRESSED_SIZE
-      ) {
+      if (totalImageSize > MAX_TOTAL_IMAGE_SIZE) {
         throw new Error(
           "Combined image size is too large."
         );
@@ -714,21 +723,21 @@ export default function PreliminaryAdmissionForm() {
       } catch {
         throw new Error(
           response.status === 413
-            ? "Total upload size exceeds the server limit."
-            : `The server returned an invalid response (HTTP ${response.status}).`
+            ? "Total image upload size exceeds the server limit."
+            : `Invalid server response (HTTP ${response.status}).`
         );
       }
 
-      if (!response.ok || result.success !== true) {
+      if (!response.ok || !result.success) {
         throw new Error(
           result.message ||
-          "Application submission failed."
+            "Application submission failed."
         );
       }
 
       if (!result.registration_no) {
         throw new Error(
-          "Application was received, but no registration number was returned. Please contact the school."
+          "Application was received without a registration number. Please contact the school."
         );
       }
 
@@ -744,45 +753,39 @@ export default function PreliminaryAdmissionForm() {
     }
   }
 
-  const closeSuccess = () => {
+  function closeSuccess() {
     setRegistrationNo(null);
     setValues({ ...INITIAL });
     setImages({ ...EMPTY_IMAGES });
+    setUploadResetKey((previous) => previous + 1);
     setError("");
     formRef.current?.reset();
-  };
-
-  // ====================================================
-  // JSX
-  // ====================================================
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-3 py-6 sm:px-6 lg:px-10">
       <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
 
         {/* HEADER */}
-        <header className="bg-gradient-to-br from-[#F4FAFF] to-[#DFEEFF] px-5 py-10 text-center sm:px-10 sm:py-14">
-          <span className="inline-flex rounded-full border border-blue-200 bg-white px-5 py-2 text-xs font-bold uppercase tracking-wide text-[#0075FF]">
+        <header className="flex w-full flex-col items-center justify-center bg-gradient-to-br from-[#F4FAFF] to-[#DFEEFF] px-5 py-10 text-center sm:px-10 sm:py-14">
+          <span className="inline-flex items-center justify-center rounded-full border border-blue-200 bg-white px-5 py-2 text-center text-xs font-bold uppercase tracking-wide text-[#0075FF]">
             Admissions Open
           </span>
 
-          <h1 className="mx-auto mt-4 max-w-5xl text-2xl font-extrabold leading-tight text-[#10284D] sm:text-3xl lg:text-4xl">
+          <h1 className="mx-auto mt-4 w-full max-w-6xl text-center text-2xl font-extrabold leading-tight text-[#10284D] sm:text-3xl lg:text-4xl">
             Rosary Matriculation Higher Secondary School
           </h1>
 
-          <p className="mt-3 text-sm text-[#54749C] sm:text-base">
+          <p className="mt-3 w-full text-center text-sm text-[#54749C] sm:text-base">
             LKG Application Form 2027–2028
           </p>
 
-          <p className="mt-1 text-xs text-[#6B85A7] sm:text-sm">
+          <p className="mt-1 w-full text-center text-xs text-[#6B85A7] sm:text-sm">
             Please complete all required details carefully.
           </p>
         </header>
 
-        <form
-          ref={formRef}
-          onSubmit={handleSubmit}
-        >
+        <form ref={formRef} onSubmit={handleSubmit}>
           <div className="space-y-10 px-4 py-8 sm:px-8 lg:px-12">
 
             {/* PERSONAL DETAILS */}
@@ -800,17 +803,27 @@ export default function PreliminaryAdmissionForm() {
 
                 <Field label="Date of Birth">
                   <input
+                    name="date_of_birth"
                     type="date"
                     required
                     className={inputClass}
                     value={values.date_of_birth}
-                    max={new Date().toISOString().slice(0, 10)}
-                    onChange={(event) =>
-                      update(
-                        "date_of_birth",
-                        event.target.value
-                      )
-                    }
+                    max={MAX_DOB}
+                    onChange={(event) => {
+                      if (
+                        !event.target.value ||
+                        event.target.value <= MAX_DOB
+                      ) {
+                        update(
+                          "date_of_birth",
+                          event.target.value
+                        );
+                      } else {
+                        setError(
+                          "Date of Birth must be on or before 31 December 2024."
+                        );
+                      }
+                    }}
                   />
                 </Field>
 
@@ -860,11 +873,10 @@ export default function PreliminaryAdmissionForm() {
                     placeholder="Enter place of birth"
                   />
                 </Field>
-
               </div>
             </Section>
 
-            {/* FATHER */}
+            {/* FATHER'S DETAILS */}
             <Section title="Father's Details">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
@@ -904,11 +916,10 @@ export default function PreliminaryAdmissionForm() {
                     placeholder="Enter monthly income"
                   />
                 </Field>
-
               </div>
             </Section>
 
-            {/* MOTHER */}
+            {/* MOTHER'S DETAILS */}
             <Section title="Mother's Details">
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
@@ -924,7 +935,9 @@ export default function PreliminaryAdmissionForm() {
                 <Field label="Is she a past pupil of Rosary?">
                   <YesNoField
                     name="past_pupil"
-                    value={values.is_she_a_past_pupil_of_rosary}
+                    value={
+                      values.is_she_a_past_pupil_of_rosary
+                    }
                     onChange={(value) =>
                       update(
                         "is_she_a_past_pupil_of_rosary",
@@ -989,11 +1002,10 @@ export default function PreliminaryAdmissionForm() {
                     />
                   </Field>
                 )}
-
               </div>
             </Section>
 
-            {/* SIBLING */}
+            {/* SIBLING DETAILS */}
             <Section title="Sibling Details">
               <Field label="Does the applicant have any sibling(s) studying in this school?">
                 <YesNoField
@@ -1026,27 +1038,24 @@ export default function PreliminaryAdmissionForm() {
                       placeholder="Enter class and section"
                     />
                   </Field>
-
                 </div>
               )}
             </Section>
 
-            {/* CONTACT */}
+            {/* CONTACT DETAILS */}
             <Section title="Contact Details">
               <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
                 <Field label="Address">
                   <textarea
+                    name="address"
                     required
                     rows={5}
                     className={`${inputClass} h-auto min-h-[165px] resize-y py-3`}
                     value={values.address}
                     placeholder="Enter address"
                     onChange={(event) =>
-                      update(
-                        "address",
-                        event.target.value
-                      )
+                      update("address", event.target.value)
                     }
                   />
                 </Field>
@@ -1079,19 +1088,20 @@ export default function PreliminaryAdmissionForm() {
                   >
                     <TextInput
                       name="alternative_phone_number"
-                      value={values.alternative_phone_number}
+                      value={
+                        values.alternative_phone_number
+                      }
                       onChange={update}
                       type="tel"
                       optional
                       placeholder="Optional"
                     />
                   </Field>
-
                 </div>
               </div>
             </Section>
 
-            {/* UPLOADS */}
+            {/* PHOTOGRAPH AND SIGNATURE UPLOADS */}
             <Section title="Photograph and Signature Uploads">
               <p className="text-sm leading-6 text-[#647D9D]">
                 Upload the student’s passport-size photograph
@@ -1102,13 +1112,12 @@ export default function PreliminaryAdmissionForm() {
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {IMAGE_FIELDS.map(({ key, label }) => (
                   <UploadField
-                    key={key}
+                    key={`${key}-${uploadResetKey}`}
                     label={label}
                     file={images[key]}
                     onError={setError}
                     onChange={(file) => {
                       setError("");
-
                       setImages((previous) => ({
                         ...previous,
                         [key]: file,
@@ -1119,7 +1128,7 @@ export default function PreliminaryAdmissionForm() {
               </div>
             </Section>
 
-            {/* ERROR MESSAGE */}
+            {/* ERROR */}
             {error && (
               <div
                 role="alert"
@@ -1128,12 +1137,10 @@ export default function PreliminaryAdmissionForm() {
                 {error}
               </div>
             )}
-
           </div>
 
           {/* SUBMIT */}
           <div className="flex flex-col gap-4 border-t border-blue-100 bg-[#F6FAFF] px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
-
             <p className="text-sm text-[#6882A4]">
               Please review all information before submitting.
             </p>
@@ -1158,7 +1165,6 @@ export default function PreliminaryAdmissionForm() {
                 </>
               )}
             </button>
-
           </div>
         </form>
       </div>
@@ -1166,7 +1172,6 @@ export default function PreliminaryAdmissionForm() {
       {/* SUCCESS POPUP */}
       {registrationNo && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#071D3B]/65 px-4 backdrop-blur-sm">
-
           <div
             role="dialog"
             aria-modal="true"
@@ -1200,7 +1205,6 @@ export default function PreliminaryAdmissionForm() {
             </p>
 
             <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
-
               <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
                 Registration No.
               </p>
@@ -1208,7 +1212,6 @@ export default function PreliminaryAdmissionForm() {
               <p className="mt-2 text-3xl font-bold tracking-wide text-[#0755AD]">
                 {registrationNo}
               </p>
-
             </div>
 
             <p className="mt-5 text-xs text-slate-500">
@@ -1222,7 +1225,6 @@ export default function PreliminaryAdmissionForm() {
             >
               Done
             </button>
-
           </div>
         </div>
       )}

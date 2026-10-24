@@ -5,13 +5,18 @@ import sharp from "sharp";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+// =====================================================
+// CONFIGURATION
+// =====================================================
+
 const API_URL =
   "https://api.ayatiworks.com/api/v1/public/rosary-school/rosary_lkg_admission/records";
 
-// Use the existing unchanged API key.
+// Keep your existing secret value unchanged in .env.local.
 const API_KEY = process.env.AYATIWORKS_API_KEY ?? "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
 
 const REGISTRATION_PREFIX = "2728";
+const MAX_DATE_OF_BIRTH = "2024-12-31";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const MAX_REQUEST_SIZE = 4 * 1024 * 1024;
@@ -27,23 +32,28 @@ const TEXT_FIELDS = [
   "date_of_birth",
   "religion",
   "place_of_birth",
+
   "father_s_name",
   "father_s_qualification",
   "father_s_occupation",
   "father_s_income_per_month",
+
   "mother_s_name",
   "is_she_a_past_pupil_of_rosary",
   "mother_s_qualification",
   "mother_s_occupation",
   "mother_s_income_per_month",
   "mother_tongue",
+
   "does_the_applicant_have_any_sibling_s_studying_in_this_school",
   "name_of_the_sibling",
   "class_and_section",
+
   "address",
   "email",
   "phone_number",
   "alternative_phone_number",
+
   "name_of_parish",
   "religion_others",
   "mother_tongue_others",
@@ -58,6 +68,8 @@ const OPTIONAL_FIELDS = new Set<string>([
   "mother_tongue_others",
 ]);
 
+type JsonObject = Record<string, unknown>;
+
 type ApiResponse = {
   success: boolean;
   message: string;
@@ -65,7 +77,9 @@ type ApiResponse = {
   upstream_status?: number;
 };
 
-type JsonObject = Record<string, unknown>;
+// =====================================================
+// HELPERS
+// =====================================================
 
 function isObject(
   value: unknown
@@ -87,7 +101,9 @@ function sendError(
       success: false,
       message,
       ...(upstreamStatus !== undefined
-        ? { upstream_status: upstreamStatus }
+        ? {
+            upstream_status: upstreamStatus,
+          }
         : {}),
     },
     { status }
@@ -104,6 +120,10 @@ function readText(
     ? value.trim()
     : "";
 }
+
+// =====================================================
+// DATE VALIDATION
+// =====================================================
 
 function isValidDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -134,9 +154,9 @@ function isValidIncome(value: string): boolean {
   );
 }
 
-// ======================================================
+// =====================================================
 // IMAGE PROCESSING
-// ======================================================
+// =====================================================
 
 async function processImage(
   formData: FormData,
@@ -179,7 +199,6 @@ async function processImage(
     await file.arrayBuffer()
   );
 
-  // TypeScript infers the metadata type.
   let metadata;
 
   try {
@@ -193,8 +212,7 @@ async function processImage(
   }
 
   if (
-    metadata.format !==
-    expectedFormats[file.type]
+    metadata.format !== expectedFormats[file.type]
   ) {
     throw new Error(
       `${label} has an invalid image format.`
@@ -203,6 +221,8 @@ async function processImage(
 
   const isSignature = field.includes("signature");
 
+  // Preserve source aspect ratio and orientation.
+  // Email preview sizing is separate from saved image data.
   const output = await sharp(input, {
     limitInputPixels: 25_000_000,
   })
@@ -220,14 +240,16 @@ async function processImage(
     })
     .toBuffer();
 
-  // This assumes Ayatiworks supports Base64 data URLs
-  // in its Image Upload fields.
-  return `data:image/jpeg;base64,${output.toString("base64")}`;
+  // This format assumes that Ayatiworks accepts
+  // Base64 data URLs for its Image Upload fields.
+  return `data:image/jpeg;base64,${output.toString(
+    "base64"
+  )}`;
 }
 
-// ======================================================
-// REGISTRATION NUMBER
-// ======================================================
+// =====================================================
+// REGISTRATION NUMBER HELPERS
+// =====================================================
 
 function getSequence(
   value: unknown
@@ -244,8 +266,10 @@ function getSequence(
 
   const sequence = Number(match[1]);
 
-  return Number.isSafeInteger(sequence) &&
+  return (
+    Number.isSafeInteger(sequence) &&
     sequence > 0
+  )
     ? sequence
     : null;
 }
@@ -263,11 +287,7 @@ function getRecords(
     );
   }
 
-  for (const key of [
-    "items",
-    "records",
-    "data",
-  ]) {
+  for (const key of ["items", "records", "data"]) {
     const value = payload[key];
 
     if (Array.isArray(value)) {
@@ -294,9 +314,11 @@ function getRecords(
   );
 }
 
-// Requires Ayatiworks GET support with page/page_size.
-// Exact sequential uniqueness under concurrent requests
-// requires atomic allocation in persistent storage.
+// =====================================================
+// GENERATE REGISTRATION NUMBER
+// Format: 2728-001, 2728-002, ...
+// =====================================================
+
 async function generateRegistrationNumber(): Promise<string> {
   const PAGE_SIZE = 100;
   let highest = 0;
@@ -338,12 +360,12 @@ async function generateRegistrationNumber(): Promise<string> {
     );
 
     for (const record of records) {
-      const data = isObject(record.data)
+      const recordData = isObject(record.data)
         ? record.data
         : record;
 
       const sequence = getSequence(
-        data.registration_no
+        recordData.registration_no
       );
 
       if (sequence !== null) {
@@ -366,16 +388,15 @@ async function generateRegistrationNumber(): Promise<string> {
   );
 }
 
-// ======================================================
-// SAFE UPSTREAM ERROR
-// ======================================================
+// =====================================================
+// UPSTREAM ERROR MESSAGE
+// =====================================================
 
 function getSafeUpstreamMessage(
   responseBody: string
 ): string {
   try {
-    const payload: unknown =
-      JSON.parse(responseBody);
+    const payload: unknown = JSON.parse(responseBody);
 
     if (!isObject(payload)) {
       return "";
@@ -391,22 +412,20 @@ function getSafeUpstreamMessage(
     if (
       message.length > 0 &&
       message.length <= 180 &&
-      !/base64|data:image|api.?key/i.test(
-        message
-      )
+      !/base64|data:image|api.?key/i.test(message)
     ) {
       return message;
     }
   } catch {
-    // Upstream response may not be JSON.
+    // The upstream response might not be JSON.
   }
 
   return "";
 }
 
-// ======================================================
-// SUBMIT APPLICATION
-// ======================================================
+// =====================================================
+// POST ADMISSION APPLICATION
+// =====================================================
 
 export async function POST(
   request: NextRequest
@@ -423,7 +442,10 @@ export async function POST(
       request.headers.get("content-length") || "0"
     );
 
-    if (contentLength > MAX_REQUEST_SIZE) {
+    if (
+      Number.isFinite(contentLength) &&
+      contentLength > MAX_REQUEST_SIZE
+    ) {
       return sendError(
         "Total upload size is too large.",
         413
@@ -443,15 +465,14 @@ export async function POST(
 
     const data: Record<string, string> = {};
 
-    // All existing module fields are preserved.
+    // Read every Ayatiworks module field.
     for (const field of TEXT_FIELDS) {
       data[field] = readText(formData, field);
     }
 
     // Clear inactive conditional fields.
     if (
-      data.religion !==
-      "Christian - Roman Catholic"
+      data.religion !== "Christian - Roman Catholic"
     ) {
       data.name_of_parish = "";
     }
@@ -522,7 +543,7 @@ export async function POST(
       );
     }
 
-    // Mother Tongue.
+    // Mother tongue.
     if (
       ![
         "Tamil",
@@ -550,7 +571,7 @@ export async function POST(
       );
     }
 
-    // Yes / No fields.
+    // Yes / No.
     if (
       !["Yes", "No"].includes(
         data.is_she_a_past_pupil_of_rosary
@@ -562,9 +583,7 @@ export async function POST(
       );
     }
 
-    if (
-      !["Yes", "No"].includes(siblingChoice)
-    ) {
+    if (!["Yes", "No"].includes(siblingChoice)) {
       return sendError(
         "Please select the sibling status.",
         400
@@ -582,7 +601,7 @@ export async function POST(
       );
     }
 
-    // Date.
+    // Date of Birth restriction.
     if (!isValidDate(data.date_of_birth)) {
       return sendError(
         "Please enter a valid date of birth.",
@@ -590,7 +609,16 @@ export async function POST(
       );
     }
 
-    // Monthly income fields have separate API keys.
+    if (
+      data.date_of_birth > MAX_DATE_OF_BIRTH
+    ) {
+      return sendError(
+        "Date of Birth must be on or before 31 December 2024.",
+        400
+      );
+    }
+
+    // Monthly income.
     if (
       !isValidIncome(
         data.father_s_income_per_month
@@ -605,7 +633,7 @@ export async function POST(
       );
     }
 
-    // Email.
+    // Email validation.
     if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
         data.email
@@ -617,7 +645,7 @@ export async function POST(
       );
     }
 
-    // Phone.
+    // Phone validation.
     if (
       !/^\d{10}$/.test(
         data.phone_number
@@ -641,7 +669,7 @@ export async function POST(
       );
     }
 
-    // Process three images.
+    // Process image uploads.
     try {
       for (const field of IMAGE_FIELDS) {
         data[field] = await processImage(
@@ -671,7 +699,7 @@ export async function POST(
       );
     }
 
-    // Submit all fields to Ayatiworks.
+    // Submit to Ayatiworks.
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -756,6 +784,7 @@ export async function POST(
       );
     }
 
+    // Successful submission.
     return NextResponse.json<ApiResponse>(
       {
         success: true,
@@ -766,17 +795,17 @@ export async function POST(
       { status: 201 }
     );
   } catch (caught) {
-    const timeout =
+    const timedOut =
       caught instanceof Error &&
       ["TimeoutError", "AbortError"].includes(
         caught.name
       );
 
     return sendError(
-      timeout
+      timedOut
         ? "Submission timed out. Please contact the school before retrying."
         : "Unable to confirm submission. Please contact the school.",
-      timeout ? 504 : 502
+      timedOut ? 504 : 502
     );
   }
 }
