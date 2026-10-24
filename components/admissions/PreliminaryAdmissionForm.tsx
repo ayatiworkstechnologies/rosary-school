@@ -2,10 +2,13 @@
 "use client";
 
 import {
-  ChangeEvent,
-  FormEvent,
+  useRef,
   useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
 } from "react";
+
 import {
   ArrowRight,
   CheckCircle2,
@@ -20,6 +23,8 @@ type FormValues = {
   date_of_birth: string;
   religion: string;
   place_of_birth: string;
+  name_of_parish: string;
+  religion_others: string;
   father_s_name: string;
   father_s_qualification: string;
   father_s_occupation: string;
@@ -30,6 +35,7 @@ type FormValues = {
   mother_s_occupation: string;
   mother_s_income_per_month: string;
   mother_tongue: string;
+  mother_tongue_others: string;
   does_the_applicant_have_any_sibling_s_studying_in_this_school: string;
   name_of_the_sibling: string;
   class_and_section: string;
@@ -39,22 +45,24 @@ type FormValues = {
   alternative_phone_number: string;
 };
 
-type ImageField =
-  | "student_passport_size_photo"
+type ImageKey =
+  | "student_s_passport_size_photograph"
   | "father_s_signature"
   | "mother_s_signature";
 
-type SubmissionResult = {
+type ApiResult = {
   success?: boolean;
   message?: string;
   registration_no?: string;
 };
 
-const INITIAL_VALUES: FormValues = {
+const INITIAL: FormValues = {
   name_of_the_pupil: "",
   date_of_birth: "",
   religion: "",
   place_of_birth: "",
+  name_of_parish: "",
+  religion_others: "",
   father_s_name: "",
   father_s_qualification: "",
   father_s_occupation: "",
@@ -65,6 +73,7 @@ const INITIAL_VALUES: FormValues = {
   mother_s_occupation: "",
   mother_s_income_per_month: "",
   mother_tongue: "",
+  mother_tongue_others: "",
   does_the_applicant_have_any_sibling_s_studying_in_this_school: "",
   name_of_the_sibling: "",
   class_and_section: "",
@@ -74,80 +83,173 @@ const INITIAL_VALUES: FormValues = {
   alternative_phone_number: "",
 };
 
-const IMAGE_FIELDS: ImageField[] = [
-  "student_passport_size_photo",
-  "father_s_signature",
-  "mother_s_signature",
+const EMPTY_IMAGES: Record<ImageKey, File | null> = {
+  student_s_passport_size_photograph: null,
+  father_s_signature: null,
+  mother_s_signature: null,
+};
+
+const IMAGE_FIELDS: {
+  key: ImageKey;
+  label: string;
+}[] = [
+  {
+    key: "student_s_passport_size_photograph",
+    label: "Student’s Passport-Size Photograph",
+  },
+  {
+    key: "father_s_signature",
+    label: "Father's Signature",
+  },
+  {
+    key: "mother_s_signature",
+    label: "Mother's Signature",
+  },
 ];
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
-
-// Keep the combined multipart request comfortably
-// below Vercel's request-body limit.
-const MAX_COMPRESSED_TOTAL = 3 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_TOTAL_COMPRESSED_SIZE = 3 * 1024 * 1024;
 
 const inputClass =
-  "h-12 w-full min-w-0 rounded-lg border border-[#C9D9EF] bg-white px-4 text-sm text-[#10284D] outline-none transition focus:border-[#0075FF] focus:ring-2 focus:ring-[#0075FF]/10 placeholder:text-slate-400";
+  "block h-12 w-full min-w-0 rounded-lg border border-[#C5D8F1] bg-white px-4 text-sm text-[#10284D] outline-none transition placeholder:text-slate-400 hover:border-[#90BDF5] focus:border-[#0075FF] focus:ring-[3px] focus:ring-[#0075FF]/10";
+
+// ======================================================
+// SECTION
+// ======================================================
+
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-5">
+      <div className="border-b border-[#D8E7FA] pb-4">
+        <h2 className="flex items-center gap-3 text-base font-bold uppercase text-[#10284D] sm:text-lg">
+          <span className="h-7 w-1 shrink-0 rounded-full bg-[#0075FF]" />
+          {title}
+        </h2>
+      </div>
+
+      {children}
+    </section>
+  );
+}
+
+// ======================================================
+// FIELD
+// ======================================================
 
 function Field({
   label,
-  required = false,
   children,
+  required = true,
 }: {
   label: string;
+  children: ReactNode;
   required?: boolean;
-  children: React.ReactNode;
 }) {
   return (
     <div className="min-w-0">
-      <label className="mb-2 block text-sm font-semibold text-[#10284D]">
+      <div className="mb-2 text-sm font-semibold text-[#10284D]">
         {label}
+
         {required && (
           <span className="ml-1 text-red-500">*</span>
         )}
-      </label>
+      </div>
+
       {children}
     </div>
   );
 }
 
-function SectionTitle({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+// ======================================================
+// TEXT INPUT - IMPORTANT FIX
+// Keep this component OUTSIDE PreliminaryAdmissionForm.
+// This prevents inputs from losing focus while typing.
+// ======================================================
+
+type TextInputProps = {
+  name: keyof FormValues;
+  value: string;
+  onChange: (
+    name: keyof FormValues,
+    value: string
+  ) => void;
+  placeholder: string;
+  type?: "text" | "email" | "tel" | "number";
+  optional?: boolean;
+};
+
+function TextInput({
+  name,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  optional = false,
+}: TextInputProps) {
+  const handleChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
+    let newValue = event.target.value;
+
+    if (type === "tel") {
+      newValue = newValue.replace(/\D/g, "").slice(0, 10);
+    }
+
+    onChange(name, newValue);
+  };
+
   return (
-    <div className="mb-6 border-b border-[#D9E8FF] pb-4">
-      <h2 className="flex items-center gap-3 text-base font-bold uppercase text-[#10284D] sm:text-lg">
-        <span className="h-7 w-1 rounded-full bg-[#0075FF]" />
-        {children}
-      </h2>
-    </div>
+    <input
+      id={name}
+      name={name}
+      className={inputClass}
+      type={type}
+      value={value}
+      required={!optional}
+      placeholder={placeholder}
+      min={type === "number" ? 0 : undefined}
+      step={type === "number" ? "0.01" : undefined}
+      pattern={type === "tel" ? "[0-9]{10}" : undefined}
+      maxLength={type === "tel" ? 10 : undefined}
+      inputMode={type === "tel" ? "numeric" : undefined}
+      onChange={handleChange}
+    />
   );
 }
 
-function SelectInput({
+// ======================================================
+// SELECT
+// ======================================================
+
+function SelectField({
   value,
-  onChange,
   options,
-  required = false,
+  onChange,
+  placeholder,
 }: {
   value: string;
-  onChange: (value: string) => void;
   options: string[];
-  required?: boolean;
+  onChange: (value: string) => void;
+  placeholder: string;
 }) {
   return (
     <div className="relative">
       <select
+        required
         value={value}
-        required={required}
         onChange={(event) =>
           onChange(event.target.value)
         }
-        className={`${inputClass} appearance-none pr-12`}
+        className={`${inputClass} cursor-pointer appearance-none pr-12`}
       >
-        <option value="">Select an option</option>
+        <option value="">{placeholder}</option>
+
         {options.map((option) => (
           <option key={option} value={option}>
             {option}
@@ -157,63 +259,78 @@ function SelectInput({
 
       <ChevronDown
         size={18}
+        aria-hidden="true"
         className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#0075FF]"
       />
     </div>
   );
 }
 
-function YesNo({
+// ======================================================
+// YES / NO
+// ======================================================
+
+function YesNoField({
+  name,
   value,
   onChange,
-  name,
 }: {
+  name: string;
   value: string;
   onChange: (value: string) => void;
-  name: string;
 }) {
   return (
-    <div className="flex h-12 items-center gap-6">
-      {["Yes", "No"].map((choice) => (
+    <div className="flex flex-wrap gap-3">
+      {(["Yes", "No"] as const).map((option) => (
         <label
-          key={choice}
-          className="flex cursor-pointer items-center gap-2 text-sm text-[#10284D]"
+          key={option}
+          className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-5 py-3 text-sm transition ${
+            value === option
+              ? "border-[#0075FF] bg-[#EFF7FF] text-[#0056C9]"
+              : "border-[#D8E5F5] bg-white text-[#344563]"
+          }`}
         >
           <input
             type="radio"
             name={name}
-            value={choice}
-            checked={value === choice}
+            value={option}
+            checked={value === option}
             required
-            onChange={() => onChange(choice)}
+            onChange={() => onChange(option)}
             className="h-4 w-4 accent-[#0075FF]"
           />
-          {choice}
+
+          {option}
         </label>
       ))}
     </div>
   );
 }
 
+// ======================================================
+// CLIENT-SIDE IMAGE COMPRESSION
+// ======================================================
+
 async function compressImage(
   file: File,
-  field: ImageField
+  field: ImageKey
 ): Promise<File> {
-  if (file.size >= MAX_FILE_SIZE) {
+  if (
+    file.size === 0 ||
+    file.size >= MAX_IMAGE_SIZE
+  ) {
     throw new Error(
-      "Each uploaded image must be smaller than 5 MB."
+      "Each image must be smaller than 5 MB."
     );
   }
 
   if (
-    ![
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ].includes(file.type)
+    !["image/jpeg", "image/png", "image/webp"].includes(
+      file.type
+    )
   ) {
     throw new Error(
-      "Only JPG, PNG and WebP images are allowed."
+      "Only JPG, PNG and WebP images are supported."
     );
   }
 
@@ -221,7 +338,7 @@ async function compressImage(
 
   try {
     const isPhoto =
-      field === "student_passport_size_photo";
+      field === "student_s_passport_size_photograph";
 
     const maxWidth = isPhoto ? 800 : 900;
     const maxHeight = isPhoto ? 1100 : 450;
@@ -248,11 +365,12 @@ async function compressImage(
 
     if (!context) {
       throw new Error(
-        "Image compression is not supported."
+        "Image compression is unavailable."
       );
     }
 
     context.fillStyle = "#FFFFFF";
+
     context.fillRect(
       0,
       0,
@@ -268,10 +386,10 @@ async function compressImage(
       canvas.height
     );
 
-    let output: Blob | null = null;
+    let compressed: Blob | null = null;
 
-    for (const quality of [0.75, 0.6, 0.45]) {
-      output = await new Promise<Blob | null>(
+    for (const quality of [0.8, 0.65, 0.5, 0.35]) {
+      compressed = await new Promise<Blob | null>(
         (resolve) => {
           canvas.toBlob(
             resolve,
@@ -281,25 +399,28 @@ async function compressImage(
         }
       );
 
-      if (!output) {
-        throw new Error(
-          "Unable to compress uploaded image."
-        );
-      }
-
-      if (output.size <= 300 * 1024) {
+      if (
+        compressed &&
+        compressed.size <= 250 * 1024
+      ) {
         break;
       }
     }
 
-    if (!output) {
+    if (!compressed) {
       throw new Error(
-        "Unable to compress uploaded image."
+        "Unable to compress image."
+      );
+    }
+
+    if (compressed.size > 500 * 1024) {
+      throw new Error(
+        "The selected image is too large after compression."
       );
     }
 
     return new File(
-      [output],
+      [compressed],
       file.name.replace(/\.[^.]+$/, "") + ".jpg",
       {
         type: "image/jpeg",
@@ -311,26 +432,65 @@ async function compressImage(
   }
 }
 
+// ======================================================
+// UPLOAD FIELD
+// ======================================================
+
 function UploadField({
   label,
   file,
   onChange,
+  onError,
 }: {
   label: string;
   file: File | null;
   onChange: (file: File | null) => void;
+  onError: (message: string) => void;
 }) {
   return (
-    <Field label={label} required>
-      <label className="flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B6D5FF] bg-[#F7FBFF] p-5 text-center transition hover:border-[#0075FF] hover:bg-[#EFF7FF]">
+    <Field label={label}>
+      <label className="flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-[#B8D7FF] bg-[#F7FBFF] p-5 text-center transition hover:border-[#0075FF]">
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
           required={!file}
           className="sr-only"
-          onChange={(event) =>
-            onChange(event.target.files?.[0] ?? null)
-          }
+          onChange={(event) => {
+            const selected =
+              event.target.files?.[0] ?? null;
+
+            if (
+              selected &&
+              selected.size >= MAX_IMAGE_SIZE
+            ) {
+              event.target.value = "";
+
+              onError(
+                `${label} must be smaller than 5 MB.`
+              );
+
+              return;
+            }
+
+            if (
+              selected &&
+              ![
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+              ].includes(selected.type)
+            ) {
+              event.target.value = "";
+
+              onError(
+                `${label} must be JPG, PNG or WebP.`
+              );
+
+              return;
+            }
+
+            onChange(selected);
+          }}
         />
 
         <FileImage
@@ -340,21 +500,24 @@ function UploadField({
 
         {file ? (
           <>
-            <span className="max-w-full truncate text-sm font-semibold text-[#10284D]">
+            <span className="max-w-full break-all text-sm font-semibold text-[#10284D]">
               {file.name}
             </span>
+
             <span className="mt-2 text-xs text-slate-500">
               {(file.size / 1024).toFixed(1)} KB
             </span>
-            <span className="mt-3 text-sm font-medium text-[#0075FF]">
+
+            <span className="mt-2 text-xs font-medium text-[#0075FF]">
               Click to replace
             </span>
           </>
         ) : (
           <>
-            <span className="text-sm font-semibold text-[#10284D]">
-              Click to upload
+            <span className="text-sm font-semibold">
+              Click to upload image
             </span>
+
             <span className="mt-2 text-xs text-slate-500">
               JPG, PNG or WebP · Less than 5 MB
             </span>
@@ -365,36 +528,102 @@ function UploadField({
   );
 }
 
+// ======================================================
+// MAIN COMPONENT
+// ======================================================
+
 export default function PreliminaryAdmissionForm() {
   const [values, setValues] =
-    useState<FormValues>(INITIAL_VALUES);
+    useState<FormValues>({ ...INITIAL });
 
-  const [files, setFiles] = useState<
-    Record<ImageField, File | null>
-  >({
-    student_passport_size_photo: null,
-    father_s_signature: null,
-    mother_s_signature: null,
-  });
+  const [images, setImages] = useState<
+    Record<ImageKey, File | null>
+  >({ ...EMPTY_IMAGES });
 
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, setSubmitting] =
+    useState(false);
+
   const [error, setError] = useState("");
+
   const [registrationNo, setRegistrationNo] =
     useState<string | null>(null);
 
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Stable input update handler.
   const update = (
     field: keyof FormValues,
     value: string
   ) => {
+    setError("");
+
     setValues((previous) => ({
       ...previous,
       [field]: value,
     }));
   };
 
-  const handleSubmit = async (
+  function handleReligion(value: string) {
+    setError("");
+
+    setValues((previous) => ({
+      ...previous,
+      religion: value,
+
+      name_of_parish:
+        value === "Christian - Roman Catholic"
+          ? previous.name_of_parish
+          : "",
+
+      religion_others:
+        value === "Others"
+          ? previous.religion_others
+          : "",
+    }));
+  }
+
+  function handleMotherTongue(value: string) {
+    setError("");
+
+    setValues((previous) => ({
+      ...previous,
+      mother_tongue: value,
+
+      mother_tongue_others:
+        value === "Others"
+          ? previous.mother_tongue_others
+          : "",
+    }));
+  }
+
+  function handleSiblingChoice(value: string) {
+    setError("");
+
+    setValues((previous) => ({
+      ...previous,
+
+      does_the_applicant_have_any_sibling_s_studying_in_this_school:
+        value,
+
+      name_of_the_sibling:
+        value === "Yes"
+          ? previous.name_of_the_sibling
+          : "",
+
+      class_and_section:
+        value === "Yes"
+          ? previous.class_and_section
+          : "",
+    }));
+  }
+
+  // ====================================================
+  // SUBMIT
+  // ====================================================
+
+  async function handleSubmit(
     event: FormEvent<HTMLFormElement>
-  ) => {
+  ) {
     event.preventDefault();
 
     if (submitting) return;
@@ -403,47 +632,67 @@ export default function PreliminaryAdmissionForm() {
     setError("");
 
     try {
-      const formData = new FormData();
+      const payload = new FormData();
 
-      for (const [key, value] of Object.entries(
-        values
-      )) {
-        formData.append(key, value);
+      for (const [key, value] of Object.entries(values)) {
+        payload.append(key, value);
+      }
+
+      // Clear fields that aren't applicable.
+      if (
+        values.religion !==
+        "Christian - Roman Catholic"
+      ) {
+        payload.set("name_of_parish", "");
+      }
+
+      if (values.religion !== "Others") {
+        payload.set("religion_others", "");
+      }
+
+      if (values.mother_tongue !== "Others") {
+        payload.set("mother_tongue_others", "");
       }
 
       if (
-        values.does_the_applicant_have_any_sibling_s_studying_in_this_school ===
-        "No"
+        values.does_the_applicant_have_any_sibling_s_studying_in_this_school !==
+        "Yes"
       ) {
-        formData.set("name_of_the_sibling", "");
-        formData.set("class_and_section", "");
+        payload.set("name_of_the_sibling", "");
+        payload.set("class_and_section", "");
       }
 
       let totalCompressedSize = 0;
 
       for (const field of IMAGE_FIELDS) {
-        const original = files[field];
+        const file = images[field.key];
 
-        if (!original) {
+        if (!file) {
           throw new Error(
-            "Please upload the student photo and both parents' signatures."
+            `Please upload ${field.label}.`
           );
         }
 
         const compressed = await compressImage(
-          original,
-          field
+          file,
+          field.key
         );
 
         totalCompressedSize += compressed.size;
-        formData.set(field, compressed);
+
+        payload.append(
+          field.key,
+          compressed,
+          compressed.name
+        );
       }
 
       if (
-        totalCompressedSize > MAX_COMPRESSED_TOTAL
+        totalCompressedSize >
+        MAX_TOTAL_COMPRESSED_SIZE
       ) {
         throw new Error(
-          "The combined image size is too large. Please choose smaller images."
+          "Combined image size is too large."
         );
       }
 
@@ -451,230 +700,231 @@ export default function PreliminaryAdmissionForm() {
         "/api/rosary-lkg-admission",
         {
           method: "POST",
-          body: formData,
+          body: payload,
+          cache: "no-store",
         }
       );
 
       const responseText = await response.text();
 
-      let result: SubmissionResult;
+      let result: ApiResult;
 
       try {
         result = JSON.parse(responseText);
       } catch {
         throw new Error(
           response.status === 413
-            ? "Uploaded files exceed the server limit. Please select smaller images."
-            : "The server returned an unexpected response. Please try again."
+            ? "Total upload size exceeds the server limit."
+            : `The server returned an invalid response (HTTP ${response.status}).`
         );
       }
 
-      if (!response.ok || !result.success) {
+      if (!response.ok || result.success !== true) {
         throw new Error(
           result.message ||
-            "Unable to submit your application."
+          "Application submission failed."
         );
       }
 
       if (!result.registration_no) {
         throw new Error(
-          "Application response did not include a registration number. Please contact the school."
+          "Application was received, but no registration number was returned. Please contact the school."
         );
       }
 
       setRegistrationNo(result.registration_no);
-    } catch (error) {
+    } catch (caught) {
       setError(
-        error instanceof Error
-          ? error.message
-          : "Application submission failed."
+        caught instanceof Error
+          ? caught.message
+          : "Unable to confirm application submission."
       );
     } finally {
       setSubmitting(false);
     }
+  }
+
+  const closeSuccess = () => {
+    setRegistrationNo(null);
+    setValues({ ...INITIAL });
+    setImages({ ...EMPTY_IMAGES });
+    setError("");
+    formRef.current?.reset();
   };
 
+  // ====================================================
+  // JSX
+  // ====================================================
+
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-3 py-6 sm:px-6 lg:px-10">
-      <div className="overflow-hidden rounded-2xl border border-[#D9E8FF] bg-white shadow-sm">
-        <div className="bg-gradient-to-r from-[#EFF7FF] to-[#DCEEFF] px-5 py-10 text-center sm:px-8 sm:py-14">
-          <span className="inline-flex rounded-full border border-[#B8D6FF] bg-white px-5 py-2 text-xs font-bold text-[#0075FF]">
-            ADMISSIONS OPEN
+    <div className="mx-auto w-full max-w-[1500px] px-3 py-6 sm:px-6 lg:px-10">
+      <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
+
+        {/* HEADER */}
+        <header className="bg-gradient-to-br from-[#F4FAFF] to-[#DFEEFF] px-5 py-10 text-center sm:px-10 sm:py-14">
+          <span className="inline-flex rounded-full border border-blue-200 bg-white px-5 py-2 text-xs font-bold uppercase tracking-wide text-[#0075FF]">
+            Admissions Open
           </span>
 
-          <h1 className="mt-4 text-2xl font-bold leading-tight text-[#10284D] sm:text-3xl lg:text-4xl">
+          <h1 className="mx-auto mt-4 max-w-5xl text-2xl font-extrabold leading-tight text-[#10284D] sm:text-3xl lg:text-4xl">
             Rosary Matriculation Higher Secondary School
           </h1>
 
-          <p className="mt-3 text-sm text-[#57759A] sm:text-base">
-            LKG Application Form 2027 - 2028
+          <p className="mt-3 text-sm text-[#54749C] sm:text-base">
+            LKG Application Form 2027–2028
           </p>
 
-          <p className="mt-1 text-xs text-[#7890AA] sm:text-sm">
+          <p className="mt-1 text-xs text-[#6B85A7] sm:text-sm">
             Please complete all required details carefully.
           </p>
-        </div>
+        </header>
 
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-10 px-5 py-8 sm:px-8 lg:px-12">
-            <section>
-              <SectionTitle>
-                Personal Details
-              </SectionTitle>
+        <form
+          ref={formRef}
+          onSubmit={handleSubmit}
+        >
+          <div className="space-y-10 px-4 py-8 sm:px-8 lg:px-12">
 
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                <Field label="Name of the Pupil" required>
-                  <input
-                    className={inputClass}
-                    required
+            {/* PERSONAL DETAILS */}
+            <Section title="Personal Details">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
+                <Field label="Name of the Pupil">
+                  <TextInput
+                    name="name_of_the_pupil"
                     value={values.name_of_the_pupil}
-                    onChange={(e) =>
-                      update(
-                        "name_of_the_pupil",
-                        e.target.value
-                      )
-                    }
-                    placeholder="Enter pupil name"
+                    onChange={update}
+                    placeholder="Enter pupil's name"
                   />
                 </Field>
 
-                <Field label="Date of Birth" required>
+                <Field label="Date of Birth">
                   <input
                     type="date"
-                    className={inputClass}
                     required
-                    max={
-                      new Date()
-                        .toISOString()
-                        .split("T")[0]
-                    }
+                    className={inputClass}
                     value={values.date_of_birth}
-                    onChange={(e) =>
+                    max={new Date().toISOString().slice(0, 10)}
+                    onChange={(event) =>
                       update(
                         "date_of_birth",
-                        e.target.value
+                        event.target.value
                       )
                     }
                   />
                 </Field>
 
-                <Field label="Religion" required>
-                  <SelectInput
-                    required
+                <Field label="Religion">
+                  <SelectField
                     value={values.religion}
-                    onChange={(value) =>
-                      update("religion", value)
-                    }
+                    placeholder="Select religion"
+                    onChange={handleReligion}
                     options={[
-                      "Roman catholic",
-                      "Christian",
                       "Hindu",
+                      "Christian - Roman Catholic",
+                      "Christian",
                       "Muslim",
-                      "Other",
+                      "Others",
                     ]}
                   />
                 </Field>
 
-                <Field label="Place of Birth" required>
-                  <input
-                    className={inputClass}
-                    required
+                {values.religion ===
+                  "Christian - Roman Catholic" && (
+                  <Field label="Name of Parish">
+                    <TextInput
+                      name="name_of_parish"
+                      value={values.name_of_parish}
+                      onChange={update}
+                      placeholder="Enter name of parish"
+                    />
+                  </Field>
+                )}
+
+                {values.religion === "Others" && (
+                  <Field label="Please Specify Religion">
+                    <TextInput
+                      name="religion_others"
+                      value={values.religion_others}
+                      onChange={update}
+                      placeholder="Enter religion"
+                    />
+                  </Field>
+                )}
+
+                <Field label="Place of Birth">
+                  <TextInput
+                    name="place_of_birth"
                     value={values.place_of_birth}
-                    onChange={(e) =>
-                      update(
-                        "place_of_birth",
-                        e.target.value
-                      )
-                    }
+                    onChange={update}
                     placeholder="Enter place of birth"
                   />
                 </Field>
+
               </div>
-            </section>
+            </Section>
 
-            <section>
-              <SectionTitle>
-                Father's Details
-              </SectionTitle>
+            {/* FATHER */}
+            <Section title="Father's Details">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                {(
-                  [
-                    [
-                      "father_s_name",
-                      "Father's Name",
-                    ],
-                    [
-                      "father_s_qualification",
-                      "Qualification",
-                    ],
-                    [
-                      "father_s_occupation",
-                      "Occupation",
-                    ],
-                    [
-                      "father_s_income_per_month",
-                      "Income (per Month)",
-                    ],
-                  ] as const
-                ).map(([field, label]) => (
-                  <Field key={field} label={label} required>
-                    <input
-                      className={inputClass}
-                      required
-                      type={
-                        field ===
-                        "father_s_income_per_month"
-                          ? "number"
-                          : "text"
-                      }
-                      min={
-                        field ===
-                        "father_s_income_per_month"
-                          ? 0
-                          : undefined
-                      }
-                      value={values[field]}
-                      onChange={(e) =>
-                        update(field, e.target.value)
-                      }
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                    />
-                  </Field>
-                ))}
+                <Field label="Father's Name">
+                  <TextInput
+                    name="father_s_name"
+                    value={values.father_s_name}
+                    onChange={update}
+                    placeholder="Enter father's name"
+                  />
+                </Field>
+
+                <Field label="Qualification">
+                  <TextInput
+                    name="father_s_qualification"
+                    value={values.father_s_qualification}
+                    onChange={update}
+                    placeholder="Enter qualification"
+                  />
+                </Field>
+
+                <Field label="Occupation">
+                  <TextInput
+                    name="father_s_occupation"
+                    value={values.father_s_occupation}
+                    onChange={update}
+                    placeholder="Enter occupation"
+                  />
+                </Field>
+
+                <Field label="Monthly Income">
+                  <TextInput
+                    name="father_s_income_per_month"
+                    value={values.father_s_income_per_month}
+                    onChange={update}
+                    type="number"
+                    placeholder="Enter monthly income"
+                  />
+                </Field>
+
               </div>
-            </section>
+            </Section>
 
-            <section>
-              <SectionTitle>
-                Mother's Details
-              </SectionTitle>
+            {/* MOTHER */}
+            <Section title="Mother's Details">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
 
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                <Field label="Mother's Name" required>
-                  <input
-                    className={inputClass}
-                    required
+                <Field label="Mother's Name">
+                  <TextInput
+                    name="mother_s_name"
                     value={values.mother_s_name}
-                    onChange={(e) =>
-                      update(
-                        "mother_s_name",
-                        e.target.value
-                      )
-                    }
+                    onChange={update}
                     placeholder="Enter mother's name"
                   />
                 </Field>
 
-                <Field
-                  label="Is she a past pupil of Rosary?"
-                  required
-                >
-                  <YesNo
-                    name="past-pupil"
-                    value={
-                      values.is_she_a_past_pupil_of_rosary
-                    }
+                <Field label="Is she a past pupil of Rosary?">
+                  <YesNoField
+                    name="past_pupil"
+                    value={values.is_she_a_past_pupil_of_rosary}
                     onChange={(value) =>
                       update(
                         "is_she_a_past_pupil_of_rosary",
@@ -684,54 +934,39 @@ export default function PreliminaryAdmissionForm() {
                   />
                 </Field>
 
-                {(
-                  [
-                    [
-                      "mother_s_qualification",
-                      "Qualification",
-                    ],
-                    [
-                      "mother_s_occupation",
-                      "Occupation",
-                    ],
-                    [
-                      "mother_s_income_per_month",
-                      "Income (per Month)",
-                    ],
-                  ] as const
-                ).map(([field, label]) => (
-                  <Field key={field} label={label} required>
-                    <input
-                      className={inputClass}
-                      required
-                      type={
-                        field ===
-                        "mother_s_income_per_month"
-                          ? "number"
-                          : "text"
-                      }
-                      min={
-                        field ===
-                        "mother_s_income_per_month"
-                          ? 0
-                          : undefined
-                      }
-                      value={values[field]}
-                      onChange={(e) =>
-                        update(field, e.target.value)
-                      }
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                    />
-                  </Field>
-                ))}
+                <Field label="Qualification">
+                  <TextInput
+                    name="mother_s_qualification"
+                    value={values.mother_s_qualification}
+                    onChange={update}
+                    placeholder="Enter qualification"
+                  />
+                </Field>
 
-                <Field label="Mother Tongue" required>
-                  <SelectInput
-                    required
+                <Field label="Occupation">
+                  <TextInput
+                    name="mother_s_occupation"
+                    value={values.mother_s_occupation}
+                    onChange={update}
+                    placeholder="Enter occupation"
+                  />
+                </Field>
+
+                <Field label="Monthly Income">
+                  <TextInput
+                    name="mother_s_income_per_month"
+                    value={values.mother_s_income_per_month}
+                    onChange={update}
+                    type="number"
+                    placeholder="Enter monthly income"
+                  />
+                </Field>
+
+                <Field label="Mother Tongue">
+                  <SelectField
                     value={values.mother_tongue}
-                    onChange={(value) =>
-                      update("mother_tongue", value)
-                    }
+                    placeholder="Select mother tongue"
+                    onChange={handleMotherTongue}
                     options={[
                       "Tamil",
                       "English",
@@ -739,239 +974,179 @@ export default function PreliminaryAdmissionForm() {
                       "Malayalam",
                       "Kannada",
                       "Hindi",
-                      "Other",
+                      "Others",
                     ]}
                   />
                 </Field>
+
+                {values.mother_tongue === "Others" && (
+                  <Field label="Please Specify Mother Tongue">
+                    <TextInput
+                      name="mother_tongue_others"
+                      value={values.mother_tongue_others}
+                      onChange={update}
+                      placeholder="Enter mother tongue"
+                    />
+                  </Field>
+                )}
+
               </div>
-            </section>
+            </Section>
 
-            <section>
-              <SectionTitle>
-                Sibling Details
-              </SectionTitle>
-
-              <Field
-                label="Does the applicant have any siblings studying in this school?"
-                required
-              >
-                <YesNo
+            {/* SIBLING */}
+            <Section title="Sibling Details">
+              <Field label="Does the applicant have any sibling(s) studying in this school?">
+                <YesNoField
                   name="siblings"
                   value={
                     values.does_the_applicant_have_any_sibling_s_studying_in_this_school
                   }
-                  onChange={(value) => {
-                    update(
-                      "does_the_applicant_have_any_sibling_s_studying_in_this_school",
-                      value
-                    );
-
-                    if (value === "No") {
-                      setValues((previous) => ({
-                        ...previous,
-                        does_the_applicant_have_any_sibling_s_studying_in_this_school:
-                          "No",
-                        name_of_the_sibling: "",
-                        class_and_section: "",
-                      }));
-                    }
-                  }}
+                  onChange={handleSiblingChoice}
                 />
               </Field>
 
               {values.does_the_applicant_have_any_sibling_s_studying_in_this_school ===
                 "Yes" && (
-                <div className="mt-5 grid gap-5 sm:grid-cols-2">
-                  <Field
-                    label="Name of the Sibling"
-                    required
-                  >
-                    <input
-                      className={inputClass}
-                      required
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                  <Field label="Name of the Sibling">
+                    <TextInput
+                      name="name_of_the_sibling"
                       value={values.name_of_the_sibling}
-                      onChange={(e) =>
-                        update(
-                          "name_of_the_sibling",
-                          e.target.value
-                        )
-                      }
+                      onChange={update}
+                      placeholder="Enter sibling's name"
                     />
                   </Field>
 
-                  <Field
-                    label="Class and Section"
-                    required
-                  >
-                    <input
-                      className={inputClass}
-                      required
+                  <Field label="Class and Section">
+                    <TextInput
+                      name="class_and_section"
                       value={values.class_and_section}
-                      onChange={(e) =>
-                        update(
-                          "class_and_section",
-                          e.target.value
-                        )
-                      }
+                      onChange={update}
+                      placeholder="Enter class and section"
                     />
                   </Field>
+
                 </div>
               )}
-            </section>
+            </Section>
 
-            <section>
-              <SectionTitle>
-                Contact Details
-              </SectionTitle>
+            {/* CONTACT */}
+            <Section title="Contact Details">
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
 
-              <div className="grid gap-5 lg:grid-cols-2">
-                <Field label="Address" required>
+                <Field label="Address">
                   <textarea
-                    className={`${inputClass} min-h-[165px] resize-y py-3`}
                     required
+                    rows={5}
+                    className={`${inputClass} h-auto min-h-[165px] resize-y py-3`}
                     value={values.address}
-                    onChange={(e) =>
-                      update("address", e.target.value)
+                    placeholder="Enter address"
+                    onChange={(event) =>
+                      update(
+                        "address",
+                        event.target.value
+                      )
                     }
-                    placeholder="Enter permanent address"
                   />
                 </Field>
 
-                <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Email ID" required>
-                    <input
-                      type="email"
-                      className={inputClass}
-                      required
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                  <Field label="Email ID">
+                    <TextInput
+                      name="email"
                       value={values.email}
-                      onChange={(e) =>
-                        update("email", e.target.value)
-                      }
-                      placeholder="Enter email"
+                      onChange={update}
+                      type="email"
+                      placeholder="Enter email address"
                     />
                   </Field>
 
-                  <Field label="Phone Number" required>
-                    <input
-                      type="tel"
-                      className={inputClass}
-                      required
-                      inputMode="numeric"
-                      maxLength={10}
-                      pattern="[0-9]{10}"
+                  <Field label="Phone Number">
+                    <TextInput
+                      name="phone_number"
                       value={values.phone_number}
-                      onChange={(e) =>
-                        update(
-                          "phone_number",
-                          e.target.value.replace(
-                            /\D/g,
-                            ""
-                          )
-                        )
-                      }
-                      placeholder="10-digit number"
+                      onChange={update}
+                      type="tel"
+                      placeholder="10-digit phone number"
                     />
                   </Field>
 
-                  <Field label="Alternative Phone Number">
-                    <input
+                  <Field
+                    label="Alternative Phone Number"
+                    required={false}
+                  >
+                    <TextInput
+                      name="alternative_phone_number"
+                      value={values.alternative_phone_number}
+                      onChange={update}
                       type="tel"
-                      className={inputClass}
-                      inputMode="numeric"
-                      maxLength={10}
-                      pattern="[0-9]{10}"
-                      value={
-                        values.alternative_phone_number
-                      }
-                      onChange={(e) =>
-                        update(
-                          "alternative_phone_number",
-                          e.target.value.replace(
-                            /\D/g,
-                            ""
-                          )
-                        )
-                      }
+                      optional
                       placeholder="Optional"
                     />
                   </Field>
+
                 </div>
               </div>
-            </section>
+            </Section>
 
-            <section>
-              <SectionTitle>
-                Photo & Signature Uploads
-              </SectionTitle>
-
-              <p className="mb-5 text-sm leading-6 text-[#6680A2]">
-                Upload the student's passport-size photo
-                and both parents' signatures. Each image
+            {/* UPLOADS */}
+            <Section title="Photograph and Signature Uploads">
+              <p className="text-sm leading-6 text-[#647D9D]">
+                Upload the student’s passport-size photograph
+                and both parents’ signatures. Each image
                 must be smaller than 5 MB.
               </p>
 
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                <UploadField
-                  label="Student Passport Size Photo"
-                  file={
-                    files.student_passport_size_photo
-                  }
-                  onChange={(file) =>
-                    setFiles((previous) => ({
-                      ...previous,
-                      student_passport_size_photo: file,
-                    }))
-                  }
-                />
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {IMAGE_FIELDS.map(({ key, label }) => (
+                  <UploadField
+                    key={key}
+                    label={label}
+                    file={images[key]}
+                    onError={setError}
+                    onChange={(file) => {
+                      setError("");
 
-                <UploadField
-                  label="Father's Signature"
-                  file={files.father_s_signature}
-                  onChange={(file) =>
-                    setFiles((previous) => ({
-                      ...previous,
-                      father_s_signature: file,
-                    }))
-                  }
-                />
-
-                <UploadField
-                  label="Mother's Signature"
-                  file={files.mother_s_signature}
-                  onChange={(file) =>
-                    setFiles((previous) => ({
-                      ...previous,
-                      mother_s_signature: file,
-                    }))
-                  }
-                />
+                      setImages((previous) => ({
+                        ...previous,
+                        [key]: file,
+                      }));
+                    }}
+                  />
+                ))}
               </div>
-            </section>
+            </Section>
 
+            {/* ERROR MESSAGE */}
             {error && (
               <div
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"
+                className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
               >
                 {error}
               </div>
             )}
+
           </div>
 
-          <div className="flex flex-col gap-5 border-t border-[#DCE9F8] bg-[#F4F9FF] px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
-            <p className="text-sm text-[#6680A2]">
+          {/* SUBMIT */}
+          <div className="flex flex-col gap-4 border-t border-blue-100 bg-[#F6FAFF] px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-12">
+
+            <p className="text-sm text-[#6882A4]">
               Please review all information before submitting.
             </p>
 
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex h-12 items-center justify-center gap-3 rounded-lg bg-[#0075FF] px-8 text-sm font-semibold text-white transition hover:bg-[#005FCC] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-3 rounded-xl bg-[#0075FF] px-8 py-4 text-sm font-semibold text-white transition hover:bg-[#005DCC] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {submitting ? (
                 <>
                   <Loader2
-                    size={18}
+                    size={19}
                     className="animate-spin"
                   />
                   Submitting...
@@ -979,33 +1154,36 @@ export default function PreliminaryAdmissionForm() {
               ) : (
                 <>
                   Submit Application
-                  <ArrowRight size={18} />
+                  <ArrowRight size={19} />
                 </>
               )}
             </button>
+
           </div>
         </form>
       </div>
 
+      {/* SUCCESS POPUP */}
       {registrationNo && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#071D3B]/60 p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#071D3B]/65 px-4 backdrop-blur-sm">
+
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="admission-success-title"
-            className="relative w-full max-w-md rounded-2xl bg-white px-6 py-9 text-center shadow-2xl sm:px-9"
+            className="relative w-full max-w-md rounded-2xl bg-white px-6 py-9 text-center shadow-2xl sm:px-10"
           >
             <button
               type="button"
               aria-label="Close"
-              onClick={() => setRegistrationNo(null)}
-              className="absolute right-4 top-4 text-slate-400 hover:text-slate-700"
+              onClick={closeSuccess}
+              className="absolute right-4 top-4 rounded-lg p-2 text-slate-500 hover:bg-slate-100"
             >
               <X size={20} />
             </button>
 
             <CheckCircle2
-              size={62}
+              size={64}
               className="mx-auto text-green-600"
             />
 
@@ -1013,44 +1191,38 @@ export default function PreliminaryAdmissionForm() {
               id="admission-success-title"
               className="mt-5 text-2xl font-bold text-[#10284D]"
             >
-              Application Submitted!
+              Application Submitted Successfully!
             </h2>
 
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Your LKG admission application has
-              been received successfully.
+              Your LKG admission application has been
+              received successfully.
             </p>
 
-            <div className="mt-6 rounded-xl border border-[#C8E0FF] bg-[#F1F8FF] p-5">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#6680A2]">
+            <div className="mt-6 rounded-xl border border-blue-200 bg-blue-50 p-5">
+
+              <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">
                 Registration No.
               </p>
 
-              <p className="mt-2 text-3xl font-bold tracking-wide text-[#0075FF]">
+              <p className="mt-2 text-3xl font-bold tracking-wide text-[#0755AD]">
                 {registrationNo}
               </p>
+
             </div>
 
             <p className="mt-5 text-xs text-slate-500">
-              Please save this registration number
-              for future reference.
+              Please save this number for future reference.
             </p>
 
             <button
               type="button"
-              onClick={() => {
-                setRegistrationNo(null);
-                setValues(INITIAL_VALUES);
-                setFiles({
-                  student_passport_size_photo: null,
-                  father_s_signature: null,
-                  mother_s_signature: null,
-                });
-              }}
-              className="mt-7 w-full rounded-lg bg-[#0075FF] px-6 py-3 font-semibold text-white hover:bg-[#005FCC]"
+              onClick={closeSuccess}
+              className="mt-7 w-full rounded-xl bg-[#0075FF] px-6 py-3 font-semibold text-white hover:bg-[#005DCC]"
             >
               Done
             </button>
+
           </div>
         </div>
       )}

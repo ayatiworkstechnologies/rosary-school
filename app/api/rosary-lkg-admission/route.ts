@@ -8,19 +8,16 @@ export const maxDuration = 60;
 const API_URL =
   "https://api.ayatiworks.com/api/v1/public/rosary-school/rosary_lkg_admission/records";
 
-// Existing API key value unchanged.
-// Keep this route server-side only.
-const API_KEY =
-  process.env.AYATIWORKS_API_KEY ??
-  "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
+// Use the existing unchanged API key.
+const API_KEY = process.env.AYATIWORKS_API_KEY ?? "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
 
 const REGISTRATION_PREFIX = "2728";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_REQUEST_SIZE = 16 * 1024 * 1024;
+const MAX_REQUEST_SIZE = 4 * 1024 * 1024;
 
 const IMAGE_FIELDS = [
-  "student_passport_size_photo",
+  "student_s_passport_size_photograph",
   "father_s_signature",
   "mother_s_signature",
 ] as const;
@@ -47,12 +44,18 @@ const TEXT_FIELDS = [
   "email",
   "phone_number",
   "alternative_phone_number",
+  "name_of_parish",
+  "religion_others",
+  "mother_tongue_others",
 ] as const;
 
 const OPTIONAL_FIELDS = new Set<string>([
   "name_of_the_sibling",
   "class_and_section",
   "alternative_phone_number",
+  "name_of_parish",
+  "religion_others",
+  "mother_tongue_others",
 ]);
 
 type ApiResponse = {
@@ -64,7 +67,9 @@ type ApiResponse = {
 
 type JsonObject = Record<string, unknown>;
 
-function isObject(value: unknown): value is JsonObject {
+function isObject(
+  value: unknown
+): value is JsonObject {
   return (
     typeof value === "object" &&
     value !== null &&
@@ -89,7 +94,10 @@ function sendError(
   );
 }
 
-function readText(formData: FormData, key: string): string {
+function readText(
+  formData: FormData,
+  key: string
+): string {
   const value = formData.get(key);
 
   return typeof value === "string"
@@ -102,7 +110,9 @@ function isValidDate(value: string): boolean {
     return false;
   }
 
-  const date = new Date(`${value}T00:00:00.000Z`);
+  const date = new Date(
+    `${value}T00:00:00.000Z`
+  );
 
   return (
     !Number.isNaN(date.getTime()) &&
@@ -118,7 +128,10 @@ function isValidIncome(value: string): boolean {
 
   const amount = Number(value);
 
-  return Number.isFinite(amount) && amount >= 0;
+  return (
+    Number.isFinite(amount) &&
+    amount >= 0
+  );
 }
 
 // ======================================================
@@ -131,11 +144,14 @@ async function processImage(
 ): Promise<string> {
   const file = formData.get(field);
 
-  const label = field
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (character) =>
-      character.toUpperCase()
-    );
+  const labels: Record<string, string> = {
+    student_s_passport_size_photograph:
+      "Student’s Passport-Size Photograph",
+    father_s_signature: "Father's Signature",
+    mother_s_signature: "Mother's Signature",
+  };
+
+  const label = labels[field] ?? field;
 
   if (!(file instanceof File) || file.size === 0) {
     throw new Error(`Please upload ${label}.`);
@@ -147,80 +163,65 @@ async function processImage(
     );
   }
 
-  const allowedTypes = [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-  ];
-
-  if (!allowedTypes.includes(file.type)) {
-    throw new Error(
-      `${label} must be a JPG, PNG or WebP image.`
-    );
-  }
-
-  const input = Buffer.from(await file.arrayBuffer());
-
-  // TypeScript infers the Sharp metadata type.
-  // No sharp.Metadata namespace declaration needed.
-  let metadata;
-
-  try {
-    metadata = await sharp(input).metadata();
-  } catch {
-    throw new Error(`${label} is not a valid image.`);
-  }
-
   const expectedFormats: Record<string, string> = {
     "image/jpeg": "jpeg",
     "image/png": "png",
     "image/webp": "webp",
   };
 
-  if (metadata.format !== expectedFormats[file.type]) {
+  if (!expectedFormats[file.type]) {
     throw new Error(
-      `${label} does not match its image format.`
+      `${label} must be JPG, PNG or WebP.`
+    );
+  }
+
+  const input = Buffer.from(
+    await file.arrayBuffer()
+  );
+
+  // TypeScript infers the metadata type.
+  let metadata;
+
+  try {
+    metadata = await sharp(input, {
+      limitInputPixels: 25_000_000,
+    }).metadata();
+  } catch {
+    throw new Error(
+      `${label} is not a valid image.`
+    );
+  }
+
+  if (
+    metadata.format !==
+    expectedFormats[file.type]
+  ) {
+    throw new Error(
+      `${label} has an invalid image format.`
     );
   }
 
   const isSignature = field.includes("signature");
 
-  const width = isSignature ? 900 : 800;
-  const height = isSignature ? 450 : 1100;
+  const output = await sharp(input, {
+    limitInputPixels: 25_000_000,
+  })
+    .rotate()
+    .flatten({ background: "#ffffff" })
+    .resize({
+      width: isSignature ? 700 : 650,
+      height: isSignature ? 350 : 900,
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({
+      quality: 48,
+      mozjpeg: true,
+    })
+    .toBuffer();
 
-  let output: Buffer | null = null;
-
-  for (const quality of [80, 65, 50, 35]) {
-    const result = await sharp(input)
-      .rotate()
-      .flatten({ background: "#ffffff" })
-      .resize({
-        width,
-        height,
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .jpeg({
-        quality,
-        mozjpeg: true,
-      })
-      .toBuffer();
-
-    output = result;
-
-    if (result.length <= 250 * 1024) {
-      break;
-    }
-  }
-
-  if (!output) {
-    throw new Error(
-      `Unable to process ${label}.`
-    );
-  }
-
-  // The Ayatiworks API must support Base64 data URLs
-  // for these Image Upload fields.
+  // This assumes Ayatiworks supports Base64 data URLs
+  // in its Image Upload fields.
   return `data:image/jpeg;base64,${output.toString("base64")}`;
 }
 
@@ -228,43 +229,45 @@ async function processImage(
 // REGISTRATION NUMBER
 // ======================================================
 
-function getSequence(value: unknown): number | null {
+function getSequence(
+  value: unknown
+): number | null {
   if (typeof value !== "string") {
     return null;
   }
 
-  const escapedPrefix = REGISTRATION_PREFIX.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    "\\$&"
-  );
-
-  const pattern = new RegExp(
-    `^${escapedPrefix}-(\\d+)$`
-  );
-
-  const match = value.match(pattern);
+  const match = value.match(/^2728-(\d+)$/);
 
   if (!match) {
     return null;
   }
 
-  const number = Number(match[1]);
+  const sequence = Number(match[1]);
 
-  return Number.isSafeInteger(number) && number > 0
-    ? number
+  return Number.isSafeInteger(sequence) &&
+    sequence > 0
+    ? sequence
     : null;
 }
 
-function getRecords(payload: unknown): JsonObject[] {
+function getRecords(
+  payload: unknown
+): JsonObject[] {
   if (Array.isArray(payload)) {
     return payload.filter(isObject);
   }
 
   if (!isObject(payload)) {
-    throw new Error("Invalid records response.");
+    throw new Error(
+      "Invalid records response."
+    );
   }
 
-  for (const key of ["items", "records", "data"]) {
+  for (const key of [
+    "items",
+    "records",
+    "data",
+  ]) {
     const value = payload[key];
 
     if (Array.isArray(value)) {
@@ -272,41 +275,57 @@ function getRecords(payload: unknown): JsonObject[] {
     }
 
     if (isObject(value)) {
-      for (const nestedKey of ["items", "records", "data"]) {
-        const nestedValue = value[nestedKey];
+      for (const nestedKey of [
+        "items",
+        "records",
+        "data",
+      ]) {
+        const nested = value[nestedKey];
 
-        if (Array.isArray(nestedValue)) {
-          return nestedValue.filter(isObject);
+        if (Array.isArray(nested)) {
+          return nested.filter(isObject);
         }
       }
     }
   }
 
-  throw new Error("Records list not found.");
+  throw new Error(
+    "Admission records list not found."
+  );
 }
 
+// Requires Ayatiworks GET support with page/page_size.
+// Exact sequential uniqueness under concurrent requests
+// requires atomic allocation in persistent storage.
 async function generateRegistrationNumber(): Promise<string> {
-  const pageSize = 100;
-  let maximum = 0;
+  const PAGE_SIZE = 100;
+  let highest = 0;
 
   for (let page = 1; page <= 1000; page++) {
     const url = new URL(API_URL);
 
-    url.searchParams.set("page", String(page));
     url.searchParams.set(
-      "page_size",
-      String(pageSize)
+      "page",
+      String(page)
     );
 
-    const response = await fetch(url.toString(), {
-      method: "GET",
-      headers: {
-        "X-API-Key": API_KEY,
-        Accept: "application/json",
-      },
-      cache: "no-store",
-      signal: AbortSignal.timeout(15000),
-    });
+    url.searchParams.set(
+      "page_size",
+      String(PAGE_SIZE)
+    );
+
+    const response = await fetch(
+      url.toString(),
+      {
+        method: "GET",
+        headers: {
+          "X-API-Key": API_KEY,
+          Accept: "application/json",
+        },
+        cache: "no-store",
+        signal: AbortSignal.timeout(15000),
+      }
+    );
 
     if (!response.ok) {
       throw new Error(
@@ -314,42 +333,49 @@ async function generateRegistrationNumber(): Promise<string> {
       );
     }
 
-    const payload: unknown = await response.json();
-    const records = getRecords(payload);
+    const records = getRecords(
+      await response.json()
+    );
 
     for (const record of records) {
-      const item = isObject(record.data)
+      const data = isObject(record.data)
         ? record.data
         : record;
 
       const sequence = getSequence(
-        item.registration_no
+        data.registration_no
       );
 
       if (sequence !== null) {
-        maximum = Math.max(maximum, sequence);
+        highest = Math.max(
+          highest,
+          sequence
+        );
       }
     }
 
-    if (records.length < pageSize) {
+    if (records.length < PAGE_SIZE) {
       return `${REGISTRATION_PREFIX}-${String(
-        maximum + 1
+        highest + 1
       ).padStart(3, "0")}`;
     }
   }
 
   throw new Error(
-    "Unable to scan all registration records."
+    "Registration records pagination exceeded the limit."
   );
 }
 
 // ======================================================
-// UPSTREAM ERROR HANDLING
+// SAFE UPSTREAM ERROR
 // ======================================================
 
-function getUpstreamMessage(body: string): string {
+function getSafeUpstreamMessage(
+  responseBody: string
+): string {
   try {
-    const payload: unknown = JSON.parse(body);
+    const payload: unknown =
+      JSON.parse(responseBody);
 
     if (!isObject(payload)) {
       return "";
@@ -363,23 +389,28 @@ function getUpstreamMessage(body: string): string {
           : "";
 
     if (
+      message.length > 0 &&
       message.length <= 180 &&
-      !/base64|data:image|api.?key/i.test(message)
+      !/base64|data:image|api.?key/i.test(
+        message
+      )
     ) {
       return message;
     }
   } catch {
-    // Ignore non-JSON upstream responses.
+    // Upstream response may not be JSON.
   }
 
   return "";
 }
 
 // ======================================================
-// SUBMIT ADMISSION
+// SUBMIT APPLICATION
 // ======================================================
 
-export async function POST(request: NextRequest) {
+export async function POST(
+  request: NextRequest
+) {
   try {
     if (!API_KEY) {
       return sendError(
@@ -394,7 +425,7 @@ export async function POST(request: NextRequest) {
 
     if (contentLength > MAX_REQUEST_SIZE) {
       return sendError(
-        "Total uploaded file size is too large.",
+        "Total upload size is too large.",
         413
       );
     }
@@ -412,11 +443,36 @@ export async function POST(request: NextRequest) {
 
     const data: Record<string, string> = {};
 
-    // Keep all existing Ayatiworks field keys.
+    // All existing module fields are preserved.
     for (const field of TEXT_FIELDS) {
       data[field] = readText(formData, field);
     }
 
+    // Clear inactive conditional fields.
+    if (
+      data.religion !==
+      "Christian - Roman Catholic"
+    ) {
+      data.name_of_parish = "";
+    }
+
+    if (data.religion !== "Others") {
+      data.religion_others = "";
+    }
+
+    if (data.mother_tongue !== "Others") {
+      data.mother_tongue_others = "";
+    }
+
+    const siblingChoice =
+      data.does_the_applicant_have_any_sibling_s_studying_in_this_school;
+
+    if (siblingChoice !== "Yes") {
+      data.name_of_the_sibling = "";
+      data.class_and_section = "";
+    }
+
+    // Required fields.
     for (const field of TEXT_FIELDS) {
       if (
         !OPTIONAL_FIELDS.has(field) &&
@@ -429,32 +485,104 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Religion.
     if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)
+      ![
+        "Hindu",
+        "Christian - Roman Catholic",
+        "Christian",
+        "Muslim",
+        "Others",
+      ].includes(data.religion)
     ) {
       return sendError(
-        "Please enter a valid email address.",
-        400
-      );
-    }
-
-    if (!/^\d{10}$/.test(data.phone_number)) {
-      return sendError(
-        "Phone number must contain exactly 10 digits.",
+        "Please select a valid religion.",
         400
       );
     }
 
     if (
-      data.alternative_phone_number &&
-      !/^\d{10}$/.test(data.alternative_phone_number)
+      data.religion ===
+        "Christian - Roman Catholic" &&
+      !data.name_of_parish
     ) {
       return sendError(
-        "Alternative phone number must contain exactly 10 digits.",
+        "Please enter Name of Parish.",
         400
       );
     }
 
+    if (
+      data.religion === "Others" &&
+      !data.religion_others
+    ) {
+      return sendError(
+        "Please specify the religion.",
+        400
+      );
+    }
+
+    // Mother Tongue.
+    if (
+      ![
+        "Tamil",
+        "English",
+        "Telugu",
+        "Malayalam",
+        "Kannada",
+        "Hindi",
+        "Others",
+      ].includes(data.mother_tongue)
+    ) {
+      return sendError(
+        "Please select a valid mother tongue.",
+        400
+      );
+    }
+
+    if (
+      data.mother_tongue === "Others" &&
+      !data.mother_tongue_others
+    ) {
+      return sendError(
+        "Please specify the mother tongue.",
+        400
+      );
+    }
+
+    // Yes / No fields.
+    if (
+      !["Yes", "No"].includes(
+        data.is_she_a_past_pupil_of_rosary
+      )
+    ) {
+      return sendError(
+        "Please select the mother's past-pupil status.",
+        400
+      );
+    }
+
+    if (
+      !["Yes", "No"].includes(siblingChoice)
+    ) {
+      return sendError(
+        "Please select the sibling status.",
+        400
+      );
+    }
+
+    if (
+      siblingChoice === "Yes" &&
+      (!data.name_of_the_sibling ||
+        !data.class_and_section)
+    ) {
+      return sendError(
+        "Please enter sibling name, class and section.",
+        400
+      );
+    }
+
+    // Date.
     if (!isValidDate(data.date_of_birth)) {
       return sendError(
         "Please enter a valid date of birth.",
@@ -462,6 +590,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Monthly income fields have separate API keys.
     if (
       !isValidIncome(
         data.father_s_income_per_month
@@ -476,43 +605,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Email.
     if (
-      !["Yes", "No"].includes(
-        data.is_she_a_past_pupil_of_rosary
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        data.email
       )
     ) {
       return sendError(
-        "Please select the mother's past-pupil status.",
+        "Please enter a valid email address.",
         400
       );
     }
 
-    const siblingChoice =
-      data.does_the_applicant_have_any_sibling_s_studying_in_this_school;
-
-    if (!["Yes", "No"].includes(siblingChoice)) {
+    // Phone.
+    if (
+      !/^\d{10}$/.test(
+        data.phone_number
+      )
+    ) {
       return sendError(
-        "Please select Yes or No for sibling details.",
+        "Phone number must contain exactly 10 digits.",
         400
       );
     }
 
-    if (siblingChoice === "Yes") {
-      if (
-        !data.name_of_the_sibling ||
-        !data.class_and_section
-      ) {
-        return sendError(
-          "Please enter the sibling's name, class and section.",
-          400
-        );
-      }
-    } else {
-      data.name_of_the_sibling = "";
-      data.class_and_section = "";
+    if (
+      data.alternative_phone_number &&
+      !/^\d{10}$/.test(
+        data.alternative_phone_number
+      )
+    ) {
+      return sendError(
+        "Alternative phone number must contain exactly 10 digits.",
+        400
+      );
     }
 
-    // Validate and compress the three images.
+    // Process three images.
     try {
       for (const field of IMAGE_FIELDS) {
         data[field] = await processImage(
@@ -520,17 +649,16 @@ export async function POST(request: NextRequest) {
           field
         );
       }
-    } catch (error) {
+    } catch (caught) {
       return sendError(
-        error instanceof Error
-          ? error.message
-          : "Invalid uploaded image.",
+        caught instanceof Error
+          ? caught.message
+          : "Invalid image upload.",
         400
       );
     }
 
-    // Generate registration number server-side.
-    // Never accept it from the browser.
+    // Generate registration number.
     let registrationNo: string;
 
     try {
@@ -538,12 +666,12 @@ export async function POST(request: NextRequest) {
         await generateRegistrationNumber();
     } catch {
       return sendError(
-        "Unable to generate the next registration number. Please verify the admission records API.",
+        "Unable to generate a registration number. Please verify the Ayatiworks records API.",
         503
       );
     }
 
-    // Forward the application to Ayatiworks.
+    // Submit all fields to Ayatiworks.
     const response = await fetch(API_URL, {
       method: "POST",
       headers: {
@@ -563,20 +691,20 @@ export async function POST(request: NextRequest) {
     if (!response.ok) {
       const responseBody = await response.text();
 
-      const upstreamMessage =
-        getUpstreamMessage(responseBody);
+      const safeDetail =
+        getSafeUpstreamMessage(responseBody);
 
       console.error(
         "[Rosary Admission] Upstream error:",
         {
           status: response.status,
-          message: upstreamMessage || "No safe detail",
+          message: safeDetail || "No safe detail",
         }
       );
 
       if (response.status === 413) {
         return sendError(
-          "The admission service rejected the total upload size.",
+          "The admission service rejected the image upload size.",
           413,
           413
         );
@@ -584,7 +712,7 @@ export async function POST(request: NextRequest) {
 
       if (response.status === 409) {
         return sendError(
-          "Registration number conflict. Please contact the school before retrying.",
+          "Registration number conflict. Please contact the school.",
           409,
           409
         );
@@ -595,8 +723,8 @@ export async function POST(request: NextRequest) {
         response.status === 422
       ) {
         return sendError(
-          upstreamMessage ||
-            "The admission service rejected the application. Please verify its image-upload format and required fields.",
+          safeDetail ||
+            "The admission service rejected the form data or image format.",
           422,
           response.status
         );
@@ -615,7 +743,7 @@ export async function POST(request: NextRequest) {
 
       if (response.status === 429) {
         return sendError(
-          "Too many requests. Please try again later.",
+          "Too many requests. Please try later.",
           429,
           429
         );
@@ -632,35 +760,23 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         message:
-          "Your LKG admission application has been submitted successfully!",
+          "Your LKG admission application was submitted successfully!",
         registration_no: registrationNo,
       },
       { status: 201 }
     );
-  } catch (error) {
-    const timedOut =
-      error instanceof Error &&
+  } catch (caught) {
+    const timeout =
+      caught instanceof Error &&
       ["TimeoutError", "AbortError"].includes(
-        error.name
+        caught.name
       );
-
-    if (timedOut) {
-      return sendError(
-        "Submission timed out. Please contact the school before trying again.",
-        504
-      );
-    }
-
-    console.error(
-      "[Rosary Admission] Unexpected error:",
-      error instanceof Error
-        ? error.name
-        : "Unknown error"
-    );
 
     return sendError(
-      "Unable to confirm your application submission. Please contact the school.",
-      502
+      timeout
+        ? "Submission timed out. Please contact the school before retrying."
+        : "Unable to confirm submission. Please contact the school.",
+      timeout ? 504 : 502
     );
   }
 }
