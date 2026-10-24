@@ -1,6 +1,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
+import { randomUUID } from "node:crypto";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -12,14 +15,20 @@ export const maxDuration = 60;
 const API_URL =
   "https://api.ayatiworks.com/api/v1/public/rosary-school/rosary_lkg_admission/records";
 
-// Keep your existing secret value unchanged in .env.local.
-const API_KEY = process.env.AYATIWORKS_API_KEY ?? "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
+const API_KEY =
+  process.env.AYATIWORKS_API_KEY ??
+  "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
 
 const REGISTRATION_PREFIX = "2728";
 const MAX_DATE_OF_BIRTH = "2024-12-31";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_REQUEST_SIZE = 4 * 1024 * 1024;
+const MAX_REQUEST_SIZE = 18 * 1024 * 1024;
+const STORAGE_DIR = path.join(
+  process.cwd(),
+  "storage",
+  "rosary-lkg-admissions"
+);
 
 const IMAGE_FIELDS = [
   "student_s_passport_size_photograph",
@@ -158,93 +167,83 @@ function isValidIncome(value: string): boolean {
 // IMAGE PROCESSING
 // =====================================================
 
-async function processImage(
+async function saveImage(
   formData: FormData,
-  field: string
-): Promise<string> {
+  field: string,
+  origin: string
+): Promise<{ url: string; filePath: string }> {
   const file = formData.get(field);
-
   const labels: Record<string, string> = {
-    student_s_passport_size_photograph:
-      "Student’s Passport-Size Photograph",
+    student_s_passport_size_photograph: "Student’s Passport-Size Photograph",
     father_s_signature: "Father's Signature",
     mother_s_signature: "Mother's Signature",
   };
-
   const label = labels[field] ?? field;
 
   if (!(file instanceof File) || file.size === 0) {
     throw new Error(`Please upload ${label}.`);
   }
-
-  if (file.size >= MAX_IMAGE_SIZE) {
-    throw new Error(
-      `${label} must be smaller than 5 MB.`
-    );
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new Error(`${label} must not exceed 5 MB.`);
   }
 
-  const expectedFormats: Record<string, string> = {
+  const formats: Record<string, string> = {
     "image/jpeg": "jpeg",
     "image/png": "png",
     "image/webp": "webp",
   };
-
-  if (!expectedFormats[file.type]) {
-    throw new Error(
-      `${label} must be JPG, PNG or WebP.`
-    );
+  if (!formats[file.type]) {
+    throw new Error(`${label} must be JPG, PNG or WebP.`);
   }
 
-  const input = Buffer.from(
-    await file.arrayBuffer()
-  );
-
+  const input = Buffer.from(await file.arrayBuffer());
   let metadata;
-
   try {
-    metadata = await sharp(input, {
-      limitInputPixels: 25_000_000,
-    }).metadata();
+    metadata = await sharp(input, { limitInputPixels: 25_000_000 }).metadata();
   } catch {
-    throw new Error(
-      `${label} is not a valid image.`
-    );
+    throw new Error(`${label} is not a valid image.`);
+  }
+  if (metadata.format !== formats[file.type]) {
+    throw new Error(`${label} has an invalid image format.`);
   }
 
-  if (
-    metadata.format !== expectedFormats[file.type]
-  ) {
-    throw new Error(
-      `${label} has an invalid image format.`
-    );
-  }
-
-  const isSignature = field.includes("signature");
-
-  // Preserve source aspect ratio and orientation.
-  // Email preview sizing is separate from saved image data.
-  const output = await sharp(input, {
-    limitInputPixels: 25_000_000,
-  })
+  const signature = field.includes("signature");
+  const output = await sharp(input, { limitInputPixels: 25_000_000 })
     .rotate()
     .flatten({ background: "#ffffff" })
     .resize({
-      width: isSignature ? 700 : 650,
-      height: isSignature ? 350 : 900,
+      width: signature ? 900 : 800,
+      height: signature ? 450 : 1100,
       fit: "inside",
       withoutEnlargement: true,
     })
-    .jpeg({
-      quality: 48,
-      mozjpeg: true,
-    })
+    .jpeg({ quality: 78, mozjpeg: true })
     .toBuffer();
 
-  // This format assumes that Ayatiworks accepts
-  // Base64 data URLs for its Image Upload fields.
-  return `data:image/jpeg;base64,${output.toString(
-    "base64"
-  )}`;
+  // Random filenames prevent exposing applicants' names in the public URL.
+  const filename = `${randomUUID()}.jpg`;
+  const filePath = path.join(STORAGE_DIR, filename);
+
+  await mkdir(STORAGE_DIR, { recursive: true, mode: 0o700 });
+  await writeFile(filePath, output, { flag: "wx", mode: 0o600 });
+
+  return {
+    url: `${origin}/api/rosary-lkg-admission/images/${filename}`,
+    filePath,
+  };
+}
+
+function getRequestOrigin(request: NextRequest): string {
+  const protocol =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+    request.nextUrl.protocol.replace(/:$/, "");
+
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    request.headers.get("host") ||
+    request.nextUrl.host;
+
+  return `${protocol}://${host}`;
 }
 
 // =====================================================
@@ -464,6 +463,8 @@ export async function POST(
     }
 
     const data: Record<string, string> = {};
+    const savedFiles: string[] = [];
+    const origin = getRequestOrigin(request);
 
     // Read every Ayatiworks module field.
     for (const field of TEXT_FIELDS) {
@@ -672,12 +673,12 @@ export async function POST(
     // Process image uploads.
     try {
       for (const field of IMAGE_FIELDS) {
-        data[field] = await processImage(
-          formData,
-          field
-        );
+        const saved = await saveImage(formData, field, origin);
+        data[field] = saved.url;
+        savedFiles.push(saved.filePath);
       }
     } catch (caught) {
+      await Promise.all(savedFiles.map((file) => unlink(file).catch(() => undefined)));
       return sendError(
         caught instanceof Error
           ? caught.message
@@ -693,6 +694,7 @@ export async function POST(
       registrationNo =
         await generateRegistrationNumber();
     } catch {
+      await Promise.all(savedFiles.map((file) => unlink(file).catch(() => undefined)));
       return sendError(
         "Unable to generate a registration number. Please verify the Ayatiworks records API.",
         503
@@ -718,6 +720,10 @@ export async function POST(
 
     if (!response.ok) {
       const responseBody = await response.text();
+      // Definitive validation/auth rejection: record was not accepted.
+      if ([400, 401, 403, 413, 422].includes(response.status)) {
+        await Promise.all(savedFiles.map((file) => unlink(file).catch(() => undefined)));
+      }
 
       const safeDetail =
         getSafeUpstreamMessage(responseBody);

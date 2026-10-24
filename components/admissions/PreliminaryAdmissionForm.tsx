@@ -23,7 +23,7 @@ import {
 
 const MAX_DOB = "2024-12-31";
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_TOTAL_IMAGE_SIZE = 3 * 1024 * 1024;
+const MAX_TOTAL_IMAGE_SIZE = 3 * 1024 * 1024; // Compressed images sent to Next.js
 
 const inputClass =
   "block h-12 w-full min-w-0 rounded-lg border " +
@@ -1106,7 +1106,7 @@ export default function PreliminaryAdmissionForm() {
               <p className="text-sm leading-6 text-[#647D9D]">
                 Upload the student’s passport-size photograph
                 and both parents’ signatures. Each image
-                must be smaller than 5 MB.
+                must be smaller than 5 MB. Files are stored securely by the school website and only image URLs are sent to the admission service.
               </p>
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
