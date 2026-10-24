@@ -566,8 +566,9 @@ export default function PreliminaryAdmissionForm() {
                       update("religion", value)
                     }
                     options={[
-                      "Hindu",
+                      "Roman catholic",
                       "Christian",
+                      "Hindu",
                       "Muslim",
                       "Other",
                     ]}
@@ -824,7 +825,7 @@ export default function PreliminaryAdmissionForm() {
               </SectionTitle>
 
               <div className="grid gap-5 lg:grid-cols-2">
-                <Field label="Permanent Address" required>
+                <Field label="Address" required>
                   <textarea
                     className={`${inputClass} min-h-[165px] resize-y py-3`}
                     required
