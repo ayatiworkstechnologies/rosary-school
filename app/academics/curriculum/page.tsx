@@ -24,7 +24,7 @@ export default function CurriculumPage() {
 
       <SubjectsWeOffer />
 
-      <AcademicSchedule />
+      {/* <AcademicSchedule /> */}
 
 
     </>
