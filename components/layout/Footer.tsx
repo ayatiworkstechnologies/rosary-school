@@ -137,7 +137,8 @@ export default function Footer() {
     setSubscribeStatus(null);
 
     try {
-      const response = await fetch("/backend/api/v1/newsletter-subscriptions", {
+      const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || "/backend").replace(/\/$/, "");
+      const response = await fetch(`${apiBaseUrl}/api/v1/newsletter-subscriptions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

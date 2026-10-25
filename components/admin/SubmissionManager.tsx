@@ -15,7 +15,8 @@ const STATUSES: SubmissionStatus[] = ["NEW", "READ", "REPLIED", "UNDER_REVIEW", 
 type Item = ContactEnquiry | AdmissionApplication;
 
 function isAdmission(item: Item): item is AdmissionApplication { return "registration_no" in item; }
-function imageUrl(value: string) { return value.startsWith("/uploads/") ? `/backend${value}` : value; }
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend").replace(/\/$/, "");
+function imageUrl(value: string) { return value.startsWith("/uploads/") ? `${API_BASE_URL}${value}` : value; }
 function fieldLabel(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, letter => letter.toUpperCase()); }
 
 function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {

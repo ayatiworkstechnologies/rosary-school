@@ -764,8 +764,9 @@ export default function PreliminaryAdmissionForm() {
         );
       }
 
+      const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || "/backend").replace(/\/$/, "");
       const response = await fetch(
-        "/backend/api/v1/admission-applications",
+        `${apiBaseUrl}/api/v1/admission-applications`,
         {
           method: "POST",
           body: payload,

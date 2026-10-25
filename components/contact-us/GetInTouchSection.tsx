@@ -162,7 +162,8 @@ export default function GetInTouchSection() {
     setToast(null);
 
     try {
-      const response = await fetch("/backend/api/v1/contact-enquiries", {
+      const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || "/backend").replace(/\/$/, "");
+      const response = await fetch(`${apiBaseUrl}/api/v1/contact-enquiries`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
