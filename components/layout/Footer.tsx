@@ -137,16 +137,12 @@ export default function Footer() {
     setSubscribeStatus(null);
 
     try {
-      const response = await fetch("/api/rosary-newsletter", {
+      const response = await fetch("/backend/api/v1/newsletter-subscriptions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          data: {
-            email,
-          },
-        }),
+        body: JSON.stringify({ email }),
       });
 
       let result: NewsletterApiResponse = {};

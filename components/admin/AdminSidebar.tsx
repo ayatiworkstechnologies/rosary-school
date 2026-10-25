@@ -21,6 +21,10 @@ import {
   Images,
   UsersRound,
   Download,
+  MessageSquareText,
+  ClipboardList,
+  Settings,
+  MailPlus,
   LogOut,
   X,
   School,
@@ -74,6 +78,26 @@ const menuItems = [
     label: "Downloads",
     href: "/admin/downloads",
     icon: Download,
+  },
+  {
+    label: "Contact Enquiries",
+    href: "/admin/contact-enquiries",
+    icon: MessageSquareText,
+  },
+  {
+    label: "Admissions",
+    href: "/admin/admissions",
+    icon: ClipboardList,
+  },
+  {
+    label: "Newsletter",
+    href: "/admin/newsletter",
+    icon: MailPlus,
+  },
+  {
+    label: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
   },
 ];
 
@@ -155,7 +179,7 @@ export default function AdminSidebar({
   // SIDEBAR CONTENT
   // =========================================================
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex h-full flex-col">
 
       {/* =====================================================
@@ -489,7 +513,7 @@ export default function AdminSidebar({
           lg:block
         "
       >
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
 
@@ -610,7 +634,7 @@ export default function AdminSidebar({
               </button>
 
 
-              <SidebarContent />
+              {renderSidebarContent()}
 
             </motion.aside>
 
@@ -621,4 +645,4 @@ export default function AdminSidebar({
 
     </>
   );
-}     
+}

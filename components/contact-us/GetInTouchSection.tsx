@@ -162,19 +162,12 @@ export default function GetInTouchSection() {
     setToast(null);
 
     try {
-      const response = await fetch("/api/rosary-contact", {
+      const response = await fetch("/backend/api/v1/contact-enquiries", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          data: {
-            name,
-            email,
-            phone,
-            message,
-          },
-        }),
+        body: JSON.stringify({ name, email, phone, message }),
         cache: "no-store",
       });
 

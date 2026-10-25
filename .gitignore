@@ -58,6 +58,8 @@ backend/**/__pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.tox/
+.nox/
 
 # Python coverage
 .coverage
@@ -82,6 +84,9 @@ backend/logs/
 *.sqlite
 *.sqlite3
 *.db
+*.db-journal
+*.sqlite-journal
+*.sqlite3-journal
 
 
 # =========================================================
@@ -106,7 +111,27 @@ backend/logs/
 # =========================================================
 
 .DS_Store
+Thumbs.db
+Desktop.ini
 *.pem
+*.pid
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Local editor settings
+.idea/
+.vscode/
+
+# Local agent/tool state
+.agents/
+.codex/
+
+# Browser and end-to-end test artifacts
+/test-results/
+/playwright-report/
+/blob-report/
 
 
 # =========================================================

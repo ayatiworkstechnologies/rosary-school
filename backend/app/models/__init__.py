@@ -27,6 +27,7 @@ from app.models.faculty import (
 )
 
 from app.models.download import Download
+from app.models.submission import AdmissionApplication, ContactEnquiry, MailRoutingSettings, NewsletterSubscription, SubmissionStatus
 
 __all__ = [
     "Admin",
@@ -46,4 +47,9 @@ __all__ = [
     "FacultyMember",
 
     "Download",
+    "AdmissionApplication",
+    "ContactEnquiry",
+    "MailRoutingSettings",
+    "NewsletterSubscription",
+    "SubmissionStatus",
 ]

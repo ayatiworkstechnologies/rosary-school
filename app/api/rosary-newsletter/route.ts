@@ -10,7 +10,7 @@ const NEWSLETTER_API_URL = "https://api.ayatiworks.com/api/v1/public/rosary-scho
 // Use your existing Ayatiworks API key as a server-side
 // environment variable in your hosting provider.
 // This key must never be exposed in frontend code.
-const API_KEY = process.env.AYATIWORKS_API_KEY ?? "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
+const API_KEY = process.env.AYATIWORKS_API_KEY ?? "";
 
 type ApiResponse = {
   success: boolean;
@@ -29,6 +29,9 @@ function sendResponse(
 }
 
 export async function POST(request: NextRequest) {
+  if (!API_KEY) {
+    return sendResponse(false, "Newsletter service is not configured.", 503);
+  }
   try {
     if (!NEWSLETTER_API_URL || !API_KEY) {
       return sendResponse(

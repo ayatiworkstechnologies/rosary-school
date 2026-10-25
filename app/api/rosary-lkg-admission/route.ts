@@ -14,9 +14,7 @@ export const maxDuration = 60;
 const API_URL =
   "https://api.ayatiworks.com/api/v1/public/rosary-school/rosary_lkg_admission/records";
 
-const API_KEY =
-  process.env.AYATIWORKS_API_KEY ??
-  "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
+const API_KEY = process.env.AYATIWORKS_API_KEY ?? "";
 
 const REGISTRATION_PREFIX = "2728";
 const MAX_DATE_OF_BIRTH = "2024-12-31";
@@ -416,6 +414,9 @@ function getSafeUpstreamMessage(
 export async function POST(
   request: NextRequest
 ) {
+  if (!API_KEY) {
+    return sendError("Legacy admission integration is not configured.", 503);
+  }
   try {
     if (!API_KEY) {
       return sendError(

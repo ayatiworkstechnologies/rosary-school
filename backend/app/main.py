@@ -76,6 +76,14 @@ from app.api.v1.admin.downloads import (
     router as admin_downloads_router,
 )
 
+from app.api.v1.admin.submissions import (
+    router as admin_submissions_router,
+)
+
+from app.api.v1.admin.settings import (
+    router as admin_settings_router,
+)
+
 
 # =========================================================
 # PUBLIC API ROUTERS
@@ -103,6 +111,10 @@ from app.api.v1.public.faculty import (
 
 from app.api.v1.public.downloads import (
     router as public_downloads_router,
+)
+
+from app.api.v1.public.submissions import (
+    router as public_submissions_router,
 )
 
 
@@ -393,6 +405,14 @@ app.include_router(
     admin_downloads_router
 )
 
+app.include_router(
+    admin_submissions_router
+)
+
+app.include_router(
+    admin_settings_router
+)
+
 
 # =========================================================
 # PUBLIC ROUTERS
@@ -476,6 +496,10 @@ app.include_router(
 
 app.include_router(
     public_downloads_router
+)
+
+app.include_router(
+    public_submissions_router
 )
 
 

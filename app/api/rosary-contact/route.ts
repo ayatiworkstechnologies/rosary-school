@@ -8,10 +8,7 @@ export const runtime = "nodejs";
 const CONTACT_API_URL =
   "https://api.ayatiworks.com/api/v1/public/rosary-school/rosary_contact_us/records";
 
-// Existing API key - unchanged.
-// This file must remain server-side.
-const API_KEY =
-  "205a80dc727cceb4c6df90f93173287f2fe7bb21b2d445b7046f4d1130afa2f8";
+const API_KEY = process.env.AYATIWORKS_API_KEY;
 
 type ContactData = {
   name: string;
@@ -41,6 +38,9 @@ function getString(value: unknown): string {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!API_KEY) {
+      return sendError("Legacy contact integration is not configured.", 503);
+    }
     let body: unknown;
 
     // 1. Parse incoming JSON.

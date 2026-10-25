@@ -5,9 +5,9 @@ import {
   useRef,
   useState,
   type ChangeEvent,
-  type FormEvent,
   type ReactNode,
 } from "react";
+import { FormProvider, useForm, useFormContext } from "react-hook-form";
 import {
   ArrowRight,
   CheckCircle2,
@@ -122,6 +122,37 @@ const EMPTY_IMAGES: ImageRecord = {
   mother_s_signature: null,
 };
 
+const OPTIONAL_TEXT_FIELDS = new Set<keyof FormValues>([
+  "alternative_phone_number", "name_of_parish", "religion_others",
+  "mother_tongue_others", "name_of_the_sibling", "class_and_section",
+]);
+
+function validateField(name: keyof FormValues, value: string, all: FormValues): true | string {
+  const cleaned = value.trim();
+  const conditionallyRequired =
+    (name === "name_of_parish" && all.religion === "Christian - Roman Catholic") ||
+    (name === "religion_others" && all.religion === "Others") ||
+    (name === "mother_tongue_others" && all.mother_tongue === "Others") ||
+    (["name_of_the_sibling", "class_and_section"] as (keyof FormValues)[]).includes(name) &&
+      all.does_the_applicant_have_any_sibling_s_studying_in_this_school === "Yes";
+  if (!cleaned && (!OPTIONAL_TEXT_FIELDS.has(name) || conditionallyRequired)) return "This field is required.";
+  if (!cleaned) return true;
+  if (name === "date_of_birth" && (cleaned > MAX_DOB || !/^\d{4}-\d{2}-\d{2}$/.test(cleaned))) return "Date of birth must be on or before 31 December 2024.";
+  if (name === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleaned)) return "Enter a valid email address.";
+  if (name === "phone_number" && !/^\d{10}$/.test(cleaned)) return "Enter a valid 10-digit phone number.";
+  if (name === "alternative_phone_number" && !/^\d{10}$/.test(cleaned)) return "Enter a valid 10-digit alternative number.";
+  if ((name === "father_s_income_per_month" || name === "mother_s_income_per_month") && (!/^\d+(\.\d{1,2})?$/.test(cleaned) || Number(cleaned) < 0)) return "Enter a valid monthly income.";
+  if (name === "address" && cleaned.length < 10) return "Address must contain at least 10 characters.";
+  if (cleaned.length > (name === "address" ? 500 : 150)) return `Maximum ${name === "address" ? 500 : 150} characters allowed.`;
+  return true;
+}
+
+function FieldError({ name }: { name: keyof FormValues }) {
+  const { formState: { errors } } = useFormContext<FormValues>();
+  const message = errors[name]?.message;
+  return message ? <p className="mt-1.5 text-xs font-medium text-red-600" role="alert">{String(message)}</p> : null;
+}
+
 const IMAGE_FIELDS: {
   key: ImageKey;
   label: string;
@@ -213,6 +244,8 @@ function TextInput({
   type?: "text" | "email" | "tel" | "number";
   optional?: boolean;
 }) {
+  const { register } = useFormContext<FormValues>();
+  const registration = register(name, { validate: (value, all) => validateField(name, value, all) });
   function handleChange(
     event: ChangeEvent<HTMLInputElement>
   ) {
@@ -226,9 +259,9 @@ function TextInput({
   }
 
   return (
+    <>
     <input
       id={name}
-      name={name}
       type={type}
       value={value}
       className={inputClass}
@@ -239,8 +272,11 @@ function TextInput({
       maxLength={type === "tel" ? 10 : undefined}
       pattern={type === "tel" ? "[0-9]{10}" : undefined}
       inputMode={type === "tel" ? "numeric" : undefined}
-      onChange={handleChange}
+      {...registration}
+      onChange={(event) => { void registration.onChange(event); handleChange(event); }}
     />
+    <FieldError name={name}/>
+    </>
   );
 }
 
@@ -249,24 +285,28 @@ function TextInput({
 // =====================================================
 
 function SelectField({
+  name,
   value,
   options,
   placeholder,
   onChange,
 }: {
+  name: keyof FormValues;
   value: string;
   options: string[];
   placeholder: string;
   onChange: (value: string) => void;
 }) {
+  const { register } = useFormContext<FormValues>();
+  const registration = register(name, { validate: (fieldValue, all) => validateField(name, fieldValue, all) });
   return (
+    <div>
     <div className="relative">
       <select
         value={value}
         required
-        onChange={(event) =>
-          onChange(event.target.value)
-        }
+        {...registration}
+        onChange={(event) => { void registration.onChange(event); onChange(event.target.value); }}
         className={`${inputClass} cursor-pointer appearance-none pr-12`}
       >
         <option value="">{placeholder}</option>
@@ -282,6 +322,8 @@ function SelectField({
         className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#0075FF]"
       />
     </div>
+    <FieldError name={name}/>
+    </div>
   );
 }
 
@@ -294,11 +336,14 @@ function YesNoField({
   value,
   onChange,
 }: {
-  name: string;
+  name: keyof FormValues;
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { register } = useFormContext<FormValues>();
+  const registration = register(name, { validate: (fieldValue, all) => validateField(name, fieldValue, all) });
   return (
+    <div>
     <div className="flex flex-wrap gap-3">
       {(["Yes", "No"] as const).map((option) => (
         <label
@@ -311,16 +356,18 @@ function YesNoField({
         >
           <input
             type="radio"
-            name={name}
             required
             checked={value === option}
             value={option}
-            onChange={() => onChange(option)}
+            {...registration}
+            onChange={(event) => { void registration.onChange(event); onChange(option); }}
             className="h-4 w-4 accent-[#0075FF]"
           />
           {option}
         </label>
       ))}
+    </div>
+    <FieldError name={name}/>
     </div>
   );
 }
@@ -550,6 +597,8 @@ function UploadField({
 // =====================================================
 
 export default function PreliminaryAdmissionForm() {
+  const form = useForm<FormValues>({ defaultValues: INITIAL, mode: "onTouched", reValidateMode: "onChange" });
+  const { register, handleSubmit: validateSubmit, setValue: setFormValue, reset, formState: { errors } } = form;
   const [values, setValues] = useState<FormValues>({
     ...INITIAL,
   });
@@ -565,12 +614,15 @@ export default function PreliminaryAdmissionForm() {
     useState<string | null>(null);
 
   const formRef = useRef<HTMLFormElement>(null);
+  const dateRegistration = register("date_of_birth", { validate: (value, all) => validateField("date_of_birth", value, all) });
+  const addressRegistration = register("address", { validate: (value, all) => validateField("address", value, all) });
 
   function update(
     field: keyof FormValues,
     value: string
   ) {
     setError("");
+    setFormValue(field, value, { shouldDirty: true, shouldValidate: true });
 
     setValues((previous) => ({
       ...previous,
@@ -593,6 +645,9 @@ export default function PreliminaryAdmissionForm() {
           ? previous.religion_others
           : "",
     }));
+    setFormValue("religion", value, { shouldDirty: true, shouldValidate: true });
+    if (value !== "Christian - Roman Catholic") setFormValue("name_of_parish", "", { shouldValidate: true });
+    if (value !== "Others") setFormValue("religion_others", "", { shouldValidate: true });
   }
 
   function handleMotherTongue(value: string) {
@@ -606,6 +661,8 @@ export default function PreliminaryAdmissionForm() {
           ? previous.mother_tongue_others
           : "",
     }));
+    setFormValue("mother_tongue", value, { shouldDirty: true, shouldValidate: true });
+    if (value !== "Others") setFormValue("mother_tongue_others", "", { shouldValidate: true });
   }
 
   function handleSiblingChoice(value: string) {
@@ -624,12 +681,14 @@ export default function PreliminaryAdmissionForm() {
           ? previous.class_and_section
           : "",
     }));
+    setFormValue("does_the_applicant_have_any_sibling_s_studying_in_this_school", value, { shouldDirty: true, shouldValidate: true });
+    if (value !== "Yes") {
+      setFormValue("name_of_the_sibling", "", { shouldValidate: true });
+      setFormValue("class_and_section", "", { shouldValidate: true });
+    }
   }
 
-  async function handleSubmit(
-    event: FormEvent<HTMLFormElement>
-  ) {
-    event.preventDefault();
+  async function submitApplication(values: FormValues) {
     if (submitting) return;
 
     setSubmitting(true);
@@ -706,7 +765,7 @@ export default function PreliminaryAdmissionForm() {
       }
 
       const response = await fetch(
-        "/api/rosary-lkg-admission",
+        "/backend/api/v1/admission-applications",
         {
           method: "POST",
           body: payload,
@@ -757,12 +816,14 @@ export default function PreliminaryAdmissionForm() {
     setRegistrationNo(null);
     setValues({ ...INITIAL });
     setImages({ ...EMPTY_IMAGES });
+    reset(INITIAL);
     setUploadResetKey((previous) => previous + 1);
     setError("");
     formRef.current?.reset();
   }
 
   return (
+    <FormProvider {...form}>
     <div className="mx-auto w-full max-w-[1500px] px-3 py-6 sm:px-6 lg:px-10">
       <div className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-sm">
 
@@ -785,7 +846,7 @@ export default function PreliminaryAdmissionForm() {
           </p>
         </header>
 
-        <form ref={formRef} onSubmit={handleSubmit}>
+        <form ref={formRef} noValidate onSubmit={validateSubmit(submitApplication, () => setError("Please correct the highlighted fields before submitting."))}>
           <div className="space-y-10 px-4 py-8 sm:px-8 lg:px-12">
 
             {/* PERSONAL DETAILS */}
@@ -803,13 +864,14 @@ export default function PreliminaryAdmissionForm() {
 
                 <Field label="Date of Birth">
                   <input
-                    name="date_of_birth"
                     type="date"
                     required
                     className={inputClass}
                     value={values.date_of_birth}
                     max={MAX_DOB}
+                    {...dateRegistration}
                     onChange={(event) => {
+                      void dateRegistration.onChange(event);
                       if (
                         !event.target.value ||
                         event.target.value <= MAX_DOB
@@ -825,10 +887,12 @@ export default function PreliminaryAdmissionForm() {
                       }
                     }}
                   />
+                  <FieldError name="date_of_birth"/>
                 </Field>
 
                 <Field label="Religion">
                   <SelectField
+                    name="religion"
                     value={values.religion}
                     placeholder="Select religion"
                     onChange={handleReligion}
@@ -934,7 +998,7 @@ export default function PreliminaryAdmissionForm() {
 
                 <Field label="Is she a past pupil of Rosary?">
                   <YesNoField
-                    name="past_pupil"
+                    name="is_she_a_past_pupil_of_rosary"
                     value={
                       values.is_she_a_past_pupil_of_rosary
                     }
@@ -977,6 +1041,7 @@ export default function PreliminaryAdmissionForm() {
 
                 <Field label="Mother Tongue">
                   <SelectField
+                    name="mother_tongue"
                     value={values.mother_tongue}
                     placeholder="Select mother tongue"
                     onChange={handleMotherTongue}
@@ -1009,7 +1074,7 @@ export default function PreliminaryAdmissionForm() {
             <Section title="Sibling Details">
               <Field label="Does the applicant have any sibling(s) studying in this school?">
                 <YesNoField
-                  name="siblings"
+                  name="does_the_applicant_have_any_sibling_s_studying_in_this_school"
                   value={
                     values.does_the_applicant_have_any_sibling_s_studying_in_this_school
                   }
@@ -1048,16 +1113,15 @@ export default function PreliminaryAdmissionForm() {
 
                 <Field label="Address">
                   <textarea
-                    name="address"
                     required
                     rows={5}
                     className={`${inputClass} h-auto min-h-[165px] resize-y py-3`}
                     value={values.address}
                     placeholder="Enter address"
-                    onChange={(event) =>
-                      update("address", event.target.value)
-                    }
+                    {...addressRegistration}
+                    onChange={(event) => { void addressRegistration.onChange(event); update("address", event.target.value); }}
                   />
+                  <FieldError name="address"/>
                 </Field>
 
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -1137,6 +1201,7 @@ export default function PreliminaryAdmissionForm() {
                 {error}
               </div>
             )}
+            {Object.keys(errors).length > 0 && !error && <div role="alert" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Please correct the highlighted fields before submitting.</div>}
           </div>
 
           {/* SUBMIT */}
@@ -1229,5 +1294,6 @@ export default function PreliminaryAdmissionForm() {
         </div>
       )}
     </div>
+    </FormProvider>
   );
 }
