@@ -22,8 +22,8 @@ import {
 // =====================================================
 
 const MAX_DOB = "2024-12-31";
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
-const MAX_TOTAL_IMAGE_SIZE = 3 * 1024 * 1024; // Compressed images sent to Next.js
+const MAX_IMAGE_SIZE = 1 * 1024 * 1024;
+const MAX_TOTAL_IMAGE_SIZE = 1 * 1024 * 1024; // Compressed image sent to Next.js
 
 const inputClass =
   "block h-12 w-full min-w-0 rounded-lg border " +
@@ -371,7 +371,7 @@ async function compressImage(
 ): Promise<File> {
   if (file.size === 0 || file.size >= MAX_IMAGE_SIZE) {
     throw new Error(
-      "Each image must be smaller than 5 MB."
+      "The photograph must be smaller than 1024 KB."
     );
   }
 
@@ -499,7 +499,7 @@ function UploadField({
 
     if (selected && selected.size >= MAX_IMAGE_SIZE) {
       event.target.value = "";
-      onError(`${label} must be smaller than 5 MB.`);
+      onError(`${label} must be smaller than 1024 KB.`);
       return;
     }
 
@@ -571,7 +571,7 @@ function UploadField({
               Click to upload image
             </span>
             <span className="mt-2 text-xs text-slate-500">
-              JPG, PNG or WebP · Less than 5 MB
+              JPG, PNG or WebP · Passport-size photo · Maximum 1024 KB
             </span>
           </>
         )}
@@ -1153,8 +1153,7 @@ export default function PreliminaryAdmissionForm() {
             {/* PHOTOGRAPH UPLOAD */}
             <Section title="Student Photograph Upload">
               <p className="text-sm leading-6 text-[#647D9D]">
-                Upload the student’s passport-size photograph. The image
-                must be smaller than 5 MB. Files are stored securely by the school website and only image URLs are sent to the admission service.
+                Upload a recent passport-size photograph of the student. Files are stored securely by the school website and only image URLs are sent to the admission service.
               </p>
 
               <div className="max-w-md">

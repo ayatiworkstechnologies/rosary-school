@@ -193,8 +193,8 @@ async def _save_image(upload: UploadFile, label: str) -> str:
     if suffix is None:
         raise HTTPException(status_code=400, detail=f"{label} must be a JPG, PNG, or WEBP image.")
     content = await upload.read()
-    if not content or len(content) > 5 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail=f"{label} must be between 1 byte and 5 MB.")
+    if not content or len(content) > 1 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail=f"{label} must be between 1 byte and 1024 KB.")
     filename = f"{uuid4().hex}{suffix}"
     (UPLOAD_ROOT / filename).write_bytes(content)
     return f"/uploads/admissions/{filename}"

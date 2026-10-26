@@ -19,7 +19,7 @@ const API_KEY = process.env.AYATIWORKS_API_KEY ?? "";
 const REGISTRATION_PREFIX = "2728";
 const MAX_DATE_OF_BIRTH = "2024-12-31";
 
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 1 * 1024 * 1024;
 const MAX_REQUEST_SIZE = 18 * 1024 * 1024;
 
 const IMAGE_FIELDS = [
@@ -170,7 +170,7 @@ async function saveImage(
     throw new Error(`Please upload ${label}.`);
   }
   if (file.size > MAX_IMAGE_SIZE) {
-    throw new Error(`${label} must not exceed 5 MB.`);
+    throw new Error(`${label} must not exceed 1024 KB.`);
   }
 
   const formats: Record<string, string> = {
