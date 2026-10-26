@@ -203,7 +203,7 @@ The Settings page manages To, CC, BCC, Reply-To and acknowledgement switches. Sa
 
 Newsletter signups are stored in MySQL, send a subscriber confirmation in the background, and can be activated, deactivated or deleted from the admin page.
 
-Branded HTML templates for school notifications are stored in `backend/app/templates/` for contact enquiries, admission applications and newsletter subscriptions. `BACKEND_PUBLIC_URL` must be the publicly reachable backend origin in production so admission photographs and signatures can render inside emails.
+Branded HTML templates for school notifications are stored in `backend/app/templates/` for contact enquiries, admission applications and newsletter subscriptions. `BACKEND_PUBLIC_URL` must be the publicly reachable backend origin in production so admission photographs can render inside emails.
 
 After pulling a version containing new migrations, apply them from `backend`:
 
@@ -217,7 +217,6 @@ python -m alembic upgrade head
 app/          Next.js routes, including the public site and admin dashboard
 components/   Reusable React components
 services/     Browser-side API clients
-public/       Static frontend assets
 backend/app/  FastAPI application, models, schemas, routes, and services
 backend/migrations/  Alembic database migrations
 backend/scripts/     Administrator maintenance commands

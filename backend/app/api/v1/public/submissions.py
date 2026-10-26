@@ -1,4 +1,3 @@
-import secrets
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -10,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal, get_db
-from app.models.submission import AdmissionApplication, ContactEnquiry, NewsletterSubscription
+from app.models.submission import AdmissionApplication, AdmissionRegistrationSequence, ContactEnquiry, NewsletterSubscription
 from app.schemas.submission import ContactCreate, NewsletterCreate, PublicSubmissionResponse
 from app.services.mail_service import render_email_template, send_submission_email
 from app.services.mail_settings_service import get_mail_routes
@@ -258,7 +257,7 @@ def _validate_admission_data(data: dict[str, str]) -> None:
         raise HTTPException(status_code=422, detail="Enter a valid email address.")
     if not data["phone_number"].isdigit() or len(data["phone_number"]) != 10:
         raise HTTPException(status_code=422, detail="Phone number must contain exactly 10 digits.")
-    if data.get("alternative_phone_number") and (not data["alternative_phone_number"].isdigit() or len(data["alternative_phone_number"]) != 10):
+    if not data["alternative_phone_number"].isdigit() or len(data["alternative_phone_number"]) != 10:
         raise HTTPException(status_code=422, detail="Alternative phone number must contain exactly 10 digits.")
     for key, label in (("father_s_income_per_month", "Father's income"), ("mother_s_income_per_month", "Mother's income")):
         try:
@@ -291,15 +290,13 @@ async def create_admission(
     address: str = Form(...),
     email: str = Form(...),
     phone_number: str = Form(...),
-    alternative_phone_number: str = Form(""),
+    alternative_phone_number: str = Form(...),
     name_of_parish: str = Form(""),
     religion_others: str = Form(""),
     mother_tongue_others: str = Form(""),
     name_of_the_sibling: str = Form(""),
     class_and_section: str = Form(""),
     student_s_passport_size_photograph: UploadFile = File(...),
-    father_s_signature: UploadFile = File(...),
-    mother_s_signature: UploadFile = File(...),
     db: Session = Depends(get_db),
 ):
     if not name_of_the_pupil.strip() or "@" not in email or not phone_number.isdigit():
@@ -332,19 +329,15 @@ async def create_admission(
         "class_and_section": class_and_section.strip(),
     }
     _validate_admission_data(form_data)
-    mail_routes = get_mail_routes(db)
-    prefix = mail_routes.admission_registration_prefix
-    registration_no = ""
-    for _ in range(20):
-        candidate = f"{prefix}{secrets.randbelow(10**8):08d}"
-        if db.scalar(select(AdmissionApplication.id).where(AdmissionApplication.registration_no == candidate)) is None:
-            registration_no = candidate
-            break
-    if not registration_no:
-        raise HTTPException(status_code=503, detail="Unable to generate a unique registration number. Please try again.")
     photo_url = await _save_image(student_s_passport_size_photograph, "Student photograph")
-    father_url = await _save_image(father_s_signature, "Father signature")
-    mother_url = await _save_image(mother_s_signature, "Mother signature")
+    mail_routes = get_mail_routes(db)
+    sequence = db.execute(
+        select(AdmissionRegistrationSequence)
+        .where(AdmissionRegistrationSequence.id == 1)
+        .with_for_update()
+    ).scalar_one()
+    registration_no = f"{mail_routes.admission_registration_prefix}{sequence.next_number:03d}"
+    sequence.next_number += 1
 
     item = AdmissionApplication(
         registration_no=registration_no,
@@ -353,8 +346,8 @@ async def create_admission(
         phone_number=phone_number.strip(),
         form_data=form_data,
         student_photo_url=photo_url,
-        father_signature_url=father_url,
-        mother_signature_url=mother_url,
+        father_signature_url=None,
+        mother_signature_url=None,
     )
     db.add(item)
     db.commit()
@@ -363,10 +356,8 @@ async def create_admission(
         "registration_no": registration_no,
         **form_data,
         "student_s_passport_size_photograph": "cid:student-photograph",
-        "father_s_signature": "cid:father-signature",
-        "mother_s_signature": "cid:mother-signature",
     }
-    mail_fields = {"Registration No": registration_no, **form_data, "Student Photo": "Included in email", "Father Signature": "Included in email", "Mother Signature": "Included in email"}
+    mail_fields = {"Registration No": registration_no, **form_data, "Student Photo": "Included in email"}
     background_tasks.add_task(
         _deliver_later,
         AdmissionApplication,
@@ -381,8 +372,6 @@ async def create_admission(
         html_body=render_email_template("admission_admin.html", template_values),
         inline_images={
             "student-photograph": UPLOAD_ROOT / Path(photo_url).name,
-            "father-signature": UPLOAD_ROOT / Path(father_url).name,
-            "mother-signature": UPLOAD_ROOT / Path(mother_url).name,
         },
         acknowledgement={
             "subject": f"Admission application received - {registration_no}",

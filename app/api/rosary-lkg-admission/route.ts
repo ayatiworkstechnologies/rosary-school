@@ -24,8 +24,6 @@ const MAX_REQUEST_SIZE = 18 * 1024 * 1024;
 
 const IMAGE_FIELDS = [
   "student_s_passport_size_photograph",
-  "father_s_signature",
-  "mother_s_signature",
 ] as const;
 
 const TEXT_FIELDS = [
@@ -63,7 +61,6 @@ const TEXT_FIELDS = [
 const OPTIONAL_FIELDS = new Set<string>([
   "name_of_the_sibling",
   "class_and_section",
-  "alternative_phone_number",
   "name_of_parish",
   "religion_others",
   "mother_tongue_others",
@@ -166,8 +163,6 @@ async function saveImage(
   const file = formData.get(field);
   const labels: Record<string, string> = {
     student_s_passport_size_photograph: "Student’s Passport-Size Photograph",
-    father_s_signature: "Father's Signature",
-    mother_s_signature: "Mother's Signature",
   };
   const label = labels[field] ?? field;
 
@@ -198,13 +193,12 @@ async function saveImage(
     throw new Error(`${label} has an invalid image format.`);
   }
 
-  const signature = field.includes("signature");
   const output = await sharp(input, { limitInputPixels: 25_000_000 })
     .rotate()
     .flatten({ background: "#ffffff" })
     .resize({
-      width: signature ? 900 : 800,
-      height: signature ? 450 : 1100,
+      width: 800,
+      height: 1100,
       fit: "inside",
       withoutEnlargement: true,
     })
@@ -352,7 +346,8 @@ async function generateRegistrationNumber(): Promise<string> {
         recordData.registration_no
       );
 
-      if (sequence !== null) {
+      // The former random 8-digit value is not part of the restarted series.
+      if (sequence !== null && sequence <= 999) {
         highest = Math.max(
           highest,
           sequence
@@ -646,7 +641,6 @@ export async function POST(
     }
 
     if (
-      data.alternative_phone_number &&
       !/^\d{10}$/.test(
         data.alternative_phone_number
       )

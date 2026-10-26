@@ -144,10 +144,7 @@ def update_admission(item_id: int, payload: SubmissionUpdate, db: Session = Depe
 @router.delete("/admission-applications/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_admission(item_id: int, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
     item = _item(db, AdmissionApplication, item_id)
-    upload_paths = [
-        (BACKEND_ROOT / value.lstrip("/")).resolve()
-        for value in (item.student_photo_url, item.father_signature_url, item.mother_signature_url)
-    ]
+    upload_paths = [(BACKEND_ROOT / item.student_photo_url.lstrip("/")).resolve()]
     db.delete(item)
     db.commit()
     for upload_path in upload_paths:
@@ -175,7 +172,7 @@ def _resend(item, kind: str, db: Session):
             "to": item.email,
         }
     else:
-        fields = {"Registration No": item.registration_no, **item.form_data, "Student Photo": item.student_photo_url, "Father Signature": item.father_signature_url, "Mother Signature": item.mother_signature_url}
+        fields = {"Registration No": item.registration_no, **item.form_data, "Student Photo": item.student_photo_url}
         subject, heading, reply_to = f"Admission Application - {item.registration_no}", "Admission Application", item.parent_email
         to, cc, bcc = mail_routes.admission_to, mail_routes.admission_cc, mail_routes.admission_bcc
         html_body = render_email_template(
@@ -184,14 +181,10 @@ def _resend(item, kind: str, db: Session):
                 "registration_no": item.registration_no,
                 **item.form_data,
                 "student_s_passport_size_photograph": "cid:student-photograph",
-                "father_s_signature": "cid:father-signature",
-                "mother_s_signature": "cid:mother-signature",
             },
         )
         inline_images = {
             "student-photograph": BACKEND_ROOT / item.student_photo_url.lstrip("/"),
-            "father-signature": BACKEND_ROOT / item.father_signature_url.lstrip("/"),
-            "mother-signature": BACKEND_ROOT / item.mother_signature_url.lstrip("/"),
         }
         acknowledgement = {
             "enabled": mail_routes.admission_ack_enabled,

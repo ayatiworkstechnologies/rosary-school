@@ -71,9 +71,7 @@ type FormValues = {
 };
 
 type ImageKey =
-  | "student_s_passport_size_photograph"
-  | "father_s_signature"
-  | "mother_s_signature";
+  | "student_s_passport_size_photograph";
 
 type ApiResult = {
   success?: boolean;
@@ -118,12 +116,10 @@ const INITIAL: FormValues = {
 
 const EMPTY_IMAGES: ImageRecord = {
   student_s_passport_size_photograph: null,
-  father_s_signature: null,
-  mother_s_signature: null,
 };
 
 const OPTIONAL_TEXT_FIELDS = new Set<keyof FormValues>([
-  "alternative_phone_number", "name_of_parish", "religion_others",
+  "name_of_parish", "religion_others",
   "mother_tongue_others", "name_of_the_sibling", "class_and_section",
 ]);
 
@@ -160,14 +156,6 @@ const IMAGE_FIELDS: {
   {
     key: "student_s_passport_size_photograph",
     label: "Student’s Passport-Size Photograph",
-  },
-  {
-    key: "father_s_signature",
-    label: "Father's Signature",
-  },
-  {
-    key: "mother_s_signature",
-    label: "Mother's Signature",
   },
 ];
 
@@ -1147,10 +1135,7 @@ export default function PreliminaryAdmissionForm() {
                     />
                   </Field>
 
-                  <Field
-                    label="Alternative Phone Number"
-                    required={false}
-                  >
+                  <Field label="Alternative Phone Number">
                     <TextInput
                       name="alternative_phone_number"
                       value={
@@ -1158,23 +1143,21 @@ export default function PreliminaryAdmissionForm() {
                       }
                       onChange={update}
                       type="tel"
-                      optional
-                      placeholder="Optional"
+                      placeholder="10-digit alternative number"
                     />
                   </Field>
                 </div>
               </div>
             </Section>
 
-            {/* PHOTOGRAPH AND SIGNATURE UPLOADS */}
-            <Section title="Photograph and Signature Uploads">
+            {/* PHOTOGRAPH UPLOAD */}
+            <Section title="Student Photograph Upload">
               <p className="text-sm leading-6 text-[#647D9D]">
-                Upload the student’s passport-size photograph
-                and both parents’ signatures. Each image
+                Upload the student’s passport-size photograph. The image
                 must be smaller than 5 MB. Files are stored securely by the school website and only image URLs are sent to the admission service.
               </p>
 
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="max-w-md">
                 {IMAGE_FIELDS.map(({ key, label }) => (
                   <UploadField
                     key={`${key}-${uploadResetKey}`}

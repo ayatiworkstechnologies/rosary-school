@@ -11,7 +11,7 @@ export interface ContactEnquiry {
 export interface AdmissionApplication {
   id: number; registration_no: string; pupil_name: string; parent_email: string;
   phone_number: string; form_data: Record<string, string>;
-  student_photo_url: string; father_signature_url: string; mother_signature_url: string;
+  student_photo_url: string;
   status: SubmissionStatus; admin_notes: string | null; email_status: string;
   email_error: string | null; created_at: string; updated_at: string;
 }

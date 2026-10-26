@@ -49,8 +49,9 @@ class AdmissionApplication(Base):
     phone_number: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     form_data: Mapped[dict] = mapped_column(JSON, nullable=False)
     student_photo_url: Mapped[str] = mapped_column(String(500), nullable=False)
-    father_signature_url: Mapped[str] = mapped_column(String(500), nullable=False)
-    mother_signature_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    # Retained for historical submissions created before signatures were removed.
+    father_signature_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    mother_signature_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     status: Mapped[SubmissionStatus] = mapped_column(
         SQLEnum(SubmissionStatus, name="admission_submission_status", native_enum=False),
         nullable=False,
@@ -63,6 +64,13 @@ class AdmissionApplication(Base):
     email_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now(), index=True)
     updated_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+
+class AdmissionRegistrationSequence(Base):
+    __tablename__ = "admission_registration_sequence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    next_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
 
 class MailRoutingSettings(Base):

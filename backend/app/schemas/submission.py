@@ -47,8 +47,6 @@ class AdmissionResponse(BaseModel):
     phone_number: str
     form_data: dict[str, Any]
     student_photo_url: str
-    father_signature_url: str
-    mother_signature_url: str
     status: SubmissionStatus
     admin_notes: str | None
     email_status: str
