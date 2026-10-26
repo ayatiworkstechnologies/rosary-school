@@ -19,6 +19,45 @@ const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend").replace(/\/
 function imageUrl(value: string) { return value.startsWith("/uploads/") ? `${API_BASE_URL}${value}` : value; }
 function fieldLabel(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, letter => letter.toUpperCase()); }
 
+// Keep the detail drawer in the same sequence as the printed application.
+// Stored JSON key order is not a reliable presentation contract.
+const ADMISSION_FIELD_ORDER = [
+  "name_of_the_pupil",
+  "date_of_birth",
+  "religion",
+  "name_of_parish",
+  "religion_others",
+  "place_of_birth",
+  "father_s_name",
+  "father_s_qualification",
+  "father_s_occupation",
+  "father_s_income_per_month",
+  "mother_s_name",
+  "is_she_a_past_pupil_of_rosary",
+  "mother_s_qualification",
+  "mother_s_occupation",
+  "mother_s_income_per_month",
+  "mother_tongue",
+  "mother_tongue_others",
+  "does_the_applicant_have_any_sibling_s_studying_in_this_school",
+  "name_of_the_sibling",
+  "class_and_section",
+  "address",
+  "email",
+  "phone_number",
+  "alternative_phone_number",
+] as const;
+
+function orderedAdmissionFields(formData: AdmissionApplication["form_data"]) {
+  const knownFields = ADMISSION_FIELD_ORDER
+    .filter(key => key in formData)
+    .map(key => [key, formData[key]] as const);
+  const remainingFields = Object.entries(formData)
+    .filter(([key]) => !ADMISSION_FIELD_ORDER.includes(key as typeof ADMISSION_FIELD_ORDER[number]));
+
+  return [...knownFields, ...remainingFields];
+}
+
 function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
   return <section className="print-sheet hidden bg-white text-[#172B4D] print:block">
     <header className="border-b-2 border-[#0075FF] pb-4 text-center">
@@ -32,7 +71,7 @@ function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
     </div>
     <h2 className="mb-2 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Application details</h2>
     <div className="grid grid-cols-2 border-l border-t border-slate-300">
-      {Object.entries(item.form_data).map(([key, value]) => <div key={key} className="border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
+      {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
     </div>
     <h2 className="mb-3 mt-5 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Student photograph</h2>
     <div className="break-inside-avoid">
@@ -116,7 +155,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
       {selected.email_error && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{selected.email_error}</p>}
       <div className="mt-4 flex flex-wrap gap-2"><button disabled={busy} onClick={() => void resend()} className="inline-flex items-center gap-2 rounded-lg bg-[#0075FF] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy ? <RefreshCw className="animate-spin" size={16}/> : <Mail size={16}/>} Resend email</button>{isAdmission(selected) && <button disabled={busy} onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#10284D] hover:bg-slate-50 disabled:opacity-50"><Printer size={16}/> Print application</button>}<button disabled={busy} onClick={() => void remove()} className="ml-auto inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"><Trash2 size={16}/> Delete</button></div>
       <div className="mt-6 space-y-3">{isAdmission(selected) ? <>
-        {Object.entries(selected.form_data).map(([key, value]) => <div key={key} className="rounded-lg border border-slate-100 p-3"><p className="text-xs font-bold uppercase text-slate-400">{key.replaceAll("_", " ")}</p><p className="mt-1 break-words text-sm text-slate-700">{value || "-"}</p></div>)}
+        {orderedAdmissionFields(selected.form_data).map(([key, value]) => <div key={key} className="rounded-lg border border-slate-100 p-3"><p className="text-xs font-bold uppercase text-slate-400">{key.replaceAll("_", " ")}</p><p className="mt-1 break-words text-sm text-slate-700">{value || "-"}</p></div>)}
         <div className="max-w-48"><a href={imageUrl(selected.student_photo_url)} target="_blank" rel="noreferrer"><img src={imageUrl(selected.student_photo_url)} alt="Student photograph" className="aspect-square w-full rounded-lg border object-contain"/><span className="mt-1 block text-xs text-slate-500">Student photograph</span></a></div>
       </> : <><div><b>Name:</b> {selected.name}</div><div><b>Email:</b> <a className="text-blue-600" href={`mailto:${selected.email}`}>{selected.email}</a></div><div><b>Phone:</b> <a className="text-blue-600" href={`tel:${selected.phone}`}>{selected.phone}</a></div><div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4">{selected.message}</div></>}
       </div>
