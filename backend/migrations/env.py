@@ -95,6 +95,11 @@ from app.models.download import (
     Download,
 )  # noqa: F401
 
+from app.models.achievement import (
+    Achievement,
+    AchievementImage,
+)  # noqa: F401
+
 
 # =========================================================
 # ALEMBIC CONFIG

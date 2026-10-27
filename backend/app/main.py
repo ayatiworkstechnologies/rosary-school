@@ -84,6 +84,14 @@ from app.api.v1.admin.settings import (
     router as admin_settings_router,
 )
 
+from app.api.v1.admin.achievements import (
+    router as admin_achievements_router,
+)
+
+from app.api.v1.admin.achievement_uploads import (
+    router as admin_achievement_upload_router,
+)
+
 
 # =========================================================
 # PUBLIC API ROUTERS
@@ -115,6 +123,10 @@ from app.api.v1.public.downloads import (
 
 from app.api.v1.public.submissions import (
     router as public_submissions_router,
+)
+
+from app.api.v1.public.achievements import (
+    router as public_achievements_router,
 )
 
 
@@ -413,6 +425,14 @@ app.include_router(
     admin_settings_router
 )
 
+app.include_router(
+    admin_achievements_router
+)
+
+app.include_router(
+    admin_achievement_upload_router
+)
+
 
 # =========================================================
 # PUBLIC ROUTERS
@@ -500,6 +520,10 @@ app.include_router(
 
 app.include_router(
     public_submissions_router
+)
+
+app.include_router(
+    public_achievements_router
 )
 
 

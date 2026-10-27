@@ -19,6 +19,7 @@ import {
   CalendarDays,
   BellRing,
   Images,
+  Trophy,
   UsersRound,
   Download,
   MessageSquareText,
@@ -68,6 +69,11 @@ const menuItems = [
     label: "Gallery",
     href: "/admin/gallery",
     icon: Images,
+  },
+  {
+    label: "Achievements",
+    href: "/admin/achievements",
+    icon: Trophy,
   },
   {
     label: "Faculty",

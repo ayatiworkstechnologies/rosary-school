@@ -28,6 +28,11 @@ import type {
   MouseEvent as ReactMouseEvent,
 } from "react";
 
+import {
+  achievementPublicAssetUrl,
+  getPublicAchievements,
+} from "@/services/publicAchievementService";
+
 /* =========================================================
    TYPES
 ========================================================= */
@@ -83,75 +88,7 @@ type VideoAchievement = {
    PHOTO DATA
 ========================================================= */
 
-const photoAchievements: PhotoAchievement[] = [
-  /* =======================================================
-     2026
-  ======================================================= */
-
-  {
-    id: 1,
-    year: 2026,
-    date: "2026-08-24",
-
-    title: "Sports Excellence 2026",
-    category: "Sports Achievement",
-
-    images: [
-      "/images/achievements/2026/ag-4.png",
-      "/images/achievements/2026/ag-5.png",
-     
-    ],
-  },
-
-  {
-    id: 2,
-    year: 2026,
-    date: "2026-07-18",
-
-    title: "Academic Excellence Awards",
-    category: "Academic Achievement",
-
-    images: [
-      "/images/achievements/2026/ag-1.png",
-      "/images/achievements/2026/ag-2.png",
-    ],
-  },
-
-  {
-    id: 3,
-    year: 2026,
-    date: "2026-06-10",
-
-    title: "Sports Day ",
-    category: "school-Competition",
-
-    images: [
-      "/images/achievements/2026/sc-1.png",
-      "/images/achievements/2026/sc-2.png",
-      "/images/achievements/2026/sc-3.png",
-      "/images/achievements/2026/sc-4.png",
-    ],
-  },
-
-  /* =======================================================
-     2025
-  ======================================================= */
-
-  {
-    id: 4,
-    year: 2025,
-    date: "2025-11-21",
-
-    title: "Sports Achievements 2025",
-    category: "Sports Achievement",
-
-    images: [
-      "/images/achievements/2025/sports-01.png",
-      "/images/achievements/2025/sports-02.png",
-    ],
-  },
-
-
+const initialPhotoAchievements: PhotoAchievement[] = [
 ];
 
 /* =========================================================
@@ -161,32 +98,8 @@ const photoAchievements: PhotoAchievement[] = [
    You can mix YouTube + uploaded/local video.
 ========================================================= */
 
-const videoAchievements: VideoAchievement[] = [
-  /* =======================================================
-     2026 - YOUTUBE EXAMPLE
-  ======================================================= */
-
-  {
-    id: 1,
-    year: 2026,
-    date: "2026-08-20",
-
-    title: "Achievement Highlights 2026",
-    category: "School Achievements",
-
-    poster:
-      "/images/achievements/2026/ag-1.png",
-
-    /*
-     * YouTube URL.
-     */
-    video:
-      "https://youtu.be/zDz9o57vGXs",
-  },
-
-  /* =======================================================
+const initialVideoAchievements: VideoAchievement[] = [/*
      2025 - LOCAL UPLOAD EXAMPLE
-  ======================================================= */
 
   {
     id: 2,
@@ -199,18 +112,16 @@ const videoAchievements: VideoAchievement[] = [
     poster:
       "/images/achievements/2025/sports-01.png",
 
-    /*
      * Put the file inside:
      *
      * public/
      * └── videos/
      *     └── achievements/
      *         └── achievement-2025.mp4
-     */
     video:
       "/videos/achievements/achievement-2025.mp4",
   },
-];
+*/];
 
 /* =========================================================
    ANIMATION
@@ -434,20 +345,17 @@ function isYouTubeVideo(
    Automatically latest year first.
 ========================================================= */
 
-const availableYears =
-  Array.from(
+function getAvailableYears(
+  photos: PhotoAchievement[],
+  videos: VideoAchievement[]
+) {
+  return Array.from(
     new Set([
-      ...photoAchievements.map(
-        (item) => item.year
-      ),
-
-      ...videoAchievements.map(
-        (item) => item.year
-      ),
+      ...photos.map((item) => item.year),
+      ...videos.map((item) => item.year),
     ])
-  ).sort(
-    (a, b) => b - a
-  );
+  ).sort((a, b) => b - a);
+}
 
 /* =========================================================
    DYNAMIC GRID
@@ -1640,7 +1548,7 @@ function PhotoViewer({
 
               rounded-[10px]
 
-              bg-black
+              bg-[#F4F7FA]
             "
           >
             <AnimatePresence
@@ -2391,6 +2299,24 @@ function VideoViewer({
 
 export default function AchievementsGallery() {
   const [
+    photoAchievements,
+    setPhotoAchievements,
+  ] = useState<PhotoAchievement[]>(initialPhotoAchievements);
+
+  const [
+    videoAchievements,
+    setVideoAchievements,
+  ] = useState<VideoAchievement[]>(initialVideoAchievements);
+
+  const availableYears = useMemo(
+    () => getAvailableYears(
+      photoAchievements,
+      videoAchievements
+    ),
+    [photoAchievements, videoAchievements]
+  );
+
+  const [
     activeTab,
     setActiveTab,
   ] =
@@ -2406,8 +2332,49 @@ export default function AchievementsGallery() {
     selectedYear,
     setSelectedYear,
   ] = useState(
-    availableYears[0]
+    0
   );
+
+  useEffect(() => {
+    let mounted = true;
+
+    getPublicAchievements()
+      .then((response) => {
+        if (!mounted) return;
+
+        const photos: PhotoAchievement[] = response.items
+          .filter((item) => item.achievement_type === "PHOTO")
+          .map((item) => ({
+            id: item.id,
+            year: item.year,
+            date: item.achievement_date,
+            title: item.title,
+            category: item.category,
+            images: [...item.images]
+              .sort((first, second) => first.display_order - second.display_order)
+              .map((image) => achievementPublicAssetUrl(image.image_url)),
+          }));
+
+        const videos: VideoAchievement[] = response.items
+          .filter((item) => item.achievement_type === "VIDEO")
+          .map((item) => ({
+            id: item.id,
+            year: item.year,
+            date: item.achievement_date,
+            title: item.title,
+            category: item.category,
+            poster: achievementPublicAssetUrl(item.poster_image_url),
+            video: item.youtube_url || achievementPublicAssetUrl(item.video_url),
+          }));
+
+        setPhotoAchievements(photos);
+        setVideoAchievements(videos);
+        setSelectedYear((current) => current || getAvailableYears(photos, videos)[0] || new Date().getFullYear());
+      })
+      .catch((error) => console.error("Unable to load achievements:", error));
+
+    return () => { mounted = false; };
+  }, []);
 
   const [
     selectedPhoto,

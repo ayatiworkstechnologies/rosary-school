@@ -27,6 +27,7 @@ from app.models.faculty import (
 )
 
 from app.models.download import Download
+from app.models.achievement import Achievement, AchievementImage, AchievementType, VideoSource
 from app.models.submission import AdmissionApplication, ContactEnquiry, MailRoutingSettings, NewsletterSubscription, SubmissionStatus
 
 __all__ = [
@@ -47,6 +48,10 @@ __all__ = [
     "FacultyMember",
 
     "Download",
+    "Achievement",
+    "AchievementImage",
+    "AchievementType",
+    "VideoSource",
     "AdmissionApplication",
     "ContactEnquiry",
     "MailRoutingSettings",
