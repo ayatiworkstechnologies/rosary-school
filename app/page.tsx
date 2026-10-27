@@ -1,3 +1,4 @@
+import ImagePopup from "@/components/Homepage/ImagePopup";
 import ConnectSection from "../components/Homepage/ConnectSection";
 import GallerySection from "../components/Homepage/GallerySection";
 import HeroBanner from "../components/Homepage/HeroBanner";
@@ -28,6 +29,8 @@ export default function Home() {
      <GallerySection />
      
      <ConnectSection />
+
+     <ImagePopup />
 
     </main>
   );
