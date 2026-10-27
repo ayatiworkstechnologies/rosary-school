@@ -446,7 +446,7 @@ export default function GetInTouchSection() {
                       />
                     </div>
 
-                    <div className="pt-[2px]">
+                    <div className="pt-[2px] ">
                       <motion.button
                         type="submit"
                         disabled={isSubmitting}
@@ -461,7 +461,7 @@ export default function GetInTouchSection() {
                             : { scale: 0.98 }
                         }
                         transition={{ duration: 0.25, ease }}
-                        className="inline-flex h-[46px] min-w-[165px] items-center justify-center gap-[10px] rounded-[7px] bg-[#0075FF] px-[30px] font-secondary text-[14px] font-medium uppercase tracking-[0.35px] text-white shadow-[0_12px_28px_rgba(0,117,255,0.22)] transition-all duration-300 hover:bg-[#0069E3] hover:shadow-[0_16px_34px_rgba(0,117,255,0.28)] disabled:cursor-not-allowed disabled:opacity-70 sm:min-w-[180px]"
+                        className="inline- cursor-pointer h-[46px] min-w-[165px] items-center justify-center gap-[10px] rounded-[7px] bg-[#0075FF] px-[30px] font-secondary text-[14px] font-medium uppercase tracking-[0.35px] text-white shadow-[0_12px_28px_rgba(0,117,255,0.22)] transition-all duration-300 hover:bg-[#0069E3] hover:shadow-[0_16px_34px_rgba(0,117,255,0.28)] disabled:cursor-not-allowed disabled:opacity-70 sm:min-w-[180px]"
                       >
                         {isSubmitting ? (
                           <>
