@@ -15,8 +15,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
-export function getNewsletterSubscriptions(search = "") {
-  return request<{ items: NewsletterSubscription[]; total: number }>(`/api/v1/admin/newsletter-subscriptions?limit=200&search=${encodeURIComponent(search)}`);
+export function getNewsletterSubscriptions(search = "", page = 1, limit = 10) {
+  return request<{ items: NewsletterSubscription[]; total: number; page: number; limit: number }>(`/api/v1/admin/newsletter-subscriptions?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
 }
 export function updateNewsletterSubscription(id: number, is_active: boolean) {
   return request<NewsletterSubscription>(`/api/v1/admin/newsletter-subscriptions/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ is_active }) });

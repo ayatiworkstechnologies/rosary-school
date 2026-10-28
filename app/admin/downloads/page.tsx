@@ -15,6 +15,8 @@ import {
   BookOpen,
   CalendarDays,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   CircleSlash2,
   ClipboardList,
   Clock3,
@@ -234,6 +236,7 @@ function StatusBadge({
 ========================================================= */
 
 export default function AdminDownloadsPage() {
+  const pageSize = 10;
   const [
     mobileSidebarOpen,
     setMobileSidebarOpen,
@@ -265,6 +268,11 @@ export default function AdminDownloadsPage() {
     search,
     setSearch,
   ] = useState("");
+
+  const [
+    page,
+    setPage,
+  ] = useState(1);
 
   const [
     statusFilter,
@@ -421,6 +429,9 @@ export default function AdminDownloadsPage() {
         ).length,
       [downloads],
     );
+
+  const totalPages = Math.max(1, Math.ceil(filteredDownloads.length / pageSize));
+  const pagedDownloads = filteredDownloads.slice((page - 1) * pageSize, page * pageSize);
 
   const inactiveCount =
     downloads.length -
@@ -1308,7 +1319,7 @@ export default function AdminDownloadsPage() {
                     </div>
 
 
-                    {filteredDownloads.map(
+                    {pagedDownloads.map(
                       (item) => (
                         <div
                           key={
@@ -1625,7 +1636,7 @@ export default function AdminDownloadsPage() {
                       lg:hidden
                     "
                   >
-                    {filteredDownloads.map(
+                    {pagedDownloads.map(
                       (item) => (
                         <article
                           key={
@@ -1884,6 +1895,7 @@ export default function AdminDownloadsPage() {
                   </div>
                 </>
               )}
+              {!loading && filteredDownloads.length > 0 && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-500 shadow-sm"><span>Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filteredDownloads.length)} of {filteredDownloads.length} downloads</span><div className="flex items-center gap-6"><button aria-label="Previous page" disabled={page === 1} onClick={() => setPage(current => current - 1)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-400 disabled:opacity-40"><ChevronLeft size={18}/></button><span className="text-slate-600">Page {page} / {totalPages}</span><button aria-label="Next page" disabled={page === totalPages} onClick={() => setPage(current => current + 1)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-400 disabled:opacity-40"><ChevronRight size={18}/></button></div></div>}
             </section>
           </main>
         </div>

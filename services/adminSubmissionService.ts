@@ -28,8 +28,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
-export function getContacts(search = "") {
-  return request<SubmissionList<ContactEnquiry>>(`/api/v1/admin/contact-enquiries?limit=100&search=${encodeURIComponent(search)}`);
+export function getContacts(search = "", page = 1, limit = 10) {
+  return request<SubmissionList<ContactEnquiry>>(`/api/v1/admin/contact-enquiries?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
 }
 export function updateContact(id: number, payload: { status?: SubmissionStatus; admin_notes?: string }) {
   return request<ContactEnquiry>(`/api/v1/admin/contact-enquiries/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -37,8 +37,8 @@ export function updateContact(id: number, payload: { status?: SubmissionStatus; 
 export function resendContact(id: number) { return request<ContactEnquiry>(`/api/v1/admin/contact-enquiries/${id}/resend-email`, { method: "POST" }); }
 export function deleteContact(id: number) { return request<void>(`/api/v1/admin/contact-enquiries/${id}`, { method: "DELETE" }); }
 
-export function getAdmissions(search = "") {
-  return request<SubmissionList<AdmissionApplication>>(`/api/v1/admin/admission-applications?limit=100&search=${encodeURIComponent(search)}`);
+export function getAdmissions(search = "", page = 1, limit = 10) {
+  return request<SubmissionList<AdmissionApplication>>(`/api/v1/admin/admission-applications?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`);
 }
 export function updateAdmission(id: number, payload: { status?: SubmissionStatus; admin_notes?: string; form_data?: Record<string, string> }) {
   return request<AdmissionApplication>(`/api/v1/admin/admission-applications/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });

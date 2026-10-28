@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Mail, Pencil, Printer, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Mail, Pencil, Printer, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
 import AdminAuthGuard from "./AdminAuthGuard";
 import AdminHeader from "./AdminHeader";
 import AdminSidebar from "./AdminSidebar";
@@ -13,6 +13,7 @@ import {
 
 const STATUSES: SubmissionStatus[] = ["NEW", "READ", "REPLIED", "UNDER_REVIEW", "SHORTLISTED", "REJECTED", "ADMITTED", "ARCHIVED"];
 type Item = ContactEnquiry | AdmissionApplication;
+const PAGE_SIZE = 10;
 
 function isAdmission(item: Item): item is AdmissionApplication { return "registration_no" in item; }
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL || "/backend").replace(/\/$/, "");
@@ -69,13 +70,13 @@ function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
       <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Registration number</p><p className="text-xl font-bold text-[#0755AD]">{item.registration_no}</p></div>
       <div className="text-right"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Received</p><p className="text-sm font-semibold">{new Date(item.created_at).toLocaleString("en-IN")}</p></div>
     </div>
-    <h2 className="print-section-title mb-2 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Application details</h2>
-    <div className="print-details grid grid-cols-2 border-l border-t border-slate-300">
-      {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="print-field border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
-    </div>
     <h2 className="print-section-title mb-3 mt-5 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Student photograph</h2>
     <div className="print-photo-section break-inside-avoid">
       <div className="max-w-48 text-center"><div className="print-photo flex h-32 items-center justify-center rounded border border-slate-300 p-2"><img src={imageUrl(item.student_photo_url)} alt="Student Photograph" className="max-h-full max-w-full object-contain"/></div><p className="mt-2 text-xs font-semibold">Student Photograph</p></div>
+    </div>
+    <h2 className="print-section-title mb-2 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Application details</h2>
+    <div className="print-details grid grid-cols-2 border-l border-t border-slate-300">
+      {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="print-field border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
     </div>
     <footer className="print-footer mt-8 border-t border-slate-300 pt-3 text-center text-[10px] text-slate-500">Printed from the Rosary School admission administration portal.</footer>
   </section>;
@@ -89,6 +90,8 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [editingAdmission, setEditingAdmission] = useState(false);
   const [editedFormData, setEditedFormData] = useState<Record<string, string>>({});
   const [replacementPhoto, setReplacementPhoto] = useState<File | null>(null);
@@ -97,11 +100,11 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
   const load = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const result = kind === "contact" ? await getContacts(search) : await getAdmissions(search);
-      setItems(result.items);
+      const result = kind === "contact" ? await getContacts(search, page, PAGE_SIZE) : await getAdmissions(search, page, PAGE_SIZE);
+      setItems(result.items); setTotal(result.total);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to load submissions."); }
     finally { setLoading(false); }
-  }, [kind, search]);
+  }, [kind, search, page]);
 
   useEffect(() => { const timer = window.setTimeout(() => void load(), 250); return () => window.clearTimeout(timer); }, [load]);
   useEffect(() => () => { if (replacementPhotoPreview) URL.revokeObjectURL(replacementPhotoPreview); }, [replacementPhotoPreview]);
@@ -184,13 +187,14 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
     <div className="min-h-screen lg:pl-[250px]"><AdminHeader onMenuClick={() => setMobileOpen(true)} />
       <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-6"><h1 className="text-2xl font-bold text-[#10284D]">{title}</h1><p className="mt-1 text-sm text-slate-500">Review website submissions and email delivery.</p></div>
-        <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"><Search size={18} className="text-slate-400"/><input className="w-full outline-none" placeholder="Search by name, email, phone or registration number" value={search} onChange={event => setSearch(event.target.value)} /></div>
+        <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"><Search size={18} className="text-slate-400"/><input className="w-full outline-none" placeholder="Search by name, email, phone or registration number" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} /></div>
         {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           {loading ? <div className="p-10 text-center text-slate-500">Loading…</div> : items.length === 0 ? <div className="p-10 text-center text-slate-500">No submissions found.</div> :
           <div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead className="bg-slate-50 text-xs uppercase text-slate-500"><tr><th className="px-5 py-3">Reference</th><th className="px-5 py-3">Name</th><th className="px-5 py-3">Contact</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Email</th><th className="px-5 py-3">Received</th></tr></thead>
           <tbody className="divide-y divide-slate-100">{items.map(item => <tr key={item.id} onClick={() => setSelected(item)} className="cursor-pointer hover:bg-blue-50/50"><td className="px-5 py-4 font-semibold text-[#0075FF]">{isAdmission(item) ? item.registration_no : `ENQ-${item.id}`}</td><td className="px-5 py-4 font-medium text-[#10284D]">{isAdmission(item) ? item.pupil_name : item.name}</td><td className="px-5 py-4 text-slate-600">{isAdmission(item) ? item.parent_email : item.email}<br/>{isAdmission(item) ? item.phone_number : item.phone}</td><td className="px-5 py-4">{item.status.replaceAll("_", " ")}</td><td className="px-5 py-4">{item.email_status}</td><td className="px-5 py-4 text-slate-500">{new Date(item.created_at).toLocaleString("en-IN")}</td></tr>)}</tbody></table></div>}
         </div>
+        {total > 0 && <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-500 shadow-sm"><span>Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total} {kind === "admission" ? "applications" : "enquiries"}</span><div className="flex items-center gap-6"><button aria-label="Previous page" disabled={page === 1 || loading} onClick={() => setPage(current => current - 1)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-400 disabled:cursor-not-allowed disabled:opacity-40"><ChevronLeft size={18}/></button><span className="text-slate-600">Page {page} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}</span><button aria-label="Next page" disabled={page * PAGE_SIZE >= total || loading} onClick={() => setPage(current => current + 1)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-400 disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={18}/></button></div></div>}
       </main>
     </div>
     {selected && <><div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 sm:p-6" onMouseDown={() => setSelected(null)}><aside className="max-h-full w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onMouseDown={event => event.stopPropagation()}>
@@ -208,6 +212,6 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
       </div>
       <label className="mt-6 block text-sm font-semibold text-slate-700">Admin notes<textarea defaultValue={selected.admin_notes || ""} onBlur={event => void save({ admin_notes: event.target.value })} className="mt-1 min-h-28 w-full rounded-lg border border-slate-200 p-3 font-normal" placeholder="Private notes for administrators"/></label>
     </aside></div>{isAdmission(selected) && <AdmissionPrintSheet item={selected}/>}</>}
-    <style jsx global>{`@media print { @page { size: A4; margin: 10mm; } body { background: white !important; } .submission-manager > :not(.print-sheet) { display: none !important; } .print-sheet { display: block !important; position: static !important; width: auto !important; } .print-header { padding-bottom: 12px !important; } .print-header h1 { font-size: 24px !important; line-height: 1.15 !important; } .print-header p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta { margin: 14px 0 !important; padding: 11px 14px !important; } .print-meta p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta .text-xl { font-size: 20px !important; } .print-section-title { margin: 12px 0 6px !important; padding-bottom: 6px !important; font-size: 16px !important; } .print-details { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .print-field { min-height: 47px; padding: 7px 9px !important; } .print-field p:first-child { font-size: 9px !important; line-height: 1.15 !important; } .print-field p:last-child { margin-top: 4px !important; font-size: 11px !important; line-height: 1.2 !important; overflow-wrap: anywhere; } .print-photo-section { display: flex; justify-content: flex-end; } .print-photo { height: 100px !important; padding: 4px !important; } .print-photo-section p { margin-top: 4px !important; font-size: 10px !important; } .print-footer { margin-top: 12px !important; padding-top: 6px !important; font-size: 9px !important; } }`}</style>
+    <style jsx global>{`@media print { @page { size: A4; margin: 10mm; } body { background: white !important; } .submission-manager > :not(.print-sheet) { display: none !important; } .print-sheet { display: block !important; position: static !important; width: auto !important; } .print-header { padding-bottom: 12px !important; } .print-header h1 { font-size: 24px !important; line-height: 1.15 !important; } .print-header p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta { margin: 14px 0 !important; padding: 11px 14px !important; } .print-meta p { font-size: 9px !important; line-height: 1.2 !important; } .print-meta .text-xl { font-size: 16px !important; } .print-section-title { margin: 12px 0 6px !important; padding-bottom: 6px !important; font-size: 16px !important; } .print-details { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .print-field { min-height: 47px; padding: 7px 9px !important; } .print-field p:first-child { font-size: 9px !important; line-height: 1.15 !important; } .print-field p:last-child { margin-top: 4px !important; font-size: 11px !important; line-height: 1.2 !important; overflow-wrap: anywhere; } .print-photo-section { display: flex; justify-content: flex-end; } .print-photo { height: 100px !important; padding: 4px !important; } .print-photo-section p { margin-top: 4px !important; font-size: 10px !important; } .print-footer { margin-top: 12px !important; padding-top: 6px !important; font-size: 9px !important; } }`}</style>
   </div></AdminAuthGuard>;
 }

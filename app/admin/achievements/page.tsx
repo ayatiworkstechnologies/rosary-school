@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ImageIcon, Pencil, Plus, RefreshCw, Search, Trash2, Trophy, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, ImageIcon, Pencil, Plus, RefreshCw, Search, Trash2, Trophy, Video } from "lucide-react";
 import AdminAuthGuard from "@/components/admin/AdminAuthGuard";
 import AdminHeader from "@/components/admin/AdminHeader";
 import AdminSidebar from "@/components/admin/AdminSidebar";
@@ -10,6 +10,7 @@ import { AdminAchievement, achievementAssetUrl, deleteAdminAchievement, getAdmin
 
 type Tab = "PHOTO" | "VIDEO";
 type Status = "ALL" | "ACTIVE" | "INACTIVE";
+const PAGE_SIZE = 9;
 
 export default function AchievementsPage() {
   const [menu, setMenu] = useState(false);
@@ -21,6 +22,7 @@ export default function AchievementsPage() {
   const [status, setStatus] = useState<Status>("ALL");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     try {
@@ -53,6 +55,8 @@ export default function AchievementsPage() {
       (status === "ALL" || item.is_active === (status === "ACTIVE"))
     );
   }, [items, tab, search, year, category, status]);
+  const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const pagedItems = visible.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function remove(id: number) {
     if (!window.confirm("Delete this achievement?")) return;
@@ -90,7 +94,7 @@ export default function AchievementsPage() {
           </div>
 
           {error && <p className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-          {loading ? <p className="py-16 text-center text-slate-500">Loading achievements…</p> : <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{visible.map((item) => { const photo = item.achievement_type === "PHOTO"; const image = photo ? item.images[0]?.image_url : item.poster_image_url; return <article key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"><div className="relative h-44 bg-slate-100">{image ? <img src={achievementAssetUrl(image)} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-slate-400">{photo ? <ImageIcon /> : <Video />}</div>}<span className="absolute left-3 top-3 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">{photo ? "PHOTO" : "VIDEO"}</span></div><div className="p-4"><h2 className="font-bold">{item.title}</h2><p className="text-sm text-slate-500">{item.category}</p><p className="mt-2 text-xs text-slate-500">{item.year} · Order {item.display_order} · {item.is_active ? "Active" : "Inactive"}</p><div className="mt-4 flex items-center gap-2"><Link href={"/admin/achievements/" + item.id + "/edit"} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-50 px-4 font-semibold text-blue-700 transition hover:bg-blue-100"><Pencil size={16} /> Edit</Link><button type="button" onClick={() => void remove(item.id)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-red-600 transition hover:bg-red-50" aria-label={"Delete " + item.title}><Trash2 size={18} /></button></div></div></article>; })}</div>}
+          {loading ? <p className="py-16 text-center text-slate-500">Loading achievements…</p> : <><div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{pagedItems.map((item) => { const photo = item.achievement_type === "PHOTO"; const image = photo ? item.images[0]?.image_url : item.poster_image_url; return <article key={item.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm"><div className="relative h-44 bg-slate-100">{image ? <img src={achievementAssetUrl(image)} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center text-slate-400">{photo ? <ImageIcon /> : <Video />}</div>}<span className="absolute left-3 top-3 rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white">{photo ? "PHOTO" : "VIDEO"}</span></div><div className="p-4"><h2 className="font-bold">{item.title}</h2><p className="text-sm text-slate-500">{item.category}</p><p className="mt-2 text-xs text-slate-500">{item.year} · Order {item.display_order} · {item.is_active ? "Active" : "Inactive"}</p><div className="mt-4 flex items-center gap-2"><Link href={"/admin/achievements/" + item.id + "/edit"} className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-50 px-4 font-semibold text-blue-700 transition hover:bg-blue-100"><Pencil size={16} /> Edit</Link><button type="button" onClick={() => void remove(item.id)} className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-red-600 transition hover:bg-red-50" aria-label={"Delete " + item.title}><Trash2 size={18} /></button></div></div></article>; })}</div>{visible.length > 0 && <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-500 shadow-sm"><span>Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, visible.length)} of {visible.length} achievements</span><div className="flex items-center gap-6"><button aria-label="Previous page" disabled={page === 1} onClick={() => setPage(current => current - 1)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-400 disabled:opacity-40"><ChevronLeft size={18}/></button><span className="text-slate-600">Page {page} / {totalPages}</span><button aria-label="Next page" disabled={page === totalPages} onClick={() => setPage(current => current + 1)} className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 text-slate-400 disabled:opacity-40"><ChevronRight size={18}/></button></div></div>}</>}
           {!loading && !visible.length && <p className="py-16 text-center text-slate-500">No achievements match these filters.</p>}
         </div>
       </main>
