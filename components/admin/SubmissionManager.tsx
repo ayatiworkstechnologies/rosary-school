@@ -1,12 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Mail, Printer, RefreshCw, Search, Trash2, X } from "lucide-react";
+import { Mail, Pencil, Printer, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
 import AdminAuthGuard from "./AdminAuthGuard";
 import AdminHeader from "./AdminHeader";
 import AdminSidebar from "./AdminSidebar";
 import {
-  deleteAdmission, deleteContact, getAdmissions, getContacts, resendAdmission, resendContact,
+  deleteAdmission, deleteContact, getAdmissions, getContacts, replaceAdmissionPhoto, resendAdmission, resendContact,
   updateAdmission, updateContact, type AdmissionApplication,
   type ContactEnquiry, type SubmissionStatus,
 } from "@/services/adminSubmissionService";
@@ -89,6 +89,9 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [editingAdmission, setEditingAdmission] = useState(false);
+  const [editedFormData, setEditedFormData] = useState<Record<string, string>>({});
+  const [replacementPhoto, setReplacementPhoto] = useState<File | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -118,6 +121,25 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
       const updated = kind === "contact" ? await resendContact(selected.id) : await resendAdmission(selected.id);
       setSelected(updated); setItems(previous => previous.map(item => item.id === updated.id ? updated : item));
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to resend email."); }
+    finally { setBusy(false); }
+  }
+
+  function beginAdmissionEdit() {
+    if (!selected || !isAdmission(selected)) return;
+    setEditedFormData({ ...selected.form_data });
+    setReplacementPhoto(null);
+    setEditingAdmission(true);
+  }
+
+  async function saveAdmissionForm() {
+    if (!selected || !isAdmission(selected)) return;
+    setBusy(true); setError("");
+    try {
+      let updated = await updateAdmission(selected.id, { form_data: editedFormData });
+      if (replacementPhoto) updated = await replaceAdmissionPhoto(selected.id, replacementPhoto);
+      setSelected(updated); setItems(previous => previous.map(item => item.id === updated.id ? updated : item));
+      setEditingAdmission(false); setReplacementPhoto(null);
+    } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to update admission application."); }
     finally { setBusy(false); }
   }
 
@@ -153,12 +175,12 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
       <div className="mb-6 flex items-start justify-between"><div><h2 className="text-xl font-bold text-[#10284D]">{isAdmission(selected) ? selected.registration_no : `Enquiry #${selected.id}`}</h2><p className="text-sm text-slate-500">{new Date(selected.created_at).toLocaleString("en-IN")}</p></div><button onClick={() => setSelected(null)} className="rounded-lg p-2 hover:bg-slate-100"><X/></button></div>
       <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Status<select disabled={busy} value={selected.status} onChange={event => void save({ status: event.target.value as SubmissionStatus })} className="mt-1 w-full rounded-lg border border-slate-200 p-3 font-normal">{STATUSES.map(value => <option key={value}>{value}</option>)}</select></label><div className="text-sm font-semibold text-slate-700">Email delivery<div className="mt-1 rounded-lg border border-slate-200 p-3 font-normal">{selected.email_status}</div></div></div>
       {selected.email_error && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{selected.email_error}</p>}
-      <div className="mt-4 flex flex-wrap gap-2"><button disabled={busy} onClick={() => void resend()} className="inline-flex items-center gap-2 rounded-lg bg-[#0075FF] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy ? <RefreshCw className="animate-spin" size={16}/> : <Mail size={16}/>} Resend email</button>{isAdmission(selected) && <button disabled={busy} onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#10284D] hover:bg-slate-50 disabled:opacity-50"><Printer size={16}/> Print application</button>}<button disabled={busy} onClick={() => void remove()} className="ml-auto inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"><Trash2 size={16}/> Delete</button></div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3"><div className="flex flex-wrap gap-2"><button disabled={busy} onClick={() => void resend()} className="inline-flex items-center gap-2 rounded-lg bg-[#0075FF] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50">{busy ? <RefreshCw className="animate-spin" size={16}/> : <Mail size={16}/>} Resend email</button>{isAdmission(selected) && <><button disabled={busy} onClick={() => window.print()} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-[#10284D] hover:bg-slate-50 disabled:opacity-50"><Printer size={16}/> Print application</button>{editingAdmission ? <><button disabled={busy} onClick={() => void saveAdmissionForm()} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"><Save size={16}/> Save changes</button><button disabled={busy} onClick={() => { setEditingAdmission(false); setReplacementPhoto(null); }} className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 disabled:opacity-50">Cancel</button></> : <button disabled={busy} onClick={beginAdmissionEdit} className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-[#0755AD] hover:bg-blue-100 disabled:opacity-50"><Pencil size={16}/> Edit application</button>}</>}</div><button disabled={busy} onClick={() => void remove()} className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"><Trash2 size={16}/> Delete</button></div>
       <div className="mt-6 space-y-3">{isAdmission(selected) ? <>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {orderedAdmissionFields(selected.form_data).map(([key, value]) => <div key={key} className="rounded-lg border border-slate-100 p-3"><p className="text-xs font-bold uppercase text-slate-400">{key.replaceAll("_", " ")}</p><p className="mt-1 break-words text-sm text-slate-700">{value || "-"}</p></div>)}
+          {orderedAdmissionFields(selected.form_data).map(([key, value]) => <div key={key} className="rounded-lg border border-slate-100 p-3"><p className="text-xs font-bold uppercase text-slate-400">{fieldLabel(key)}</p>{editingAdmission ? <input value={editedFormData[key] ?? value ?? ""} onChange={event => setEditedFormData(current => ({ ...current, [key]: event.target.value }))} className="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm text-slate-700 outline-none focus:border-[#0075FF]"/> : <p className="mt-1 break-words text-sm text-slate-700">{value || "-"}</p>}</div>)}
         </div>
-        <div className="max-w-48"><a href={imageUrl(selected.student_photo_url)} target="_blank" rel="noreferrer"><img src={imageUrl(selected.student_photo_url)} alt="Student photograph" className="aspect-square w-full rounded-lg border object-contain"/><span className="mt-1 block text-xs text-slate-500">Student photograph</span></a></div>
+        <div className="max-w-48"><a href={imageUrl(selected.student_photo_url)} target="_blank" rel="noreferrer"><img src={imageUrl(selected.student_photo_url)} alt="Student photograph" className="aspect-square w-full rounded-lg border object-contain"/><span className="mt-1 block text-xs text-slate-500">Student photograph</span></a>{editingAdmission && <label className="mt-3 block cursor-pointer text-sm font-semibold text-[#0755AD]">Replace photograph<input type="file" accept="image/jpeg,image/png,image/webp" onChange={event => setReplacementPhoto(event.target.files?.[0] ?? null)} className="mt-1 block w-full text-xs text-slate-600 file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-[#0755AD]"/>{replacementPhoto && <span className="mt-1 block text-xs text-slate-500">New: {replacementPhoto.name}</span>}</label>}</div>
       </> : <><div><b>Name:</b> {selected.name}</div><div><b>Email:</b> <a className="text-blue-600" href={`mailto:${selected.email}`}>{selected.email}</a></div><div><b>Phone:</b> <a className="text-blue-600" href={`tel:${selected.phone}`}>{selected.phone}</a></div><div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4">{selected.message}</div></>}
       </div>
       <label className="mt-6 block text-sm font-semibold text-slate-700">Admin notes<textarea defaultValue={selected.admin_notes || ""} onBlur={event => void save({ admin_notes: event.target.value })} className="mt-1 min-h-28 w-full rounded-lg border border-slate-200 p-3 font-normal" placeholder="Private notes for administrators"/></label>

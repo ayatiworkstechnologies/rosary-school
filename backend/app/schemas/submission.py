@@ -23,6 +23,10 @@ class SubmissionUpdate(BaseModel):
     admin_notes: str | None = Field(default=None, max_length=5000)
 
 
+class AdmissionUpdate(SubmissionUpdate):
+    form_data: dict[str, str] | None = None
+
+
 class ContactResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int

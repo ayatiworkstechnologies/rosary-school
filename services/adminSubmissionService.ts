@@ -40,8 +40,12 @@ export function deleteContact(id: number) { return request<void>(`/api/v1/admin/
 export function getAdmissions(search = "") {
   return request<SubmissionList<AdmissionApplication>>(`/api/v1/admin/admission-applications?limit=100&search=${encodeURIComponent(search)}`);
 }
-export function updateAdmission(id: number, payload: { status?: SubmissionStatus; admin_notes?: string }) {
+export function updateAdmission(id: number, payload: { status?: SubmissionStatus; admin_notes?: string; form_data?: Record<string, string> }) {
   return request<AdmissionApplication>(`/api/v1/admin/admission-applications/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+}
+export function replaceAdmissionPhoto(id: number, photo: File) {
+  const body = new FormData(); body.append("student_photo", photo);
+  return request<AdmissionApplication>(`/api/v1/admin/admission-applications/${id}/student-photo`, { method: "PUT", body });
 }
 export function resendAdmission(id: number) { return request<AdmissionApplication>(`/api/v1/admin/admission-applications/${id}/resend-email`, { method: "POST" }); }
 export function deleteAdmission(id: number) { return request<void>(`/api/v1/admin/admission-applications/${id}`, { method: "DELETE" }); }

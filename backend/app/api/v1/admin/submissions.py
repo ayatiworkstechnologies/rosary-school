@@ -1,6 +1,7 @@
 from pathlib import Path
+from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
@@ -11,6 +12,7 @@ from app.models.submission import AdmissionApplication, ContactEnquiry, Newslett
 from app.schemas.submission import (
     AdmissionListResponse,
     AdmissionResponse,
+    AdmissionUpdate,
     ContactListResponse,
     ContactResponse,
     NewsletterListResponse,
@@ -25,6 +27,19 @@ from app.services.mail_settings_service import get_mail_routes
 router = APIRouter(prefix="/api/v1/admin", tags=["Admin Submissions"])
 BACKEND_ROOT = Path(__file__).resolve().parents[4]
 ADMISSION_UPLOAD_ROOT = (BACKEND_ROOT / "uploads" / "admissions").resolve()
+
+
+async def _save_admission_photo(upload: UploadFile) -> str:
+    suffix = {"image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp"}.get(upload.content_type or "")
+    if suffix is None:
+        raise HTTPException(status_code=400, detail="Student photograph must be a JPG, PNG, or WEBP image.")
+    content = await upload.read()
+    if not content or len(content) > 1 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Student photograph must be between 1 byte and 1024 KB.")
+    ADMISSION_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
+    filename = f"{uuid4().hex}{suffix}"
+    (ADMISSION_UPLOAD_ROOT / filename).write_bytes(content)
+    return f"/uploads/admissions/{filename}"
 
 
 @router.get("/newsletter-subscriptions", response_model=NewsletterListResponse)
@@ -133,11 +148,26 @@ def admission(item_id: int, db: Session = Depends(get_db), _: Admin = Depends(ge
 
 
 @router.patch("/admission-applications/{item_id}", response_model=AdmissionResponse)
-def update_admission(item_id: int, payload: SubmissionUpdate, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+def update_admission(item_id: int, payload: AdmissionUpdate, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
     item = _item(db, AdmissionApplication, item_id)
     for key, value in payload.model_dump(exclude_unset=True).items():
         setattr(item, key, value)
+    if payload.form_data is not None:
+        item.pupil_name = payload.form_data.get("name_of_the_pupil", item.pupil_name).strip() or item.pupil_name
+        item.parent_email = payload.form_data.get("email", item.parent_email).strip() or item.parent_email
+        item.phone_number = payload.form_data.get("phone_number", item.phone_number).strip() or item.phone_number
     db.commit(); db.refresh(item)
+    return item
+
+
+@router.put("/admission-applications/{item_id}/student-photo", response_model=AdmissionResponse)
+async def replace_admission_photo(item_id: int, student_photo: UploadFile = File(...), db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+    item = _item(db, AdmissionApplication, item_id)
+    previous_photo = (BACKEND_ROOT / item.student_photo_url.lstrip("/")).resolve()
+    item.student_photo_url = await _save_admission_photo(student_photo)
+    db.commit(); db.refresh(item)
+    if previous_photo.parent == ADMISSION_UPLOAD_ROOT:
+        previous_photo.unlink(missing_ok=True)
     return item
 
 
