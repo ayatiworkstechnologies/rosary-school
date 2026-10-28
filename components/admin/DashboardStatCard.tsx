@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 
 type DashboardStatCardProps = {
@@ -9,6 +10,7 @@ type DashboardStatCardProps = {
   subtitle: string;
   icon: LucideIcon;
   index?: number;
+  href?: string;
 };
 
 export default function DashboardStatCard({
@@ -17,8 +19,9 @@ export default function DashboardStatCard({
   subtitle,
   icon: Icon,
   index = 0,
+  href,
 }: DashboardStatCardProps) {
-  return (
+  const content = (
     <motion.article
       initial={{
         opacity: 0,
@@ -122,4 +125,6 @@ export default function DashboardStatCard({
       </p>
     </motion.article>
   );
+
+  return href ? <Link href={href} className="block">{content}</Link> : content;
 }

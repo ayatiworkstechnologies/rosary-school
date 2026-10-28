@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -20,6 +20,13 @@ import AdminSidebar from "../../../components/admin/AdminSidebar";
 import AdminHeader from "../../../components/admin/AdminHeader";
 import DashboardStatCard from "../../../components/admin/DashboardStatCard";
 import AdminAuthGuard from "../../../components/admin/AdminAuthGuard";
+import { getAdminNews } from "@/services/adminNewsService";
+import { getAdminEvents } from "@/services/adminEventService";
+import { getAdminCircularNotices } from "@/services/adminCircularNoticeService";
+import { getAdminGalleryAlbums } from "@/services/adminGalleryService";
+import { getAdminFacultyMembers } from "@/services/adminFacultyService";
+import { getAdminDownloads } from "@/services/adminDownloadService";
+import { getAdminAchievements } from "@/services/adminAchievementService";
 
 
 const stats = [
@@ -28,36 +35,42 @@ const stats = [
     value: 12,
     subtitle: "Published news articles",
     icon: Newspaper,
+    href: "/admin/news",
   },
   {
     title: "Events",
     value: 8,
     subtitle: "Upcoming school events",
     icon: CalendarDays,
+    href: "/admin/events",
   },
   {
     title: "Notices",
     value: 15,
     subtitle: "Circulars and notices",
     icon: BellRing,
+    href: "/admin/circular-notices",
   },
   {
     title: "Gallery",
     value: 24,
     subtitle: "Gallery collections",
     icon: Images,
+    href: "/admin/gallery",
   },
   {
     title: "Faculty",
     value: 38,
     subtitle: "Faculty members",
     icon: UsersRound,
+    href: "/admin/faculty",
   },
   {
     title: "Downloads",
     value: 8,
     subtitle: "Downloadable resources",
     icon: Download,
+    href: "/admin/downloads",
   },
 ];
 
@@ -65,47 +78,48 @@ const stats = [
 const quickActions = [
   {
     title: "Add News",
-    href: "/admin/news",
+    href: "/admin/news/new",
     icon: Newspaper,
   },
   {
     title: "Create Event",
-    href: "/admin/events",
+    href: "/admin/events/new",
     icon: CalendarDays,
   },
   {
     title: "Add Notice",
-    href: "/admin/circular-notices",
+    href: "/admin/circular-notices/new",
     icon: BellRing,
   },
   {
     title: "Upload Gallery",
-    href: "/admin/gallery",
+    href: "/admin/gallery/new",
     icon: Images,
   },
 ];
 
 
-const recentActivities = [
+type Activity = { title: string; module: string; time: string; createdAt: string };
+const recentActivities: Activity[] = [
   {
     title: "Annual Sports Day news published",
     module: "News",
-    time: "10 minutes ago",
+    time: "10 minutes ago", createdAt: "",
   },
   {
     title: "Parent-Teacher Meeting updated",
     module: "Events",
-    time: "35 minutes ago",
+    time: "35 minutes ago", createdAt: "",
   },
   {
     title: "September circular uploaded",
     module: "Notices",
-    time: "2 hours ago",
+    time: "2 hours ago", createdAt: "",
   },
   {
     title: "Faculty information updated",
     module: "Faculty",
-    time: "Yesterday",
+    time: "Yesterday", createdAt: "",
   },
 ];
 
@@ -115,6 +129,39 @@ export default function AdminDashboardPage() {
     mobileSidebarOpen,
     setMobileSidebarOpen,
   ] = useState(false);
+  const [liveCounts, setLiveCounts] = useState<Record<string, number>>({});
+  const [activities, setActivities] = useState<Activity[]>(recentActivities);
+
+  useEffect(() => {
+    let active = true;
+    const relativeTime = (date: string) => {
+      const seconds = Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / 1000));
+      if (seconds < 60) return "Just now";
+      if (seconds < 3600) return `${Math.floor(seconds / 60)} minutes ago`;
+      if (seconds < 86400) return `${Math.floor(seconds / 3600)} hours ago`;
+      return `${Math.floor(seconds / 86400)} days ago`;
+    };
+    void Promise.all([
+      getAdminNews({ page: 1, limit: 100 }), getAdminEvents({ page: 1, limit: 100 }),
+      getAdminCircularNotices({ page: 1, limit: 100 }), getAdminGalleryAlbums({ page: 1, limit: 100 }),
+      getAdminFacultyMembers({ page: 1, limit: 100 }), getAdminDownloads({ page: 1, limit: 100 }),
+      getAdminAchievements({ page: 1, limit: 100 }),
+    ]).then(([news, events, notices, gallery, faculty, downloads, achievements]) => {
+      if (!active) return;
+      setLiveCounts({ News: news.total, Events: events.total, Notices: notices.total, Gallery: gallery.total, Faculty: faculty.total, Downloads: downloads.total });
+      const latest: Activity[] = [
+        ...news.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "News", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+        ...events.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Events", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+        ...notices.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Notices", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+        ...gallery.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Gallery", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+        ...faculty.items.map(item => ({ title: `${item.name} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Faculty", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+        ...downloads.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Downloads", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+        ...achievements.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Achievements", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
+      ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4);
+      if (latest.length) setActivities(latest);
+    }).catch(() => { /* The dashboard keeps its fallback display if an API is temporarily unavailable. */ });
+    return () => { active = false; };
+  }, []);
 
 
   return (
@@ -313,6 +360,7 @@ export default function AdminDashboardPage() {
                     <DashboardStatCard
                       key={item.title}
                       {...item}
+                      value={liveCounts[item.title] ?? "—"}
                       index={index}
                     />
                   )
@@ -594,8 +642,8 @@ export default function AdminDashboardPage() {
                   </div>
 
 
-                  <button
-                    type="button"
+                  <Link
+                    href="/admin/news"
                     className="
                       font-secondary
                       text-[11px]
@@ -608,14 +656,14 @@ export default function AdminDashboardPage() {
                     "
                   >
                     View all
-                  </button>
+                  </Link>
 
                 </div>
 
 
                 <div className="mt-4">
 
-                  {recentActivities.map(
+                  {activities.map(
                     (
                       activity,
                       index
