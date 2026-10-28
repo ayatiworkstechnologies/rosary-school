@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const backendUrl =
-  (process.env.ROSARY_BACKEND_URL || "http://localhost:8000").replace(/\/$/, "");
+  (process.env.ROSARY_BACKEND_URL || "http://89.167.92.220:8017").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   async rewrites() {
