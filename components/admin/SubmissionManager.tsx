@@ -60,24 +60,24 @@ function orderedAdmissionFields(formData: AdmissionApplication["form_data"]) {
 
 function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
   return <section className="print-sheet hidden bg-white text-[#172B4D] print:block">
-    <header className="border-b-2 border-[#0075FF] pb-4 text-center">
+    <header className="print-header border-b-2 border-[#0075FF] pb-4 text-center">
       <p className="text-xs font-bold tracking-[0.25em] text-[#0075FF]">ROSARY SCHOOL</p>
       <h1 className="mt-1 text-2xl font-bold">Rosary Matriculation Higher Secondary School</h1>
       <p className="mt-1 text-sm">LKG Admission Application · 2027–2028</p>
     </header>
-    <div className="my-5 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-5 py-3">
+    <div className="print-meta my-5 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-5 py-3">
       <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Registration number</p><p className="text-xl font-bold text-[#0755AD]">{item.registration_no}</p></div>
       <div className="text-right"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Received</p><p className="text-sm font-semibold">{new Date(item.created_at).toLocaleString("en-IN")}</p></div>
     </div>
-    <h2 className="mb-2 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Application details</h2>
-    <div className="grid grid-cols-2 border-l border-t border-slate-300">
-      {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
+    <h2 className="print-section-title mb-2 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Application details</h2>
+    <div className="print-details grid grid-cols-2 border-l border-t border-slate-300">
+      {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="print-field border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
     </div>
-    <h2 className="mb-3 mt-5 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Student photograph</h2>
-    <div className="break-inside-avoid">
-      <div className="max-w-48 text-center"><div className="flex h-32 items-center justify-center rounded border border-slate-300 p-2"><img src={imageUrl(item.student_photo_url)} alt="Student Photograph" className="max-h-full max-w-full object-contain"/></div><p className="mt-2 text-xs font-semibold">Student Photograph</p></div>
+    <h2 className="print-section-title mb-3 mt-5 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Student photograph</h2>
+    <div className="print-photo-section break-inside-avoid">
+      <div className="max-w-48 text-center"><div className="print-photo flex h-32 items-center justify-center rounded border border-slate-300 p-2"><img src={imageUrl(item.student_photo_url)} alt="Student Photograph" className="max-h-full max-w-full object-contain"/></div><p className="mt-2 text-xs font-semibold">Student Photograph</p></div>
     </div>
-    <footer className="mt-8 border-t border-slate-300 pt-3 text-center text-[10px] text-slate-500">Printed from the Rosary School admission administration portal.</footer>
+    <footer className="print-footer mt-8 border-t border-slate-300 pt-3 text-center text-[10px] text-slate-500">Printed from the Rosary School admission administration portal.</footer>
   </section>;
 }
 
@@ -135,7 +135,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
   }
 
   const title = kind === "contact" ? "Contact Enquiries" : "Admission Applications";
-  return <AdminAuthGuard><div className="min-h-screen bg-[#F7F9FC]">
+  return <AdminAuthGuard><div className="submission-manager min-h-screen bg-[#F7F9FC]">
     <AdminSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
     <div className="min-h-screen lg:pl-[250px]"><AdminHeader onMenuClick={() => setMobileOpen(true)} />
       <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
@@ -149,7 +149,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
         </div>
       </main>
     </div>
-    {selected && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 sm:p-6" onMouseDown={() => setSelected(null)}><aside className="max-h-full w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onMouseDown={event => event.stopPropagation()}>
+    {selected && <><div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/40 p-4 sm:p-6" onMouseDown={() => setSelected(null)}><aside className="max-h-full w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onMouseDown={event => event.stopPropagation()}>
       <div className="mb-6 flex items-start justify-between"><div><h2 className="text-xl font-bold text-[#10284D]">{isAdmission(selected) ? selected.registration_no : `Enquiry #${selected.id}`}</h2><p className="text-sm text-slate-500">{new Date(selected.created_at).toLocaleString("en-IN")}</p></div><button onClick={() => setSelected(null)} className="rounded-lg p-2 hover:bg-slate-100"><X/></button></div>
       <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-700">Status<select disabled={busy} value={selected.status} onChange={event => void save({ status: event.target.value as SubmissionStatus })} className="mt-1 w-full rounded-lg border border-slate-200 p-3 font-normal">{STATUSES.map(value => <option key={value}>{value}</option>)}</select></label><div className="text-sm font-semibold text-slate-700">Email delivery<div className="mt-1 rounded-lg border border-slate-200 p-3 font-normal">{selected.email_status}</div></div></div>
       {selected.email_error && <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">{selected.email_error}</p>}
@@ -162,7 +162,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
       </> : <><div><b>Name:</b> {selected.name}</div><div><b>Email:</b> <a className="text-blue-600" href={`mailto:${selected.email}`}>{selected.email}</a></div><div><b>Phone:</b> <a className="text-blue-600" href={`tel:${selected.phone}`}>{selected.phone}</a></div><div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4">{selected.message}</div></>}
       </div>
       <label className="mt-6 block text-sm font-semibold text-slate-700">Admin notes<textarea defaultValue={selected.admin_notes || ""} onBlur={event => void save({ admin_notes: event.target.value })} className="mt-1 min-h-28 w-full rounded-lg border border-slate-200 p-3 font-normal" placeholder="Private notes for administrators"/></label>
-    </aside>{isAdmission(selected) && <AdmissionPrintSheet item={selected}/>}</div>}
-    <style jsx global>{`@media print { @page { size: A4; margin: 12mm; } body { background: white !important; } body * { visibility: hidden !important; } .print-sheet, .print-sheet * { visibility: visible !important; } .print-sheet { display: block !important; position: absolute; inset: 0; width: 100%; } }`}</style>
+    </aside></div>{isAdmission(selected) && <AdmissionPrintSheet item={selected}/>}</>}
+    <style jsx global>{`@media print { @page { size: A4; margin: 10mm; } body { background: white !important; } .submission-manager > :not(.print-sheet) { display: none !important; } .print-sheet { display: block !important; position: static !important; width: auto !important; } .print-header { padding-bottom: 12px !important; } .print-header h1 { font-size: 24px !important; line-height: 1.15 !important; } .print-header p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta { margin: 14px 0 !important; padding: 11px 14px !important; } .print-meta p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta .text-xl { font-size: 20px !important; } .print-section-title { margin: 12px 0 6px !important; padding-bottom: 6px !important; font-size: 16px !important; } .print-details { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .print-field { min-height: 47px; padding: 7px 9px !important; } .print-field p:first-child { font-size: 9px !important; line-height: 1.15 !important; } .print-field p:last-child { margin-top: 4px !important; font-size: 11px !important; line-height: 1.2 !important; overflow-wrap: anywhere; } .print-photo-section { display: flex; justify-content: flex-end; } .print-photo { height: 100px !important; padding: 4px !important; } .print-photo-section p { margin-top: 4px !important; font-size: 10px !important; } .print-footer { margin-top: 12px !important; padding-top: 6px !important; font-size: 9px !important; } }`}</style>
   </div></AdminAuthGuard>;
 }
