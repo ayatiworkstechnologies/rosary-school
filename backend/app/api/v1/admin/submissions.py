@@ -34,8 +34,8 @@ async def _save_admission_photo(upload: UploadFile) -> str:
     if suffix is None:
         raise HTTPException(status_code=400, detail="Student photograph must be a JPG, PNG, or WEBP image.")
     content = await upload.read()
-    if not content or len(content) > 1 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="Student photograph must be between 1 byte and 1024 KB.")
+    if not content or len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Student photograph must be between 1 byte and 5 MB.")
     ADMISSION_UPLOAD_ROOT.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid4().hex}{suffix}"
     (ADMISSION_UPLOAD_ROOT / filename).write_bytes(content)
