@@ -38,39 +38,14 @@ const communityLinks = [
 
 const socialLinks = [
   {
-    label: "Facebook",
-    href: "#",
-    icon: "/icons/social/facebook.svg",
-  },
-  {
-    label: "WhatsApp",
-    href: "#",
-    icon: "/icons/social/whatsapp.svg",
-  },
-  {
-    label: "X",
-    href: "#",
-    icon: "/icons/social/x.svg",
-  },
-  {
     label: "Instagram",
-    href: "#",
+    href: "https://www.instagram.com/rosarymatricchennai?mdxt=MTh4ZTIwMjE5amRzaQ==",
     icon: "/icons/social/instagram.svg",
   },
   {
-    label: "LinkedIn",
-    href: "#",
-    icon: "/icons/social/linkedin.svg",
-  },
-  {
     label: "YouTube",
-    href: "#",
+    href: "https://www.youtube.com/@Rosarymatricche",
     icon: "/icons/social/youtube.svg",
-  },
-  {
-    label: "Threads",
-    href: "#",
-    icon: "/icons/social/threads.svg",
   },
 ];
 
