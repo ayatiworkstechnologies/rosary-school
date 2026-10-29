@@ -95,7 +95,14 @@ export default function AchievementForm({ achievementId }: { achievementId?: num
       <div><h1 className="text-2xl font-bold text-slate-900">{achievementId ? "Manage Achievement" : "Add Achievement"}</h1><p className="text-sm text-slate-500">{achievementId ? category || "Update achievement details and media." : "Create a photo collection or video highlight."}</p></div>
       <div className="grid gap-5 md:grid-cols-2">
         <label>Type<select value={type} onChange={(event) => setType(event.target.value as "PHOTO" | "VIDEO")} className={field}><option value="PHOTO">Photo</option><option value="VIDEO">Video</option></select></label>
-        <label>Status<select value={active ? "active" : "inactive"} onChange={(event) => setActive(event.target.value === "active")} className={field}><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
+        <div>
+          <span className="block text-sm font-medium text-slate-700">Publishing</span>
+          <label className="mt-1 flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5">
+            <span><span className="block text-sm font-medium text-slate-800">{active ? "Published" : "Draft"}</span><span className="block text-xs text-slate-500">{active ? "Visible on the school website" : "Saved for admin review only"}</span></span>
+            <input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} className="peer sr-only" aria-label="Publish achievement" />
+            <span className="relative h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-blue-600 after:absolute after:left-1 after:top-1 after:h-4 after:w-4 after:rounded-full after:bg-white after:transition peer-checked:after:translate-x-5" />
+          </label>
+        </div>
         <label>Title<input required value={title} onChange={(event) => setTitle(event.target.value)} className={field} /></label>
         <label>Category<input required value={category} onChange={(event) => setCategory(event.target.value)} className={field} /></label>
         <label>Date<input required type="date" value={date} onChange={(event) => { setDate(event.target.value); if (event.target.value) setYear(event.target.value.slice(0, 4)); }} className={field} /></label>

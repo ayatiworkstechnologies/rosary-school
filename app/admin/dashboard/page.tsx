@@ -11,6 +11,10 @@ import {
   Images,
   UsersRound,
   Download,
+  Trophy,
+  ClipboardList,
+  MessageSquare,
+  MailPlus,
   Plus,
   ArrowRight,
   Clock3,
@@ -27,6 +31,8 @@ import { getAdminGalleryAlbums } from "@/services/adminGalleryService";
 import { getAdminFacultyMembers } from "@/services/adminFacultyService";
 import { getAdminDownloads } from "@/services/adminDownloadService";
 import { getAdminAchievements } from "@/services/adminAchievementService";
+import { getAdmissions, getContacts } from "@/services/adminSubmissionService";
+import { getNewsletterSubscriptions } from "@/services/adminNewsletterService";
 
 
 const stats = [
@@ -71,6 +77,34 @@ const stats = [
     subtitle: "Downloadable resources",
     icon: Download,
     href: "/admin/downloads",
+  },
+  {
+    title: "Achievements",
+    value: 0,
+    subtitle: "School achievements",
+    icon: Trophy,
+    href: "/admin/achievements",
+  },
+  {
+    title: "Admissions",
+    value: 0,
+    subtitle: "Admission applications",
+    icon: ClipboardList,
+    href: "/admin/admissions",
+  },
+  {
+    title: "Contact Enquiries",
+    value: 0,
+    subtitle: "Website enquiries",
+    icon: MessageSquare,
+    href: "/admin/contact-enquiries",
+  },
+  {
+    title: "Newsletter",
+    value: 0,
+    subtitle: "Newsletter subscribers",
+    icon: MailPlus,
+    href: "/admin/newsletter",
   },
 ];
 
@@ -146,9 +180,21 @@ export default function AdminDashboardPage() {
       getAdminCircularNotices({ page: 1, limit: 100 }), getAdminGalleryAlbums({ page: 1, limit: 100 }),
       getAdminFacultyMembers({ page: 1, limit: 100 }), getAdminDownloads({ page: 1, limit: 100 }),
       getAdminAchievements({ page: 1, limit: 100 }),
-    ]).then(([news, events, notices, gallery, faculty, downloads, achievements]) => {
+      getAdmissions("", 1, 1), getContacts("", 1, 1), getNewsletterSubscriptions("", 1, 1),
+    ]).then(([news, events, notices, gallery, faculty, downloads, achievements, admissions, contacts, newsletter]) => {
       if (!active) return;
-      setLiveCounts({ News: news.total, Events: events.total, Notices: notices.total, Gallery: gallery.total, Faculty: faculty.total, Downloads: downloads.total });
+      setLiveCounts({
+        News: news.total,
+        Events: events.total,
+        Notices: notices.total,
+        Gallery: gallery.total,
+        Faculty: faculty.total,
+        Downloads: downloads.total,
+        Achievements: achievements.total,
+        Admissions: admissions.total,
+        "Contact Enquiries": contacts.total,
+        Newsletter: newsletter.total,
+      });
       const latest: Activity[] = [
         ...news.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "News", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
         ...events.items.map(item => ({ title: `${item.title} ${item.created_at === item.updated_at ? "created" : "updated"}`, module: "Events", createdAt: item.updated_at, time: relativeTime(item.updated_at) })),
@@ -350,9 +396,7 @@ export default function AdminDashboardPage() {
 
                   sm:grid-cols-2
 
-                  xl:grid-cols-3
-
-                  2xl:grid-cols-6
+                  lg:grid-cols-4
                 "
               >
                 {stats.map(
