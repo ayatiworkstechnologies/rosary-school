@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal, get_db
-from app.models.submission import AdmissionApplication, AdmissionRegistrationSequence, ContactEnquiry, NewsletterSubscription
+from app.models.submission import AdmissionApplication, AdmissionRegistrationSequence, ContactEnquiry, NewsletterSubscription, UkgAdmissionApplication, UkgAdmissionRegistrationSequence
 from app.schemas.submission import ContactCreate, NewsletterCreate, PublicSubmissionResponse
 from app.services.mail_service import render_email_template, send_submission_email
 from app.services.mail_settings_service import get_mail_routes
@@ -395,3 +395,54 @@ async def create_admission(
         reference_no=registration_no,
         registration_no=registration_no,
     )
+
+
+@router.post("/api/v1/admission-ukg-to-eighth", response_model=PublicSubmissionResponse, status_code=status.HTTP_201_CREATED)
+async def create_ukg_admission(
+    background_tasks: BackgroundTasks,
+    name_of_the_pupil: str = Form(...), date_of_birth: str = Form(...), religion: str = Form(...),
+    father_s_name: str = Form(...), father_s_qualification: str = Form(...), father_s_occupation: str = Form(...), father_s_income_per_month: str = Form(...), father_s_mobile_no: str = Form(...),
+    mother_s_name: str = Form(...), mother_s_qualification: str = Form(...), mother_s_occupation: str = Form(...), mother_s_income_per_month: str = Form(...), mother_s_mobile_no: str = Form(...),
+    email_id: str = Form(...), residential_address: str = Form(...), name_of_school_currently_attended: str = Form(...), present_class_of_the_pupil: str = Form(...), class_for_which_admission_is_sought: str = Form(...),
+    signature_of_parent: str = Form(""), name_of_parish: str = Form(""), student_s_passport_size_photograph: UploadFile = File(...), db: Session = Depends(get_db),
+):
+    form_data = {key: value.strip() for key, value in {
+        "name_of_the_pupil": name_of_the_pupil, "date_of_birth": date_of_birth, "religion": religion, "name_of_parish": name_of_parish,
+        "father_s_name": father_s_name, "father_s_qualification": father_s_qualification, "father_s_occupation": father_s_occupation, "father_s_income_per_month": father_s_income_per_month, "father_s_mobile_no": father_s_mobile_no,
+        "mother_s_name": mother_s_name, "mother_s_qualification": mother_s_qualification, "mother_s_occupation": mother_s_occupation, "mother_s_income_per_month": mother_s_income_per_month, "mother_s_mobile_no": mother_s_mobile_no,
+        "email_id": email_id.lower(), "residential_address": residential_address, "name_of_school_currently_attended": name_of_school_currently_attended,
+        "present_class_of_the_pupil": present_class_of_the_pupil, "class_for_which_admission_is_sought": class_for_which_admission_is_sought, "signature_of_parent": signature_of_parent,
+    }.items()}
+    required = [key for key in form_data if key not in {"name_of_parish", "signature_of_parent"}]
+    if any(not form_data[key] for key in required):
+        raise HTTPException(status_code=422, detail="Please complete all required admission fields.")
+    if form_data["class_for_which_admission_is_sought"] not in {"UKG", "Std I", "Std II", "Std III", "Std IV", "Std V", "Std VI", "Std VII", "Std VIII"}:
+        raise HTTPException(status_code=422, detail="Select a valid class for admission.")
+    try:
+        if date.fromisoformat(form_data["date_of_birth"]) > date.today(): raise ValueError
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail="Enter a valid date of birth.") from error
+    if "@" not in form_data["email_id"] or "." not in form_data["email_id"].split("@")[-1]:
+        raise HTTPException(status_code=422, detail="Enter a valid email address.")
+    if any(not form_data[key].isdigit() or len(form_data[key]) != 10 for key in ("father_s_mobile_no", "mother_s_mobile_no")):
+        raise HTTPException(status_code=422, detail="Mobile numbers must contain exactly 10 digits.")
+    try:
+        for key in ("father_s_income_per_month", "mother_s_income_per_month"):
+            if Decimal(form_data[key]) < 0: raise InvalidOperation
+    except InvalidOperation as error:
+        raise HTTPException(status_code=422, detail="Monthly income must be a valid non-negative amount.") from error
+    photo_url = await _save_image(student_s_passport_size_photograph, "Student photograph")
+    mail_routes = get_mail_routes(db)
+    sequence = db.execute(select(UkgAdmissionRegistrationSequence).where(UkgAdmissionRegistrationSequence.id == 1).with_for_update()).scalar_one()
+    registration_no = f"{mail_routes.ukg_admission_registration_prefix}{sequence.next_number:03d}"
+    sequence.next_number += 1
+    item = UkgAdmissionApplication(registration_no=registration_no, pupil_name=form_data["name_of_the_pupil"], parent_email=form_data["email_id"], phone_number=form_data["father_s_mobile_no"], form_data=form_data, student_photo_url=photo_url)
+    db.add(item); db.commit(); db.refresh(item)
+    background_tasks.add_task(_deliver_later, UkgAdmissionApplication, item.id,
+        subject=f"New UKG to Std VIII Admission Application - {registration_no}", heading="New UKG to Std VIII Admission Application",
+        fields={"Registration No": registration_no, **form_data, "Student Photo": "Included in email"}, reply_to=item.parent_email,
+        to=mail_routes.ukg_admission_to, cc=mail_routes.ukg_admission_cc, bcc=mail_routes.ukg_admission_bcc,
+        html_body=render_email_template("admission_admin.html", {"registration_no": registration_no, **form_data, "student_s_passport_size_photograph": "cid:student-photograph"}),
+        inline_images={"student-photograph": UPLOAD_ROOT / Path(photo_url).name},
+        acknowledgement={"subject": f"Admission application received - {registration_no}", "heading": "Thank you for applying to Rosary School", "intro": "Your UKG to Std VIII admission application has been received. Please keep the registration number for future communication.", "fields": {"Registration Number": registration_no, "Pupil Name": item.pupil_name, "Class Sought": form_data["class_for_which_admission_is_sought"]}, "reply_to": mail_routes.ukg_admission_reply_to or mail_routes.ukg_admission_to.split(",")[0].strip(), "to": item.parent_email} if mail_routes.ukg_admission_ack_enabled else None)
+    return PublicSubmissionResponse(message=f"Your UKG to Std VIII admission application was submitted successfully. Registration number: {registration_no}.", reference_no=registration_no, registration_no=registration_no)

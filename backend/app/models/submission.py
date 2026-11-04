@@ -73,6 +73,31 @@ class AdmissionRegistrationSequence(Base):
     next_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
 
+class UkgAdmissionApplication(Base):
+    __tablename__ = "ukg_admission_applications"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    registration_no: Mapped[str] = mapped_column(String(40), nullable=False, unique=True, index=True)
+    pupil_name: Mapped[str] = mapped_column(String(150), nullable=False, index=True)
+    parent_email: Mapped[str] = mapped_column(String(254), nullable=False, index=True)
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    form_data: Mapped[dict] = mapped_column(JSON, nullable=False)
+    student_photo_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    status: Mapped[SubmissionStatus] = mapped_column(SQLEnum(SubmissionStatus, name="ukg_admission_submission_status", native_enum=False), nullable=False, default=SubmissionStatus.NEW, server_default="NEW", index=True)
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    email_status: Mapped[str] = mapped_column(String(30), nullable=False, server_default="PENDING")
+    email_error: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now(), index=True)
+    updated_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False, server_default=func.now(), onupdate=func.now())
+
+
+class UkgAdmissionRegistrationSequence(Base):
+    __tablename__ = "ukg_admission_registration_sequence"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    next_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
 class MailRoutingSettings(Base):
     __tablename__ = "mail_routing_settings"
 
@@ -88,6 +113,12 @@ class MailRoutingSettings(Base):
     admission_reply_to: Mapped[str] = mapped_column(String(254), nullable=False, default="")
     admission_ack_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     admission_registration_prefix: Mapped[str] = mapped_column(String(12), nullable=False, default="2728-")
+    ukg_admission_to: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
+    ukg_admission_cc: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
+    ukg_admission_bcc: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
+    ukg_admission_reply_to: Mapped[str] = mapped_column(String(254), nullable=False, default="")
+    ukg_admission_ack_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    ukg_admission_registration_prefix: Mapped[str] = mapped_column(String(12), nullable=False, default="2728-")
     newsletter_to: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
     newsletter_cc: Mapped[str] = mapped_column(String(1000), nullable=False, default="")
     newsletter_bcc: Mapped[str] = mapped_column(String(1000), nullable=False, default="")

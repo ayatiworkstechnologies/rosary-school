@@ -19,6 +19,12 @@ class MailRoutes:
     admission_reply_to: str
     admission_ack_enabled: bool
     admission_registration_prefix: str
+    ukg_admission_to: str
+    ukg_admission_cc: str
+    ukg_admission_bcc: str
+    ukg_admission_reply_to: str
+    ukg_admission_ack_enabled: bool
+    ukg_admission_registration_prefix: str
     newsletter_to: str
     newsletter_cc: str
     newsletter_bcc: str
@@ -42,6 +48,12 @@ def get_mail_routes(db: Session) -> MailRoutes:
             admission_reply_to=saved.admission_reply_to,
             admission_ack_enabled=saved.admission_ack_enabled,
             admission_registration_prefix=saved.admission_registration_prefix,
+            ukg_admission_to=saved.ukg_admission_to,
+            ukg_admission_cc=saved.ukg_admission_cc,
+            ukg_admission_bcc=saved.ukg_admission_bcc,
+            ukg_admission_reply_to=saved.ukg_admission_reply_to,
+            ukg_admission_ack_enabled=saved.ukg_admission_ack_enabled,
+            ukg_admission_registration_prefix=saved.ukg_admission_registration_prefix,
             newsletter_to=saved.newsletter_to,
             newsletter_cc=saved.newsletter_cc,
             newsletter_bcc=saved.newsletter_bcc,
@@ -61,6 +73,12 @@ def get_mail_routes(db: Session) -> MailRoutes:
         admission_reply_to=settings.ADMISSION_REPLY_TO,
         admission_ack_enabled=settings.ADMISSION_ACKNOWLEDGEMENT_ENABLED,
         admission_registration_prefix="2728-",
+        ukg_admission_to=settings.ADMISSION_MAIL_TO,
+        ukg_admission_cc=settings.ADMISSION_MAIL_CC,
+        ukg_admission_bcc=settings.ADMISSION_MAIL_BCC,
+        ukg_admission_reply_to=settings.ADMISSION_REPLY_TO,
+        ukg_admission_ack_enabled=settings.ADMISSION_ACKNOWLEDGEMENT_ENABLED,
+        ukg_admission_registration_prefix="2728-",
         newsletter_to=settings.NEWSLETTER_MAIL_TO,
         newsletter_cc=settings.NEWSLETTER_MAIL_CC,
         newsletter_bcc=settings.NEWSLETTER_MAIL_BCC,

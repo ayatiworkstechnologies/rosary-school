@@ -92,6 +92,12 @@ class MailSettingsPayload(BaseModel):
     admission_reply_to: str = Field(default="", max_length=254)
     admission_ack_enabled: bool = True
     admission_registration_prefix: str = Field(default="2728-", min_length=2, max_length=12, pattern=r"^[A-Za-z0-9-]+$")
+    ukg_admission_to: str = Field(default="", max_length=1000)
+    ukg_admission_cc: str = Field(default="", max_length=1000)
+    ukg_admission_bcc: str = Field(default="", max_length=1000)
+    ukg_admission_reply_to: str = Field(default="", max_length=254)
+    ukg_admission_ack_enabled: bool = True
+    ukg_admission_registration_prefix: str = Field(default="2728-", min_length=2, max_length=12, pattern=r"^[A-Za-z0-9-]+$")
     newsletter_to: str = Field(max_length=1000)
     newsletter_cc: str = Field(default="", max_length=1000)
     newsletter_bcc: str = Field(default="", max_length=1000)
@@ -103,6 +109,7 @@ class MailSettingsPayload(BaseModel):
         "contact_to", "contact_cc", "contact_bcc", "contact_reply_to",
         "admission_to", "admission_cc", "admission_bcc", "admission_reply_to",
         "admission_registration_prefix",
+        "ukg_admission_to", "ukg_admission_cc", "ukg_admission_bcc", "ukg_admission_reply_to", "ukg_admission_registration_prefix",
         "newsletter_to", "newsletter_cc", "newsletter_bcc", "newsletter_reply_to",
         "backend_public_url",
         mode="before",
@@ -111,7 +118,7 @@ class MailSettingsPayload(BaseModel):
     def clean_mail_values(cls, value: Any) -> Any:
         return value.strip() if isinstance(value, str) else value
 
-    @field_validator("admission_registration_prefix")
+    @field_validator("admission_registration_prefix", "ukg_admission_registration_prefix")
     @classmethod
     def normalize_registration_prefix(cls, value: str) -> str:
         return value.upper()

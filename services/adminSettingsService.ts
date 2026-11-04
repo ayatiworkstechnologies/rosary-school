@@ -12,6 +12,12 @@ export interface MailSettings {
   admission_reply_to: string;
   admission_ack_enabled: boolean;
   admission_registration_prefix: string;
+  ukg_admission_to: string;
+  ukg_admission_cc: string;
+  ukg_admission_bcc: string;
+  ukg_admission_reply_to: string;
+  ukg_admission_ack_enabled: boolean;
+  ukg_admission_registration_prefix: string;
   newsletter_to: string;
   newsletter_cc: string;
   newsletter_bcc: string;

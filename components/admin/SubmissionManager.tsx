@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { ChevronLeft, ChevronRight, Mail, Pencil, Printer, RefreshCw, Save, Search, Trash2, X } from "lucide-react";
 import AdminAuthGuard from "./AdminAuthGuard";
 import AdminHeader from "./AdminHeader";
 import AdminSidebar from "./AdminSidebar";
 import {
-  deleteAdmission, deleteContact, getAdmissions, getContacts, replaceAdmissionPhoto, resendAdmission, resendContact,
+  deleteAdmission, deleteContact, getAdmissions, getContacts, replaceAdmissionPhoto, resendAdmission, resendContact, getUkgAdmissions, updateUkgAdmission, replaceUkgAdmissionPhoto, resendUkgAdmission, deleteUkgAdmission,
   updateAdmission, updateContact, type AdmissionApplication,
   type ContactEnquiry, type SubmissionStatus,
 } from "@/services/adminSubmissionService";
@@ -59,12 +59,12 @@ function orderedAdmissionFields(formData: AdmissionApplication["form_data"]) {
   return [...knownFields, ...remainingFields];
 }
 
-function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
+function AdmissionPrintSheet({ item, ukg = false }: { item: AdmissionApplication; ukg?: boolean }) {
   return <section className="print-sheet hidden bg-white text-[#172B4D] print:block">
     <header className="print-header border-b-2 border-[#0075FF] pb-4 text-center">
       <p className="text-xs font-bold tracking-[0.25em] text-[#0075FF]">ROSARY SCHOOL</p>
       <h1 className="mt-1 text-2xl font-bold">Rosary Matriculation Higher Secondary School</h1>
-      <p className="mt-1 text-sm">LKG Admission Application · 2027–2028</p>
+      <p className="mt-1 text-sm">{ukg ? "UKG to Std VIII" : "LKG"} Admission Application · 2027–2028</p>
     </header>
     <div className="print-meta my-5 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-5 py-3">
       <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Registration number</p><p className="text-xl font-bold text-[#0755AD]">{item.registration_no}</p></div>
@@ -82,7 +82,27 @@ function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
   </section>;
 }
 
-export default function SubmissionManager({ kind }: { kind: "contact" | "admission" }) {
+const UKG_PRINT_FIELDS = [
+  ["1.", "Name of the Pupil", "name_of_the_pupil"], ["2.", "Date of Birth", "date_of_birth"],
+  ["3.", "Religion", "religion"], ["4.", "Name of Parish", "name_of_parish"],
+  ["5.", "Father's Name", "father_s_name"], ["", "Qualification", "father_s_qualification"], ["", "Occupation", "father_s_occupation"], ["", "Income per month", "father_s_income_per_month"], ["", "Mobile No.", "father_s_mobile_no"],
+  ["6.", "Mother's Name", "mother_s_name"], ["", "Qualification", "mother_s_qualification"], ["", "Occupation", "mother_s_occupation"], ["", "Income per month", "mother_s_income_per_month"], ["", "Mobile No.", "mother_s_mobile_no"],
+  ["7.", "Email ID", "email_id"], ["7.", "Residential Address", "residential_address"],
+  ["8.", "Name of School Currently Attended", "name_of_school_currently_attended"], ["", "Present Class of the Pupil", "present_class_of_the_pupil"],
+  ["9.", "Class for which admission is sought", "class_for_which_admission_is_sought"], ["", "Signature of Parent", "signature_of_parent"],
+] as const;
+
+function UkgAdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
+  return <section className="ukg-print-sheet hidden bg-white text-[#10284D] print:block">
+    <header className="border-t-2 border-[#163f61] pt-6"><div className="grid grid-cols-[minmax(0,1fr)_132px] items-center gap-10"><div className="py-2"><span className="inline-flex rounded-full border border-[#5ea6ff] bg-[#f1f7ff] px-4 py-2 text-[10px] font-bold uppercase tracking-[1px] text-[#0075FF]">UKG to Std VIII Admission</span><h1 className="mt-4 max-w-2xl text-[22px] font-bold leading-[1.35] text-[#142B3D]">Requisition from Parent for Class Admission for the academic year 2027 – 28.</h1><p className="mt-3 text-[11px] font-semibold uppercase tracking-[1.4px] text-[#0075FF]">Rosary Matriculation Higher Secondary School</p></div><div className="justify-self-end text-center"><div className="mx-auto flex h-32 w-28 items-center justify-center rounded border border-dashed border-[#4f9cff] bg-white p-1"><img src={imageUrl(item.student_photo_url)} alt="Student Photograph" className="max-h-full max-w-full object-contain"/></div><p className="mt-2 text-[8px] font-semibold">Student Photograph</p></div></div><div className="mt-5 flex items-center justify-between border-y border-[#8db8ed] bg-[#f7fbff] px-4 py-3"><div><p className="text-[8px] font-bold uppercase tracking-[1px] text-slate-500">Registration Number</p><p className="mt-1 text-[12px] font-bold text-[#0755AD]">{item.registration_no}</p></div><div className="text-right"><p className="text-[8px] font-bold uppercase tracking-[1px] text-slate-500">Application Received</p><p className="mt-1 text-[10px] font-semibold text-[#10284D]">{new Date(item.created_at).toLocaleDateString("en-IN")}</p></div></div></header>
+    <div className="my-5 border-t border-[#8db8ed]" />
+    <div className="ukg-print-fields">{UKG_PRINT_FIELDS.map(([number, label, key]) => <div key={key} className="ukg-print-row"><div className="flex gap-2"><span className="w-4 font-semibold">{number}</span><span>{label}<sup className="ml-0.5 text-red-500">*</sup></span></div><div className="ukg-print-value">{item.form_data[key] || "-"}</div></div>)}</div>
+    <div className="mt-4 border-t border-[#8db8ed] pt-3 text-[9px]"><p className="rounded border border-[#e6c85f] bg-[#fffbe5] px-3 py-2 leading-snug"><b>Please Note:</b> The School does not collect Donation for Admission. If admission is secured through unfair means, the admission will be cancelled immediately.</p><p className="mt-2 border-l-2 border-[#0075FF] pl-2 font-semibold leading-snug text-[#10284D]">Confirmation of your daughter&apos;s admission in this School will depend only on the vacancy.</p></div>
+    <footer className="mt-3 border-t border-[#8db8ed] pt-2 text-center text-[8px] text-slate-500">Registration No: {item.registration_no} · Submitted: {new Date(item.created_at).toLocaleDateString("en-IN")}</footer>
+  </section>;
+}
+
+export default function SubmissionManager({ kind, admissionSwitcher }: { kind: "contact" | "admission" | "ukg"; admissionSwitcher?: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<Item | null>(null);
@@ -100,7 +120,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
   const load = useCallback(async () => {
     setLoading(true); setError("");
     try {
-      const result = kind === "contact" ? await getContacts(search, page, PAGE_SIZE) : await getAdmissions(search, page, PAGE_SIZE);
+      const result = kind === "contact" ? await getContacts(search, page, PAGE_SIZE) : kind === "ukg" ? await getUkgAdmissions(search, page, PAGE_SIZE) : await getAdmissions(search, page, PAGE_SIZE);
       setItems(result.items); setTotal(result.total);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to load submissions."); }
     finally { setLoading(false); }
@@ -113,7 +133,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
     if (!selected) return;
     setBusy(true); setError("");
     try {
-      const updated = kind === "contact" ? await updateContact(selected.id, patch) : await updateAdmission(selected.id, patch);
+      const updated = kind === "contact" ? await updateContact(selected.id, patch) : kind === "ukg" ? await updateUkgAdmission(selected.id, patch) : await updateAdmission(selected.id, patch);
       setSelected(updated); setItems(previous => previous.map(item => item.id === updated.id ? updated : item));
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to update submission."); }
     finally { setBusy(false); }
@@ -123,7 +143,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
     if (!selected) return;
     setBusy(true); setError("");
     try {
-      const updated = kind === "contact" ? await resendContact(selected.id) : await resendAdmission(selected.id);
+      const updated = kind === "contact" ? await resendContact(selected.id) : kind === "ukg" ? await resendUkgAdmission(selected.id) : await resendAdmission(selected.id);
       setSelected(updated); setItems(previous => previous.map(item => item.id === updated.id ? updated : item));
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to resend email."); }
     finally { setBusy(false); }
@@ -141,8 +161,8 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
     if (!selected || !isAdmission(selected)) return;
     setBusy(true); setError("");
     try {
-      let updated = await updateAdmission(selected.id, { form_data: editedFormData });
-      if (replacementPhoto) updated = await replaceAdmissionPhoto(selected.id, replacementPhoto);
+      let updated = kind === "ukg" ? await updateUkgAdmission(selected.id, { form_data: editedFormData }) : await updateAdmission(selected.id, { form_data: editedFormData });
+      if (replacementPhoto) updated = kind === "ukg" ? await replaceUkgAdmissionPhoto(selected.id, replacementPhoto) : await replaceAdmissionPhoto(selected.id, replacementPhoto);
       setSelected(updated); setItems(previous => previous.map(item => item.id === updated.id ? updated : item));
       setEditingAdmission(false); setReplacementPhoto(null); setReplacementPhotoPreview(null);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to update admission application."); }
@@ -153,7 +173,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
     if (!selected || !isAdmission(selected) || !replacementPhoto) return;
     setBusy(true); setError("");
     try {
-      const updated = await replaceAdmissionPhoto(selected.id, replacementPhoto);
+      const updated = kind === "ukg" ? await replaceUkgAdmissionPhoto(selected.id, replacementPhoto) : await replaceAdmissionPhoto(selected.id, replacementPhoto);
       setSelected(updated); setItems(previous => previous.map(item => item.id === updated.id ? updated : item));
       setReplacementPhoto(null); setReplacementPhotoPreview(null);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to update student photograph."); }
@@ -174,19 +194,19 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
     if (!window.confirm(`Permanently delete ${label}? This action cannot be undone.`)) return;
     setBusy(true); setError("");
     try {
-      if (isAdmission(selected)) await deleteAdmission(selected.id); else await deleteContact(selected.id);
+      if (isAdmission(selected)) { if (kind === "ukg") await deleteUkgAdmission(selected.id); else await deleteAdmission(selected.id); } else await deleteContact(selected.id);
       setItems(previous => previous.filter(item => item.id !== selected.id));
       setSelected(null);
     } catch (caught) { setError(caught instanceof Error ? caught.message : "Unable to delete submission."); }
     finally { setBusy(false); }
   }
 
-  const title = kind === "contact" ? "Contact Enquiries" : "Admission Applications";
+  const title = kind === "contact" ? "Contact Enquiries" : kind === "ukg" ? "UKG to Std VIII Applications" : "LKG Admission Applications";
   return <AdminAuthGuard><div className="submission-manager min-h-screen bg-[#F7F9FC]">
     <AdminSidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
     <div className="min-h-screen lg:pl-[250px]"><AdminHeader onMenuClick={() => setMobileOpen(true)} />
       <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-6"><h1 className="text-2xl font-bold text-[#10284D]">{title}</h1><p className="mt-1 text-sm text-slate-500">Review website submissions and email delivery.</p></div>
+        <div className="mb-6"><h1 className="text-2xl font-bold text-[#10284D]">{title}</h1><p className="mt-1 text-sm text-slate-500">Review website submissions and email delivery.</p>{admissionSwitcher && <div className="mt-4">{admissionSwitcher}</div>}</div>
         <div className="mb-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"><Search size={18} className="text-slate-400"/><input className="w-full outline-none" placeholder="Search by name, email, phone or registration number" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} /></div>
         {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</div>}
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -211,7 +231,7 @@ export default function SubmissionManager({ kind }: { kind: "contact" | "admissi
       </> : <><div><b>Name:</b> {selected.name}</div><div><b>Email:</b> <a className="text-blue-600" href={`mailto:${selected.email}`}>{selected.email}</a></div><div><b>Phone:</b> <a className="text-blue-600" href={`tel:${selected.phone}`}>{selected.phone}</a></div><div className="whitespace-pre-wrap rounded-lg bg-slate-50 p-4">{selected.message}</div></>}
       </div>
       <label className="mt-6 block text-sm font-semibold text-slate-700">Admin notes<textarea defaultValue={selected.admin_notes || ""} onBlur={event => void save({ admin_notes: event.target.value })} className="mt-1 min-h-28 w-full rounded-lg border border-slate-200 p-3 font-normal" placeholder="Private notes for administrators"/></label>
-    </aside></div>{isAdmission(selected) && <AdmissionPrintSheet item={selected}/>}</>}
-    <style jsx global>{`@media print { @page { size: A4; margin: 10mm; } body { background: white !important; } .submission-manager > :not(.print-sheet) { display: none !important; } .print-sheet { display: block !important; position: static !important; width: auto !important; } .print-header { padding-bottom: 12px !important; } .print-header h1 { font-size: 24px !important; line-height: 1.15 !important; } .print-header p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta { margin: 14px 0 !important; padding: 11px 14px !important; } .print-meta p { font-size: 9px !important; line-height: 1.2 !important; } .print-meta .text-xl { font-size: 16px !important; } .print-section-title { margin: 12px 0 6px !important; padding-bottom: 6px !important; font-size: 16px !important; } .print-details { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .print-field { min-height: 47px; padding: 7px 9px !important; } .print-field p:first-child { font-size: 9px !important; line-height: 1.15 !important; } .print-field p:last-child { margin-top: 4px !important; font-size: 11px !important; line-height: 1.2 !important; overflow-wrap: anywhere; } .print-photo-section { display: flex; justify-content: flex-end; } .print-photo { height: 100px !important; padding: 4px !important; } .print-photo-section p { margin-top: 4px !important; font-size: 10px !important; } .print-footer { margin-top: 12px !important; padding-top: 6px !important; font-size: 9px !important; } }`}</style>
+    </aside></div>{isAdmission(selected) && (kind === "ukg" ? <UkgAdmissionPrintSheet item={selected}/> : <AdmissionPrintSheet item={selected}/>)}</>}
+    <style jsx global>{`@media print { @page { size: A4; margin: 10mm; } body { background: white !important; } .submission-manager > :not(.print-sheet):not(.ukg-print-sheet) { display: none !important; } .print-sheet, .ukg-print-sheet { display: block !important; position: static !important; width: auto !important; } .print-header { padding-bottom: 12px !important; } .print-header h1 { font-size: 24px !important; line-height: 1.15 !important; } .print-header p { font-size: 12px !important; line-height: 1.2 !important; } .print-meta { margin: 14px 0 !important; padding: 11px 14px !important; } .print-meta p { font-size: 9px !important; line-height: 1.2 !important; } .print-meta .text-xl { font-size: 16px !important; } .print-section-title { margin: 12px 0 6px !important; padding-bottom: 6px !important; font-size: 16px !important; } .print-details { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } .print-field { min-height: 47px; padding: 7px 9px !important; } .print-field p:first-child { font-size: 9px !important; line-height: 1.15 !important; } .print-field p:last-child { margin-top: 4px !important; font-size: 11px !important; line-height: 1.2 !important; overflow-wrap: anywhere; } .print-photo-section { display: flex; justify-content: flex-end; } .print-photo { height: 100px !important; padding: 4px !important; } .print-photo-section p { margin-top: 4px !important; font-size: 10px !important; } .print-footer { margin-top: 12px !important; padding-top: 6px !important; font-size: 9px !important; } .ukg-print-sheet { font-family: Arial, sans-serif !important; } .ukg-print-row { display: grid; grid-template-columns: 42% 58%; gap: 12px; align-items: end; min-height: 28px; margin: 4px 0; font-size: 10px; } .ukg-print-value { min-height: 20px; border-bottom: 1px solid #8ba0b4; padding: 3px 5px; overflow-wrap: anywhere; } }`}</style>
   </div></AdminAuthGuard>;
 }

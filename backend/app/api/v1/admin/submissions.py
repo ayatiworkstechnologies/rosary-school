@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_admin
 from app.db.session import get_db
 from app.models.admin import Admin
-from app.models.submission import AdmissionApplication, ContactEnquiry, NewsletterSubscription, SubmissionStatus
+from app.models.submission import AdmissionApplication, ContactEnquiry, NewsletterSubscription, SubmissionStatus, UkgAdmissionApplication
 from app.schemas.submission import (
     AdmissionListResponse,
     AdmissionResponse,
@@ -204,7 +204,8 @@ def _resend(item, kind: str, db: Session):
     else:
         fields = {"Registration No": item.registration_no, **item.form_data, "Student Photo": item.student_photo_url}
         subject, heading, reply_to = f"Admission Application - {item.registration_no}", "Admission Application", item.parent_email
-        to, cc, bcc = mail_routes.admission_to, mail_routes.admission_cc, mail_routes.admission_bcc
+        is_ukg = kind == "ukg_admission"
+        to, cc, bcc = (mail_routes.ukg_admission_to, mail_routes.ukg_admission_cc, mail_routes.ukg_admission_bcc) if is_ukg else (mail_routes.admission_to, mail_routes.admission_cc, mail_routes.admission_bcc)
         html_body = render_email_template(
             "admission_admin.html",
             {
@@ -220,7 +221,7 @@ def _resend(item, kind: str, db: Session):
             "enabled": mail_routes.admission_ack_enabled,
             "subject": f"Admission application received - {item.registration_no}",
             "heading": "Thank you for applying to Rosary School",
-            "intro": "The LKG admission application has been received successfully. Please keep the registration number below for all future communication. The admissions team will contact you after reviewing the application.",
+            "intro": "The UKG to Std VIII admission application has been received successfully. Please keep the registration number below for all future communication. The admissions team will contact you after reviewing the application." if is_ukg else "The LKG admission application has been received successfully. Please keep the registration number below for all future communication. The admissions team will contact you after reviewing the application.",
             "fields": {
                 "Registration Number": item.registration_no,
                 "Pupil Name": item.pupil_name,
@@ -230,7 +231,7 @@ def _resend(item, kind: str, db: Session):
                 "Parent Email": item.parent_email,
                 "Phone Number": item.phone_number,
             },
-            "reply_to": mail_routes.admission_reply_to or mail_routes.admission_to.split(",")[0].strip(),
+            "reply_to": (mail_routes.ukg_admission_reply_to or mail_routes.ukg_admission_to.split(",")[0].strip()) if is_ukg else (mail_routes.admission_reply_to or mail_routes.admission_to.split(",")[0].strip()),
             "to": item.parent_email,
         }
     try:
@@ -263,3 +264,48 @@ def resend_contact(item_id: int, db: Session = Depends(get_db), _: Admin = Depen
 @router.post("/admission-applications/{item_id}/resend-email", response_model=AdmissionResponse)
 def resend_admission(item_id: int, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
     return _resend(_item(db, AdmissionApplication, item_id), "admission", db)
+
+
+@router.get("/ukg-admission-applications", response_model=AdmissionListResponse)
+def ukg_admissions(page: int = Query(1, ge=1), limit: int = Query(10, ge=1, le=100), search: str | None = None, submission_status: SubmissionStatus | None = None, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+    filters = []
+    if search:
+        term = f"%{search.strip()}%"
+        filters.append(or_(UkgAdmissionApplication.registration_no.ilike(term), UkgAdmissionApplication.pupil_name.ilike(term), UkgAdmissionApplication.parent_email.ilike(term), UkgAdmissionApplication.phone_number.ilike(term)))
+    if submission_status: filters.append(UkgAdmissionApplication.status == submission_status)
+    total = db.scalar(select(func.count(UkgAdmissionApplication.id)).where(*filters)) or 0
+    items = db.scalars(select(UkgAdmissionApplication).where(*filters).order_by(UkgAdmissionApplication.created_at.desc()).offset((page - 1) * limit).limit(limit)).all()
+    return AdmissionListResponse(items=items, total=total, page=page, limit=limit)
+
+
+@router.patch("/ukg-admission-applications/{item_id}", response_model=AdmissionResponse)
+def update_ukg_admission(item_id: int, payload: AdmissionUpdate, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+    item = _item(db, UkgAdmissionApplication, item_id)
+    for key, value in payload.model_dump(exclude_unset=True).items(): setattr(item, key, value)
+    if payload.form_data is not None:
+        item.pupil_name = payload.form_data.get("name_of_the_pupil", item.pupil_name).strip() or item.pupil_name
+        item.parent_email = payload.form_data.get("email_id", item.parent_email).strip() or item.parent_email
+        item.phone_number = payload.form_data.get("father_s_mobile_no", item.phone_number).strip() or item.phone_number
+    db.commit(); db.refresh(item); return item
+
+
+@router.put("/ukg-admission-applications/{item_id}/student-photo", response_model=AdmissionResponse)
+async def replace_ukg_admission_photo(item_id: int, student_photo: UploadFile = File(...), db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+    item = _item(db, UkgAdmissionApplication, item_id)
+    previous_photo = (BACKEND_ROOT / item.student_photo_url.lstrip("/")).resolve(); item.student_photo_url = await _save_admission_photo(student_photo)
+    db.commit(); db.refresh(item)
+    if previous_photo.parent == ADMISSION_UPLOAD_ROOT: previous_photo.unlink(missing_ok=True)
+    return item
+
+
+@router.delete("/ukg-admission-applications/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_ukg_admission(item_id: int, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+    item = _item(db, UkgAdmissionApplication, item_id); upload_path = (BACKEND_ROOT / item.student_photo_url.lstrip("/")).resolve()
+    db.delete(item); db.commit()
+    if upload_path.parent == ADMISSION_UPLOAD_ROOT: upload_path.unlink(missing_ok=True)
+    return Response(status_code=204)
+
+
+@router.post("/ukg-admission-applications/{item_id}/resend-email", response_model=AdmissionResponse)
+def resend_ukg_admission(item_id: int, db: Session = Depends(get_db), _: Admin = Depends(get_current_admin)):
+    return _resend(_item(db, UkgAdmissionApplication, item_id), "ukg_admission", db)

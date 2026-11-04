@@ -49,3 +49,8 @@ export function replaceAdmissionPhoto(id: number, photo: File) {
 }
 export function resendAdmission(id: number) { return request<AdmissionApplication>(`/api/v1/admin/admission-applications/${id}/resend-email`, { method: "POST" }); }
 export function deleteAdmission(id: number) { return request<void>(`/api/v1/admin/admission-applications/${id}`, { method: "DELETE" }); }
+export function getUkgAdmissions(search = "", page = 1, limit = 10) { return request<SubmissionList<AdmissionApplication>>(`/api/v1/admin/ukg-admission-applications?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`); }
+export function updateUkgAdmission(id: number, payload: { status?: SubmissionStatus; admin_notes?: string; form_data?: Record<string, string> }) { return request<AdmissionApplication>(`/api/v1/admin/ukg-admission-applications/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); }
+export function replaceUkgAdmissionPhoto(id: number, photo: File) { const body = new FormData(); body.append("student_photo", photo); return request<AdmissionApplication>(`/api/v1/admin/ukg-admission-applications/${id}/student-photo`, { method: "PUT", body }); }
+export function resendUkgAdmission(id: number) { return request<AdmissionApplication>(`/api/v1/admin/ukg-admission-applications/${id}/resend-email`, { method: "POST" }); }
+export function deleteUkgAdmission(id: number) { return request<void>(`/api/v1/admin/ukg-admission-applications/${id}`, { method: "DELETE" }); }

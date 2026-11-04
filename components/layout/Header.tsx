@@ -211,6 +211,16 @@ const utilityLinks = [
       "application",
     ],
   },
+  {
+    label: "Admission UKG to Std VIII",
+    href: "/admission-ukg-to-eighth",
+    keywords: [
+      "admission",
+      "admissions",
+      "application",
+    ],
+  },
+  
 ];
 
 /* =====================================================
@@ -1196,7 +1206,43 @@ export default function Header() {
                   hover:bg-[#0075FF]
                 "
               >
-                Admission
+                Admission LKG
+
+                <Icon
+                  name="arrow"
+                  size={16}
+                />
+              </Link>
+              <Link
+                href="/admission-ukg-to-eighth"
+                className="
+                  inline-flex
+                  h-[43px]
+
+                  items-center
+                  justify-center
+
+                  gap-[10px]
+
+                  rounded-md
+
+                  bg-[#263F53]
+
+                  px-[23px]
+
+                  font-secondary
+                  text-[13px]
+                  font-semibold
+
+                  !text-white
+
+                  transition-colors
+                  duration-200
+
+                  hover:bg-[#0075FF]
+                "
+              >
+                Admission UKG to Std VIII
 
                 <Icon
                   name="arrow"
@@ -2066,7 +2112,43 @@ export default function Header() {
                 hover:bg-[#0075FF]
               "
             >
-              Admission
+              Admission LkG
+
+              <Icon
+                name="arrow"
+                size={17}
+              />
+            </Link>
+            <Link
+              href="/admission-ukg-to-eighth"
+              className="
+                mt-3
+
+                flex
+                h-[46px]
+                w-full
+
+                items-center
+                justify-center
+
+                gap-2
+
+                rounded-md
+
+                bg-[#263F53]
+
+                font-secondary
+                text-[14px]
+                font-semibold
+
+                !text-white
+
+                transition-colors
+
+                hover:bg-[#0075FF]
+              "
+            >
+              Admission UKG to Std VIII
 
               <Icon
                 name="arrow"
