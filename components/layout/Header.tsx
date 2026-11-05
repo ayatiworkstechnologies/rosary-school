@@ -211,15 +211,15 @@ const utilityLinks = [
       "application",
     ],
   },
-  {
-    label: "Admission UKG to Std VIII",
-    href: "/admission-ukg-to-eighth",
-    keywords: [
-      "admission",
-      "admissions",
-      "application",
-    ],
-  },
+  // {
+  //   label: "Admission UKG to Std VIII",
+  //   href: "/admission-ukg-to-eighth",
+  //   keywords: [
+  //     "admission",
+  //     "admissions",
+  //     "application",
+  //   ],
+  // },
   
 ];
 
@@ -1213,7 +1213,7 @@ export default function Header() {
                   size={16}
                 />
               </Link>
-              <Link
+              {/* <Link
                 href="/admission-ukg-to-eighth"
                 className="
                   inline-flex
@@ -1248,7 +1248,7 @@ export default function Header() {
                   name="arrow"
                   size={16}
                 />
-              </Link>
+              </Link> */}
             </div>
 
             {/* ============================================
@@ -2119,7 +2119,7 @@ export default function Header() {
                 size={17}
               />
             </Link>
-            <Link
+            {/* <Link
               href="/admission-ukg-to-eighth"
               className="
                 mt-3
@@ -2154,7 +2154,7 @@ export default function Header() {
                 name="arrow"
                 size={17}
               />
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>
