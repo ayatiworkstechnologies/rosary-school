@@ -207,7 +207,7 @@ def _resend(item, kind: str, db: Session):
         is_ukg = kind == "ukg_admission"
         to, cc, bcc = (mail_routes.ukg_admission_to, mail_routes.ukg_admission_cc, mail_routes.ukg_admission_bcc) if is_ukg else (mail_routes.admission_to, mail_routes.admission_cc, mail_routes.admission_bcc)
         html_body = render_email_template(
-            "admission_admin.html",
+            "ukg_admission_admin.html" if is_ukg else "admission_admin.html",
             {
                 "registration_no": item.registration_no,
                 **item.form_data,
@@ -218,7 +218,7 @@ def _resend(item, kind: str, db: Session):
             "student-photograph": BACKEND_ROOT / item.student_photo_url.lstrip("/"),
         }
         acknowledgement = {
-            "enabled": mail_routes.admission_ack_enabled,
+            "enabled": mail_routes.ukg_admission_ack_enabled if is_ukg else mail_routes.admission_ack_enabled,
             "subject": f"Admission application received - {item.registration_no}",
             "heading": "Thank you for applying to Rosary School",
             "intro": "The UKG to Std VIII admission application has been received successfully. Please keep the registration number below for all future communication. The admissions team will contact you after reviewing the application." if is_ukg else "The LKG admission application has been received successfully. Please keep the registration number below for all future communication. The admissions team will contact you after reviewing the application.",

@@ -442,7 +442,7 @@ async def create_ukg_admission(
         subject=f"New UKG to Std VIII Admission Application - {registration_no}", heading="New UKG to Std VIII Admission Application",
         fields={"Registration No": registration_no, **form_data, "Student Photo": "Included in email"}, reply_to=item.parent_email,
         to=mail_routes.ukg_admission_to, cc=mail_routes.ukg_admission_cc, bcc=mail_routes.ukg_admission_bcc,
-        html_body=render_email_template("admission_admin.html", {"registration_no": registration_no, **form_data, "student_s_passport_size_photograph": "cid:student-photograph"}),
+        html_body=render_email_template("ukg_admission_admin.html", {"registration_no": registration_no, **form_data, "student_s_passport_size_photograph": "cid:student-photograph"}),
         inline_images={"student-photograph": UPLOAD_ROOT / Path(photo_url).name},
         acknowledgement={"subject": f"Admission application received - {registration_no}", "heading": "Thank you for applying to Rosary School", "intro": "Your UKG to Std VIII admission application has been received. Please keep the registration number for future communication.", "fields": {"Registration Number": registration_no, "Pupil Name": item.pupil_name, "Class Sought": form_data["class_for_which_admission_is_sought"]}, "reply_to": mail_routes.ukg_admission_reply_to or mail_routes.ukg_admission_to.split(",")[0].strip(), "to": item.parent_email} if mail_routes.ukg_admission_ack_enabled else None)
     return PublicSubmissionResponse(message=f"Your UKG to Std VIII admission application was submitted successfully. Registration number: {registration_no}.", reference_no=registration_no, registration_no=registration_no)

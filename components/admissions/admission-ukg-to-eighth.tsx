@@ -966,8 +966,8 @@ export default function AdmissionUkgToEighth() {
                   lg:text-[28px]
                 "
               >
-                Requisition from Parent for Class Admission for
-                the academic year 2027 – 28.
+                Preliminary Application for Classes (UKG – STD VIII)
+                Admission
               </h1>
 
               <p
@@ -985,7 +985,7 @@ export default function AdmissionUkgToEighth() {
                   sm:text-[12px]
                 "
               >
-                Rosary Matriculation Higher Secondary School
+                Academic Year 2027 – 2028
               </p>
 
             
@@ -1358,7 +1358,7 @@ export default function AdmissionUkgToEighth() {
             <FormRow
               number="4."
 
-              label="If Roman Catholic specify the name of Parish"
+              label="If Roman Catholic specify the name of the Parish"
 
               required={
                 formData.religion ===
