@@ -154,6 +154,7 @@ def send_submission_email(
     intro: str = "",
     html_body: str | None = None,
     inline_images: Mapping[str, Path] | None = None,
+    attachments: Mapping[str, Path] | None = None,
 ) -> None:
     to = _addresses(to_value)
     cc = _addresses(cc_value)
@@ -188,6 +189,16 @@ def send_submission_email(
                 cid=f"<{content_id}>",
                 filename=image_path.name,
                 disposition="inline",
+            )
+    if attachments:
+        for filename, attachment_path in attachments.items():
+            mime_type, _ = mimetypes.guess_type(attachment_path.name)
+            maintype, subtype = (mime_type or "application/octet-stream").split("/", 1)
+            message.add_attachment(
+                attachment_path.read_bytes(),
+                maintype=maintype,
+                subtype=subtype,
+                filename=filename,
             )
 
     recipients = [*to, *cc, *bcc]

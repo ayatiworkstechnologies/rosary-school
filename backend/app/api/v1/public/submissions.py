@@ -96,6 +96,7 @@ def _deliver_later(
     acknowledgement: dict | None = None,
     html_body: str | None = None,
     inline_images: dict[str, Path] | None = None,
+    attachments: dict[str, Path] | None = None,
 ) -> None:
     db = SessionLocal()
     instance = None
@@ -113,6 +114,7 @@ def _deliver_later(
             bcc_value=bcc,
             html_body=html_body,
             inline_images=inline_images,
+            attachments=attachments,
         )
         if acknowledgement:
             send_submission_email(
@@ -195,6 +197,20 @@ async def _save_image(upload: UploadFile, label: str) -> str:
     content = await upload.read()
     if not content or len(content) > 1 * 1024 * 1024:
         raise HTTPException(status_code=400, detail=f"{label} must be between 1 byte and 1024 KB.")
+    filename = f"{uuid4().hex}{suffix}"
+    (UPLOAD_ROOT / filename).write_bytes(content)
+    return f"/uploads/admissions/{filename}"
+
+
+async def _save_document(upload: UploadFile, label: str) -> str:
+    suffix = {
+        "application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp",
+    }.get(upload.content_type or "")
+    if suffix is None:
+        raise HTTPException(status_code=422, detail=f"{label} must be a PDF, JPG, PNG, or WebP file.")
+    content = await upload.read()
+    if not content or len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=422, detail=f"{label} must be between 1 byte and 5 MB.")
     filename = f"{uuid4().hex}{suffix}"
     (UPLOAD_ROOT / filename).write_bytes(content)
     return f"/uploads/admissions/{filename}"
@@ -403,21 +419,23 @@ async def create_ukg_admission(
     name_of_the_pupil: str = Form(...), date_of_birth: str = Form(...), religion: str = Form(...),
     father_s_name: str = Form(...), father_s_qualification: str = Form(...), father_s_occupation: str = Form(...), father_s_income_per_month: str = Form(...), father_s_mobile_no: str = Form(...),
     mother_s_name: str = Form(...), mother_s_qualification: str = Form(...), mother_s_occupation: str = Form(...), mother_s_income_per_month: str = Form(...), mother_s_mobile_no: str = Form(...),
-    email_id: str = Form(...), residential_address: str = Form(...), name_of_school_currently_attended: str = Form(...), present_class_of_the_pupil: str = Form(...), class_for_which_admission_is_sought: str = Form(...),
-    signature_of_parent: str = Form(""), name_of_parish: str = Form(""), student_s_passport_size_photograph: UploadFile = File(...), db: Session = Depends(get_db),
+    email_id: str = Form(...), residential_address: str = Form(...), name_of_school_currently_attended: str = Form(...), present_class_of_the_pupil: str = Form(...), class_for_which_admission_is_sought: str = Form(...), does_the_applicant_have_any_siblings_studying_in_this_school: str = Form(...),
+    signature_of_parent: str = Form(""), name_of_parish: str = Form(""), student_s_passport_size_photograph: UploadFile = File(...), previous_school_progress_report_front: UploadFile = File(...), previous_school_progress_report_back: UploadFile = File(...), birth_certificate: UploadFile = File(...), aadhaar_card: UploadFile = File(...), db: Session = Depends(get_db),
 ):
     form_data = {key: value.strip() for key, value in {
         "name_of_the_pupil": name_of_the_pupil, "date_of_birth": date_of_birth, "religion": religion, "name_of_parish": name_of_parish,
         "father_s_name": father_s_name, "father_s_qualification": father_s_qualification, "father_s_occupation": father_s_occupation, "father_s_income_per_month": father_s_income_per_month, "father_s_mobile_no": father_s_mobile_no,
         "mother_s_name": mother_s_name, "mother_s_qualification": mother_s_qualification, "mother_s_occupation": mother_s_occupation, "mother_s_income_per_month": mother_s_income_per_month, "mother_s_mobile_no": mother_s_mobile_no,
         "email_id": email_id.lower(), "residential_address": residential_address, "name_of_school_currently_attended": name_of_school_currently_attended,
-        "present_class_of_the_pupil": present_class_of_the_pupil, "class_for_which_admission_is_sought": class_for_which_admission_is_sought, "signature_of_parent": signature_of_parent,
+        "present_class_of_the_pupil": present_class_of_the_pupil, "class_for_which_admission_is_sought": class_for_which_admission_is_sought, "does_the_applicant_have_any_siblings_studying_in_this_school": does_the_applicant_have_any_siblings_studying_in_this_school, "signature_of_parent": signature_of_parent,
     }.items()}
     required = [key for key in form_data if key not in {"name_of_parish", "signature_of_parent"}]
     if any(not form_data[key] for key in required):
         raise HTTPException(status_code=422, detail="Please complete all required admission fields.")
     if form_data["class_for_which_admission_is_sought"] not in {"UKG", "Std I", "Std II", "Std III", "Std IV", "Std V", "Std VI", "Std VII", "Std VIII"}:
         raise HTTPException(status_code=422, detail="Select a valid class for admission.")
+    if form_data["does_the_applicant_have_any_siblings_studying_in_this_school"] not in {"Yes", "No"}:
+        raise HTTPException(status_code=422, detail="Select a valid sibling status.")
     try:
         if date.fromisoformat(form_data["date_of_birth"]) > date.today(): raise ValueError
     except ValueError as error:
@@ -432,6 +450,13 @@ async def create_ukg_admission(
     except InvalidOperation as error:
         raise HTTPException(status_code=422, detail="Monthly income must be a valid non-negative amount.") from error
     photo_url = await _save_image(student_s_passport_size_photograph, "Student photograph")
+    document_urls = {
+        "previous_school_progress_report_front": await _save_document(previous_school_progress_report_front, "Previous School Progress Report Card (front page)"),
+        "previous_school_progress_report_back": await _save_document(previous_school_progress_report_back, "Previous School Progress Report Card (back page)"),
+        "birth_certificate": await _save_document(birth_certificate, "Student's Birth Certificate"),
+        "aadhaar_card": await _save_document(aadhaar_card, "Student's Aadhaar Card"),
+    }
+    form_data.update(document_urls)
     mail_routes = get_mail_routes(db)
     sequence = db.execute(select(UkgAdmissionRegistrationSequence).where(UkgAdmissionRegistrationSequence.id == 1).with_for_update()).scalar_one()
     registration_no = f"{mail_routes.ukg_admission_registration_prefix}{sequence.next_number:03d}"
@@ -444,5 +469,11 @@ async def create_ukg_admission(
         to=mail_routes.ukg_admission_to, cc=mail_routes.ukg_admission_cc, bcc=mail_routes.ukg_admission_bcc,
         html_body=render_email_template("ukg_admission_admin.html", {"registration_no": registration_no, **form_data, "student_s_passport_size_photograph": "cid:student-photograph"}),
         inline_images={"student-photograph": UPLOAD_ROOT / Path(photo_url).name},
+        attachments={
+            "Progress Report Card - Front" + Path(document_urls["previous_school_progress_report_front"]).suffix: UPLOAD_ROOT / Path(document_urls["previous_school_progress_report_front"]).name,
+            "Progress Report Card - Back" + Path(document_urls["previous_school_progress_report_back"]).suffix: UPLOAD_ROOT / Path(document_urls["previous_school_progress_report_back"]).name,
+            "Birth Certificate" + Path(document_urls["birth_certificate"]).suffix: UPLOAD_ROOT / Path(document_urls["birth_certificate"]).name,
+            "Aadhaar Card" + Path(document_urls["aadhaar_card"]).suffix: UPLOAD_ROOT / Path(document_urls["aadhaar_card"]).name,
+        },
         acknowledgement={"subject": f"Admission application received - {registration_no}", "heading": "Thank you for applying to Rosary School", "intro": "Your UKG to Std VIII admission application has been received. Please keep the registration number for future communication.", "fields": {"Registration Number": registration_no, "Pupil Name": item.pupil_name, "Class Sought": form_data["class_for_which_admission_is_sought"]}, "reply_to": mail_routes.ukg_admission_reply_to or mail_routes.ukg_admission_to.split(",")[0].strip(), "to": item.parent_email} if mail_routes.ukg_admission_ack_enabled else None)
     return PublicSubmissionResponse(message=f"Your UKG to Std VIII admission application was submitted successfully. Registration number: {registration_no}.", reference_no=registration_no, registration_no=registration_no)
