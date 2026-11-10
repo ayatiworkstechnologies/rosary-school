@@ -23,6 +23,17 @@ import {
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
+const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+
+const DOCUMENT_FIELDS = [
+  ["previous_school_progress_report_front", "Previous School Progress Report Card — Front Page"],
+  ["previous_school_progress_report_back", "Previous School Progress Report Card — Back Page"],
+  ["birth_certificate", "Student's Birth Certificate"],
+  ["aadhaar_card", "Student's Aadhaar Card"],
+] as const;
+
+type DocumentField = (typeof DOCUMENT_FIELDS)[number][0];
+
 const ADMISSION_CLASSES = [
   "UKG",
   "Std I",
@@ -85,6 +96,8 @@ type AdmissionFormData = {
 
   class_for_which_admission_is_sought: string;
 
+  does_the_applicant_have_any_siblings_studying_in_this_school: string;
+
   signature_of_parent: string;
 };
 
@@ -138,6 +151,8 @@ const INITIAL_FORM_DATA: AdmissionFormData = {
   present_class_of_the_pupil: "",
 
   class_for_which_admission_is_sought: "",
+
+  does_the_applicant_have_any_siblings_studying_in_this_school: "",
 
   signature_of_parent: "",
 };
@@ -265,6 +280,13 @@ export default function AdmissionUkgToEighth() {
     useState<string | null>(
       null,
     );
+
+  const [supportingDocuments, setSupportingDocuments] = useState<Record<DocumentField, File | null>>({
+    previous_school_progress_report_front: null,
+    previous_school_progress_report_back: null,
+    birth_certificate: null,
+    aadhaar_card: null,
+  });
 
   const [
     isSubmitting,
@@ -434,6 +456,23 @@ export default function AdmissionUkgToEighth() {
       ),
     );
 
+    setError("");
+  }
+
+  function handleDocumentChange(field: DocumentField, file: File | null) {
+    if (!file) return;
+
+    const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Documents must be PDF, JPG, PNG or WebP files.");
+      return;
+    }
+    if (file.size > MAX_DOCUMENT_SIZE) {
+      setError("Each document must be less than 5 MB.");
+      return;
+    }
+
+    setSupportingDocuments(current => ({ ...current, [field]: file }));
     setError("");
   }
 
@@ -627,6 +666,14 @@ export default function AdmissionUkgToEighth() {
       return "Class for which admission is sought is required.";
     }
 
+    if (!formData.does_the_applicant_have_any_siblings_studying_in_this_school) {
+      return "Please select whether the applicant has siblings studying in this school.";
+    }
+
+    if (DOCUMENT_FIELDS.some(([field]) => !supportingDocuments[field])) {
+      return "Please upload all required admission documents.";
+    }
+
     /* PHOTO */
 
     if (!photo) {
@@ -708,6 +755,11 @@ export default function AdmissionUkgToEighth() {
           photo.name,
         );
       }
+
+      DOCUMENT_FIELDS.forEach(([field]) => {
+        const document = supportingDocuments[field];
+        if (document) payload.append(field, document, document.name);
+      });
 
       /* ===============================================
          APPLICATION DATE
@@ -798,6 +850,8 @@ export default function AdmissionUkgToEighth() {
     });
 
     setPhoto(null);
+
+    setSupportingDocuments({ previous_school_progress_report_front: null, previous_school_progress_report_back: null, birth_certificate: null, aadhaar_card: null });
 
     if (photoPreview) {
       URL.revokeObjectURL(
@@ -1916,10 +1970,24 @@ export default function AdmissionUkgToEighth() {
                 )}
               </select>
             </FormRow>
+
+            <FormRow
+              number="10."
+              label="Does the applicant have any siblings studying in this School?"
+            >
+              <fieldset className="flex min-h-[46px] items-center gap-3" aria-label="Sibling studying in this school">
+                {[["Yes", "yes"], ["No", "no"]].map(([label, id]) => (
+                  <label key={id} htmlFor={`siblings-studying-${id}`} className={`inline-flex min-h-[40px] cursor-pointer items-center gap-2 rounded-lg border px-4 text-[14px] font-semibold transition-colors ${formData.does_the_applicant_have_any_siblings_studying_in_this_school === label ? "border-[#0075FF] bg-[#F1F7FF] text-[#0755AD]" : "border-[#CBD5DE] bg-white text-[#344B5C] hover:border-[#7BADE7]"}`}>
+                    <input id={`siblings-studying-${id}`} type="radio" name="does_the_applicant_have_any_siblings_studying_in_this_school" value={label} checked={formData.does_the_applicant_have_any_siblings_studying_in_this_school === label} onChange={handleChange} required={!formData.does_the_applicant_have_any_siblings_studying_in_this_school} className="h-4 w-4 accent-[#0075FF]" />
+                    {label}
+                  </label>
+                ))}
+              </fieldset>
+            </FormRow>
           </div>
 
           {/* =================================================
-              SCHOOL NOTE
+              DOCUMENTS REQUIRED + SCHOOL NOTE
           ================================================= */}
 
           <div
@@ -1932,8 +2000,45 @@ export default function AdmissionUkgToEighth() {
               pt-7
             "
           >
+            <div className="rounded-[9px] border border-[#CFE1F3] bg-[#F7FBFF] px-4 py-5 sm:px-5">
+              <h2 className="text-[15px] font-bold text-[#17324B] sm:text-[16px]">Documents Required for Online Admission Registration (UKG to Std VIII)</h2>
+              <p className="mt-2 text-[12px] leading-[1.65] text-[#435D70] sm:text-[13px]">Upload clear copies of the following documents. PDF, JPG, PNG or WebP; maximum 5 MB each.</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-dashed border-[#A6BBCB] bg-white p-3 sm:col-span-2">
+                  <span className="block text-[12px] font-semibold leading-5 text-[#17324B]">Previous School Progress Report Card <RequiredStar /></span>
+                  <span className="mt-1 block text-[11px] text-[#526A7A]">Upload clear photocopies of both the front and back pages.</span>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    {DOCUMENT_FIELDS.slice(0, 2).map(([field, label]) => {
+                      const document = supportingDocuments[field];
+                      return <label key={field} className="cursor-pointer rounded-lg border border-[#D6E3EE] bg-[#F7FBFF] px-3 py-2.5 transition-colors hover:border-[#0075FF] hover:bg-[#EEF7FF]">
+                        <span className="block text-[11px] font-semibold text-[#17324B]">{label.endsWith("Front Page") ? "Front page" : "Back page"} <RequiredStar /></span>
+                        <span className="mt-1 block truncate text-[11px] text-[#526A7A]">{document ? document.name : "Click to upload"}</span>
+                        <input type="file" name={field} accept="application/pdf,image/jpeg,image/png,image/webp" required={!document} onChange={event => handleDocumentChange(field, event.target.files?.[0] ?? null)} className="sr-only" />
+                      </label>;
+                    })}
+                  </div>
+                </div>
+                {DOCUMENT_FIELDS.slice(2).map(([field, label]) => {
+                  const document = supportingDocuments[field];
+                  return <label key={field} className="cursor-pointer rounded-lg border border-dashed border-[#A6BBCB] bg-white p-3 transition-colors hover:border-[#0075FF] hover:bg-[#F4F9FF]">
+                    <span className="block text-[12px] font-semibold leading-5 text-[#17324B]">{label} <RequiredStar /></span>
+                    <span className="mt-2 block truncate text-[11px] text-[#526A7A]">{document ? document.name : "Click to upload"}</span>
+                    <input type="file" name={field} accept="application/pdf,image/jpeg,image/png,image/webp" required={!document} onChange={event => handleDocumentChange(field, event.target.files?.[0] ?? null)} className="sr-only" />
+                  </label>;
+                })}
+              </div>
+              <div className="mt-4 border-t border-[#DCE8F3] pt-3 text-[12px] leading-[1.55] text-[#435D70] sm:text-[13px]">
+                <p><strong className="text-[#17324B]">Entrance Examination Notification</strong></p>
+                <p className="mt-1">If your child is shortlisted for the entrance examination, you will receive a notification through email and WhatsApp.</p>
+                <p className="mt-3"><strong className="text-[#17324B]">Important Note</strong></p>
+                <p className="mt-1">Online registration does not guarantee admission. Admission is subject to the selection process and availability of seats.</p>
+              </div>
+            </div>
+
             <div
               className="
+                mt-5
+
                 rounded-[9px]
 
                 border
