@@ -201,3 +201,104 @@ video {
   }
 }
 
+/* LKG admission printout: mirrors the compact, two-column school form layout. */
+@media print {
+  .lkg-print-sheet {
+    color: #111 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+  }
+
+  .lkg-print-header {
+    margin: 0 0 2.5mm !important;
+    border-bottom: 2px solid #0075ff;
+    padding-bottom: 2.5mm;
+  }
+
+  .lkg-print-kicker {
+    display: block !important;
+    color: #0075ff !important;
+    font-size: 8px !important;
+    font-weight: 700 !important;
+    letter-spacing: 3px;
+    line-height: 1 !important;
+  }
+
+  .lkg-print-header h1 {
+    margin: 1.5mm 0 0 !important;
+    font-size: 21px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.4px;
+    line-height: 1.2 !important;
+  }
+
+  .lkg-print-header p {
+    margin: 1mm 0 0 !important;
+    font-size: 11px !important;
+    color: #1c2a40 !important;
+    line-height: 1.15 !important;
+  }
+
+  .lkg-print-content {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 34mm !important;
+    align-items: start !important;
+    column-gap: 4mm !important;
+    background: #fff !important;
+  }
+
+  .lkg-print-table {
+    border: 1px solid #c8c8c8 !important;
+  }
+
+  .lkg-print-row {
+    display: grid !important;
+    grid-template-columns: 45% 55% !important;
+    min-height: 7.2mm;
+    border-bottom: 1px solid #d3d3d3 !important;
+    break-inside: avoid;
+  }
+
+  .lkg-print-row:nth-child(odd) {
+    background: #f5f5f5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .lkg-print-row:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .lkg-print-label,
+  .lkg-print-value {
+    padding: 1.4mm 2.2mm !important;
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+    overflow-wrap: anywhere;
+  }
+
+  .lkg-print-label {
+    font-weight: 700 !important;
+  }
+
+  .lkg-print-value {
+    border-left: 1px solid #d3d3d3 !important;
+    font-weight: 400 !important;
+  }
+
+  .lkg-print-photo {
+    display: flex !important;
+    min-height: 36mm;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 0;
+  }
+
+  .lkg-print-photo img {
+    width: 30mm !important;
+    height: 34mm !important;
+    object-fit: contain !important;
+  }
+}
+

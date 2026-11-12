@@ -59,26 +59,20 @@ function orderedAdmissionFields(formData: AdmissionApplication["form_data"]) {
   return [...knownFields, ...remainingFields];
 }
 
-function AdmissionPrintSheet({ item, ukg = false }: { item: AdmissionApplication; ukg?: boolean }) {
-  return <section className="print-sheet hidden bg-white text-[#172B4D] print:block">
-    <header className="print-header border-b-2 border-[#0075FF] pb-4 text-center">
-      <p className="text-xs font-bold tracking-[0.25em] text-[#0075FF]">ROSARY SCHOOL</p>
-      <h1 className="mt-1 text-2xl font-bold">Rosary Matriculation Higher Secondary School</h1>
-      <p className="mt-1 text-sm">{ukg ? "UKG to Std VIII" : "LKG"} Admission Application · 2027–2028</p>
+function AdmissionPrintSheet({ item }: { item: AdmissionApplication }) {
+  return <section className="print-sheet lkg-print-sheet hidden bg-white text-[#272727] print:block">
+    <header className="lkg-print-header text-center">
+      <span className="lkg-print-kicker">ROSARY SCHOOL</span>
+      <h1>Rosary Matriculation Higher Secondary School</h1>
+      <p>LKG Application Form 2027 - 2028</p>
     </header>
-    <div className="print-meta my-5 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-5 py-3">
-      <div><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Registration number</p><p className="text-xl font-bold text-[#0755AD]">{item.registration_no}</p></div>
-      <div className="text-right"><p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Received</p><p className="text-sm font-semibold">{new Date(item.created_at).toLocaleString("en-IN")}</p></div>
+    <div className="lkg-print-content">
+      <div className="lkg-print-table" role="table">
+        <div className="lkg-print-row" role="row"><div className="lkg-print-label" role="cell">Registration No.</div><div className="lkg-print-value" role="cell">{item.registration_no}</div></div>
+        {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="lkg-print-row" role="row"><div className="lkg-print-label" role="cell">{fieldLabel(key)}</div><div className="lkg-print-value" role="cell">{value || "-"}</div></div>)}
+      </div>
+      <aside className="lkg-print-photo" aria-label="Student photograph"><img src={imageUrl(item.student_photo_url)} alt="Student photograph"/></aside>
     </div>
-    <h2 className="print-section-title mb-3 mt-5 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Student photograph</h2>
-    <div className="print-photo-section break-inside-avoid">
-      <div className="max-w-48 text-center"><div className="print-photo flex h-32 items-center justify-center rounded border border-slate-300 p-2"><img src={imageUrl(item.student_photo_url)} alt="Student Photograph" className="max-h-full max-w-full object-contain"/></div><p className="mt-2 text-xs font-semibold">Student Photograph</p></div>
-    </div>
-    <h2 className="print-section-title mb-2 border-b border-blue-200 pb-2 text-base font-bold text-[#0755AD]">Application details</h2>
-    <div className="print-details grid grid-cols-2 border-l border-t border-slate-300">
-      {orderedAdmissionFields(item.form_data).map(([key, value]) => <div key={key} className="print-field border-b border-r border-slate-300 p-2.5 break-inside-avoid"><p className="text-[9px] font-bold uppercase tracking-wide text-slate-500">{fieldLabel(key)}</p><p className="mt-1 text-xs">{value || "-"}</p></div>)}
-    </div>
-    <footer className="print-footer mt-8 border-t border-slate-300 pt-3 text-center text-[10px] text-slate-500">Printed from the Rosary School admission administration portal.</footer>
   </section>;
 }
 
