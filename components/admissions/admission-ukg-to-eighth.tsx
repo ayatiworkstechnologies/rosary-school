@@ -98,6 +98,10 @@ type AdmissionFormData = {
 
   does_the_applicant_have_any_siblings_studying_in_this_school: string;
 
+  name_of_the_sibling: string;
+
+  class_and_section: string;
+
   signature_of_parent: string;
 };
 
@@ -153,6 +157,10 @@ const INITIAL_FORM_DATA: AdmissionFormData = {
   class_for_which_admission_is_sought: "",
 
   does_the_applicant_have_any_siblings_studying_in_this_school: "",
+
+  name_of_the_sibling: "",
+
+  class_and_section: "",
 
   signature_of_parent: "",
 };
@@ -382,6 +390,9 @@ export default function AdmissionUkgToEighth() {
               name_of_parish:
                 "",
             }
+          : {}),
+        ...(name === "does_the_applicant_have_any_siblings_studying_in_this_school" && nextValue === "No"
+          ? { name_of_the_sibling: "", class_and_section: "" }
           : {}),
       }),
     );
@@ -670,6 +681,14 @@ export default function AdmissionUkgToEighth() {
       return "Please select whether the applicant has siblings studying in this school.";
     }
 
+    if (formData.does_the_applicant_have_any_siblings_studying_in_this_school === "Yes" && !formData.name_of_the_sibling.trim()) {
+      return "Name of the sibling is required.";
+    }
+
+    if (formData.does_the_applicant_have_any_siblings_studying_in_this_school === "Yes" && !formData.class_and_section.trim()) {
+      return "Class and section of the sibling is required.";
+    }
+
     if (DOCUMENT_FIELDS.some(([field]) => !supportingDocuments[field])) {
       return "Please upload all required admission documents.";
     }
@@ -948,6 +967,24 @@ export default function AdmissionUkgToEighth() {
             lg:px-12
           "
         >
+          <section className="mb-8 overflow-hidden rounded-2xl border border-[#BFD9F5] bg-gradient-to-br from-[#F2F8FF] via-[#F8FBFF] to-white shadow-[0_8px_24px_rgba(0,117,255,0.08)] sm:mb-10">
+            <div className="border-b border-[#D6E7F8] bg-white/70 px-5 py-3.5 sm:px-6">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-2 rounded-full bg-[#0075FF] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[1px] text-white"><CheckCircle2 size={14} /> Before you begin</span>
+                <span className="text-[12px] font-medium text-[#526A7A] sm:text-[13px]">Please keep these documents ready before filling the application.</span>
+              </div>
+            </div>
+            <div className="px-5 py-5 sm:px-6 sm:py-6">
+              <h2 className="text-[17px] font-bold leading-tight text-[#17324B] sm:text-[20px]">Documents Required for Online Admission Registration (UKG to Std. VIII)</h2>
+              <p className="mt-2 text-[13px] leading-[1.65] text-[#435D70] sm:text-[14px]">Parents are requested to keep the following documents ready for online admission registration:</p>
+              <ol className="mt-4 grid gap-3 text-[13px] text-[#334E63] sm:grid-cols-3 sm:text-[14px]">
+                <li className="rounded-xl border border-[#D8E7F5] bg-white px-4 py-3 leading-[1.55]"><span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#E6F2FF] text-[11px] font-bold text-[#0075FF]">1</span><span className="font-semibold text-[#17324B]">Previous School Progress Report Card</span><span className="mt-1 block text-[12px] text-[#526A7A]">— Photocopies of both the front and back pages.</span></li>
+                <li className="rounded-xl border border-[#D8E7F5] bg-white px-4 py-3 leading-[1.55]"><span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#E6F2FF] text-[11px] font-bold text-[#0075FF]">2</span><span className="font-semibold text-[#17324B]">Student&apos;s Birth Certificate</span><span className="mt-1 block text-[12px] text-[#526A7A]">— Photocopy.</span></li>
+                <li className="rounded-xl border border-[#D8E7F5] bg-white px-4 py-3 leading-[1.55]"><span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#E6F2FF] text-[11px] font-bold text-[#0075FF]">3</span><span className="font-semibold text-[#17324B]">Student&apos;s Aadhaar Card</span><span className="mt-1 block text-[12px] text-[#526A7A]">— Photocopy.</span></li>
+              </ol>
+            </div>
+          </section>
+
           {/* =================================================
               HEADER + PHOTO
           ================================================= */}
@@ -1984,6 +2021,17 @@ export default function AdmissionUkgToEighth() {
                 ))}
               </fieldset>
             </FormRow>
+
+            {formData.does_the_applicant_have_any_siblings_studying_in_this_school === "Yes" && (
+              <div className="grid gap-5 rounded-xl border border-[#D7E5F5] bg-[#F8FBFF] p-5 sm:grid-cols-2 sm:gap-6">
+                <label className="block text-[15px] font-semibold text-[#12345A]">Name of the Sibling <RequiredStar />
+                  <input type="text" name="name_of_the_sibling" value={formData.name_of_the_sibling} onChange={handleChange} required placeholder="Enter sibling's name" className="mt-2 h-[60px] w-full rounded-xl border border-[#BCD4F3] bg-white px-5 text-[16px] font-medium text-[#17324B] outline-none transition placeholder:text-[#8EA5C8] focus:border-[#0075FF] focus:ring-2 focus:ring-[#DCEEFF]" />
+                </label>
+                <label className="block text-[15px] font-semibold text-[#12345A]">Class and Section <RequiredStar />
+                  <input type="text" name="class_and_section" value={formData.class_and_section} onChange={handleChange} required placeholder="Enter class and section" className="mt-2 h-[60px] w-full rounded-xl border border-[#BCD4F3] bg-white px-5 text-[16px] font-medium text-[#17324B] outline-none transition placeholder:text-[#8EA5C8] focus:border-[#0075FF] focus:ring-2 focus:ring-[#DCEEFF]" />
+                </label>
+              </div>
+            )}
           </div>
 
           {/* =================================================
@@ -2001,9 +2049,9 @@ export default function AdmissionUkgToEighth() {
             "
           >
             <div className="rounded-[9px] border border-[#CFE1F3] bg-[#F7FBFF] px-4 py-5 sm:px-5">
-              <h2 className="text-[15px] font-bold text-[#17324B] sm:text-[16px]">Documents Required for Online Admission Registration (UKG to Std VIII)</h2>
-              <p className="mt-2 text-[12px] leading-[1.65] text-[#435D70] sm:text-[13px]">Upload clear copies of the following documents. PDF, JPG, PNG or WebP; maximum 5 MB each.</p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div>
+                <h3 className="text-[13px] font-bold text-[#17324B] sm:text-[14px]">Upload Documents <span className="font-medium text-[#526A7A]">(PDF, JPG, PNG or WebP; maximum 5 MB each)</span></h3>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-lg border border-dashed border-[#A6BBCB] bg-white p-3 sm:col-span-2">
                   <span className="block text-[12px] font-semibold leading-5 text-[#17324B]">Previous School Progress Report Card <RequiredStar /></span>
                   <span className="mt-1 block text-[11px] text-[#526A7A]">Upload clear photocopies of both the front and back pages.</span>
@@ -2026,6 +2074,7 @@ export default function AdmissionUkgToEighth() {
                     <input type="file" name={field} accept="application/pdf,image/jpeg,image/png,image/webp" required={!document} onChange={event => handleDocumentChange(field, event.target.files?.[0] ?? null)} className="sr-only" />
                   </label>;
                 })}
+              </div>
               </div>
               <div className="mt-4 border-t border-[#DCE8F3] pt-3 text-[12px] leading-[1.55] text-[#435D70] sm:text-[13px]">
                 <p><strong className="text-[#17324B]">Entrance Examination Notification</strong></p>

@@ -419,7 +419,7 @@ async def create_ukg_admission(
     name_of_the_pupil: str = Form(...), date_of_birth: str = Form(...), religion: str = Form(...),
     father_s_name: str = Form(...), father_s_qualification: str = Form(...), father_s_occupation: str = Form(...), father_s_income_per_month: str = Form(...), father_s_mobile_no: str = Form(...),
     mother_s_name: str = Form(...), mother_s_qualification: str = Form(...), mother_s_occupation: str = Form(...), mother_s_income_per_month: str = Form(...), mother_s_mobile_no: str = Form(...),
-    email_id: str = Form(...), residential_address: str = Form(...), name_of_school_currently_attended: str = Form(...), present_class_of_the_pupil: str = Form(...), class_for_which_admission_is_sought: str = Form(...), does_the_applicant_have_any_siblings_studying_in_this_school: str = Form(...),
+    email_id: str = Form(...), residential_address: str = Form(...), name_of_school_currently_attended: str = Form(...), present_class_of_the_pupil: str = Form(...), class_for_which_admission_is_sought: str = Form(...), does_the_applicant_have_any_siblings_studying_in_this_school: str = Form(...), name_of_the_sibling: str = Form(""), class_and_section: str = Form(""),
     signature_of_parent: str = Form(""), name_of_parish: str = Form(""), student_s_passport_size_photograph: UploadFile = File(...), previous_school_progress_report_front: UploadFile = File(...), previous_school_progress_report_back: UploadFile = File(...), birth_certificate: UploadFile = File(...), aadhaar_card: UploadFile = File(...), db: Session = Depends(get_db),
 ):
     form_data = {key: value.strip() for key, value in {
@@ -427,15 +427,17 @@ async def create_ukg_admission(
         "father_s_name": father_s_name, "father_s_qualification": father_s_qualification, "father_s_occupation": father_s_occupation, "father_s_income_per_month": father_s_income_per_month, "father_s_mobile_no": father_s_mobile_no,
         "mother_s_name": mother_s_name, "mother_s_qualification": mother_s_qualification, "mother_s_occupation": mother_s_occupation, "mother_s_income_per_month": mother_s_income_per_month, "mother_s_mobile_no": mother_s_mobile_no,
         "email_id": email_id.lower(), "residential_address": residential_address, "name_of_school_currently_attended": name_of_school_currently_attended,
-        "present_class_of_the_pupil": present_class_of_the_pupil, "class_for_which_admission_is_sought": class_for_which_admission_is_sought, "does_the_applicant_have_any_siblings_studying_in_this_school": does_the_applicant_have_any_siblings_studying_in_this_school, "signature_of_parent": signature_of_parent,
+        "present_class_of_the_pupil": present_class_of_the_pupil, "class_for_which_admission_is_sought": class_for_which_admission_is_sought, "does_the_applicant_have_any_siblings_studying_in_this_school": does_the_applicant_have_any_siblings_studying_in_this_school, "name_of_the_sibling": name_of_the_sibling, "class_and_section": class_and_section, "signature_of_parent": signature_of_parent,
     }.items()}
-    required = [key for key in form_data if key not in {"name_of_parish", "signature_of_parent"}]
+    required = [key for key in form_data if key not in {"name_of_parish", "signature_of_parent", "name_of_the_sibling", "class_and_section"}]
     if any(not form_data[key] for key in required):
         raise HTTPException(status_code=422, detail="Please complete all required admission fields.")
     if form_data["class_for_which_admission_is_sought"] not in {"UKG", "Std I", "Std II", "Std III", "Std IV", "Std V", "Std VI", "Std VII", "Std VIII"}:
         raise HTTPException(status_code=422, detail="Select a valid class for admission.")
     if form_data["does_the_applicant_have_any_siblings_studying_in_this_school"] not in {"Yes", "No"}:
         raise HTTPException(status_code=422, detail="Select a valid sibling status.")
+    if form_data["does_the_applicant_have_any_siblings_studying_in_this_school"] == "Yes" and (not form_data["name_of_the_sibling"] or not form_data["class_and_section"]):
+        raise HTTPException(status_code=422, detail="Enter the sibling's name, class and section.")
     try:
         if date.fromisoformat(form_data["date_of_birth"]) > date.today(): raise ValueError
     except ValueError as error:

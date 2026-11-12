@@ -85,6 +85,7 @@ const UKG_PRINT_FIELDS = [
   ["8.", "Name of School Currently Attended", "name_of_school_currently_attended"], ["", "Present Class of the Pupil", "present_class_of_the_pupil"],
   ["9.", "Class for which admission is sought", "class_for_which_admission_is_sought"],
   ["10.", "Does the applicant have any siblings studying in this School?", "does_the_applicant_have_any_siblings_studying_in_this_school"],
+  ["", "Name of the Sibling", "name_of_the_sibling"], ["", "Class and Section", "class_and_section"],
   ["", "Signature of Parent", "signature_of_parent"],
 ] as const;
 

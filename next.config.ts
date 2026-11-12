@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const backendUrl =
-  (process.env.ROSARY_BACKEND_URL || "https://www.cmsapi.rosarychennai.com").replace(/\/$/, "");
+  (process.env.ROSARY_BACKEND_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
 const nextConfig: NextConfig = {
   async rewrites() {
